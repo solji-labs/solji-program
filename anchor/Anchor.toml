@@ -6,31 +6,20 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-temple = "D9immZaczS2ASFqqSux2iCCAaFat7vcusB1PQ2SW6d95"
+solji_program = "EHeMFMeN22VbNmB9BnPaQLRFVVGRuw5uEU6bVSM3eWaw"
 
 [registry]
 url = "https://api.apr.dev"
-[scripts]
-test = "npx mocha --require tsx --recursive tests/*.test.ts"
-
-# 单独运行某些测试文件 示例 anchor run  donate
-temple-init = "npx mocha --require tsx tests/temple-init.test.ts"
-donate = "npx mocha --require tsx tests/donate.test.ts"
-draw-fortune = "npx mocha --require tsx tests/draw-fortune.test.ts"
-stake = "npx mocha --require tsx tests/stake_medal_nft.test.ts"
-share = "npx mocha --require tsx tests/share_fortune.test.ts"
-leaderboard = "npx mocha --require tsx tests/leaderboard.test.ts"
-buy-burn-incense = "npx mocha --require tsx tests/buy-burn-incense.test.ts"
-wish = "npx mocha --require tsx tests/wish.test.ts"
-mintbuddha = "npx mocha --require tsx tests/buddha-nft.test.ts"
-shop = "npx mocha --require tsx tests/shop.test.ts"
-get-user-profile = "npx mocha --require tsx tests/get_user_profile.test.ts"
-
 
 [provider]
-cluster = "http://localhost:8899"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
-[test]
-validator = { url = "http://localhost:8899" }
-startup_wait = 10000
+[scripts]
+api = "yarn run ts-node example/index.ts"
+donate = "yarn run ts-node example/donate.ts"
+draw = "yarn run ts-node example/draw.ts"
+mint = "yarn run ts-node example/mint.ts"
+temple = "yarn run ts-node example/temple.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+wish = "yarn run ts-node example/wish.ts"
