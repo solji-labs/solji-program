@@ -103,33 +103,49 @@ pub fn draw_lots(ctx: Context<DrawLots>) -> Result<()> {
         }
     }
 
-    // 获取下表随机数
+    // 获取下标随机数
     let lottery_type = {
-        let randomness_data =
-            RandomnessAccountData::parse(ctx.accounts.randomness_account_data.data.borrow())
-                .map_err(|_| DrawLotsCode::InvalidRandomnessAccount)?;
+        #[cfg(feature = "mainnet")]
         {
-            let st = &ctx.accounts.player_state;
-            require!(
-                randomness_data.seed_slot == st.commit_slot,
-                DrawLotsCode::RandomnessExpired
-            );
-        }
+            let randomness_data =
+                RandomnessAccountData::parse(ctx.accounts.randomness_account_data.data.borrow())
+                    .map_err(|_| DrawLotsCode::InvalidRandomnessAccount)?;
+            {
+                let st = &ctx.accounts.player_state;
+                require!(
+                    randomness_data.seed_slot == st.commit_slot,
+                    DrawLotsCode::RandomnessExpired
+                );
+            }
 
-        let revealed_random_value = randomness_data
-            .get_value(&clock)
-            .map_err(|_| DrawLotsCode::RandomnessNotResolved)?;
-        // 取前8字节做 u64
-        let r = u64::from_le_bytes(revealed_random_value[..8].try_into().unwrap());
-        #[inline]
-        fn unbiased_u64(x: u64, n: u64) -> u64 {
-            ((x as u128 * n as u128) >> 64) as u64
-        }
-        let idx = unbiased_u64(r, 7);
+            let revealed_random_value = randomness_data
+                .get_value(&clock)
+                .map_err(|_| DrawLotsCode::RandomnessNotResolved)?;
+            // 取前8字节做 u64
+            let r = u64::from_le_bytes(revealed_random_value[..8].try_into().unwrap());
+            #[inline]
+            fn unbiased_u64(x: u64, n: u64) -> u64 {
+                ((x as u128 * n as u128) >> 64) as u64
+            }
+            let idx = unbiased_u64(r, 7);
 
-        let lottery_type = ctx.accounts.lottery_array.get_lottery_type(idx);
-        msg!("Random Numbers: {},Result:{:?}", idx, lottery_type);
-        lottery_type
+            let lottery_type = ctx.accounts.lottery_array.get_lottery_type(idx);
+            msg!("Random Numbers: {},Result:{:?}", idx, lottery_type);
+            lottery_type
+        }
+        #[cfg(not(feature = "mainnet"))]
+        // 非主网环境：简单随机数生成
+        {
+            // 使用时间戳 + 账户地址哈希作为简单随机种子
+            let seed =
+                clock.unix_timestamp as u64 ^ ctx.accounts.authority.key().to_bytes()[0] as u64;
+            // 简单的取模运算生成 0-6 的随机下标（非主网调试用）
+            let idx = seed % 7;
+
+            let lottery_type = ctx.accounts.lottery_array.get_lottery_type(idx);
+            msg!("Testnet Random Numbers: {}, Result:{:?}", idx, lottery_type);
+            lottery_type
+        }
     };
 
     // 抽签功德值+2,大吉另外加 1
