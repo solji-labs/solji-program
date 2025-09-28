@@ -66,15 +66,15 @@ pub fn coin_flip(ctx: Context<CoinFlip>) -> Result<()> {
 
 // 抽签 value是扣除功德值
 pub fn draw_lots(ctx: Context<DrawLots>) -> Result<()> {
-    {
-        let st = &ctx.accounts.player_state;
-        require_keys_eq!(
-            st.allowed_user,
-            ctx.accounts.authority.key(),
-            DrawLotsCode::Unauthorized
-        );
-        require!(!st.settled, DrawLotsCode::AlreadySettled);
-    }
+    // {
+    //     let st = &ctx.accounts.player_state;
+    //     require_keys_eq!(
+    //         st.allowed_user,
+    //         ctx.accounts.authority.key(),
+    //         DrawLotsCode::Unauthorized
+    //     );
+    //     require!(!st.settled, DrawLotsCode::AlreadySettled);
+    // }
 
     // 判断是否第一次抽签
     let clock = Clock::get()?;

@@ -90,6 +90,6 @@ pub struct LikeCreated {
 pub struct WishCreated {
     pub user: Pubkey,       // 谁许的愿
     pub content: String,    // 愿望内容
-    pub value: u64,         // 花费的功德值
+    pub value: u8,          // 花费的功德值
     pub is_anonymous: bool, // 是否匿名
 }

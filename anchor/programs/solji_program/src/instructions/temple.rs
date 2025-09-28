@@ -32,18 +32,17 @@ pub fn withdraw(ctx: Context<Withdraw>, lamports: u64) -> Result<()> {
         WithdrawCode::AmountMustBeLessThanTempleBalance
     );
 
-    let signer_seeds: &[&[&[u8]]] = &[&[b"temple", &[ctx.bumps.temple]]];
-    transfer(
-        CpiContext::new_with_signer(
-            ctx.accounts.system_program.to_account_info(),
-            Transfer {
-                from: ctx.accounts.temple.to_account_info(),
-                to: ctx.accounts.admin.to_account_info(),
-            },
-            signer_seeds,
-        ),
-        lamports,
-    )?;
+    **ctx
+        .accounts
+        .temple
+        .to_account_info()
+        .try_borrow_mut_lamports()? -= lamports;
+
+    **ctx
+        .accounts
+        .admin
+        .to_account_info()
+        .try_borrow_mut_lamports()? += lamports;
 
     let remaining = ctx.accounts.temple.to_account_info().lamports();
     emit!(TempleWithdrawal {
@@ -85,8 +84,6 @@ pub struct Withdraw<'info> {
         has_one = admin,
     )]
     pub temple: Account<'info, Temple>,
-
-    pub system_program: Program<'info, System>,
 }
 
 #[error_code]

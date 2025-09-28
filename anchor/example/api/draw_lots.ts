@@ -1,6 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { program } from "./wallet";
-import { getLotteryArrayPda, getNftMintAccount, getLotteryRecordPda, getUserBurnInfo } from "./address";
+import { getLotteryArrayPda, getNftMintAccount, getLotteryRecordPda, getUserBurnInfo, getPlayerPda } from "./address";
 import { ON_DEMAND_DEVNET_PID, ON_DEMAND_DEVNET_QUEUE, Queue, Randomness } from "@switchboard-xyz/on-demand";
 import { Connection, Keypair, Transaction } from "@solana/web3.js";
 
@@ -39,7 +39,7 @@ export async function coinFlip(
   console.log("Commit Ix:", commitIx);
   await provider.sendAndConfirm(new Transaction().add(commitIx));
 
-  return await program.methods.coinFlip(randomness.pubkey)
+  return await program.methods.coinFlip()
     .accounts({
       randomnessAccountData: randomness.pubkey,  // 作为 AccountInfo 传进合约
     })
@@ -47,13 +47,16 @@ export async function coinFlip(
 }
 
 
-export async function drawLots(name: string, wallet: anchor.Wallet) {
+export async function drawLots(wallet: anchor.Wallet) {
   let r1 = await program.account.userInfo.fetch(getUserBurnInfo(wallet));
   console.log("lotteryCount===>", r1.lotteryCount);
   let pda = getLotteryRecordPda(r1.lotteryCount, wallet);
+  let [playerPda] = getPlayerPda(wallet);
+  const st = await program.account.playerState.fetch(playerPda);
   let r = await program.methods.drawLots()
     .accounts({
       lotteryRecord: pda,
+      randomnessAccountData: st.randomnessAccount,
     })
     .rpc();
 

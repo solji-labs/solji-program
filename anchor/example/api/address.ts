@@ -62,4 +62,8 @@ export function getDonateRecordPda(count: number, wallet: anchor.Wallet) {
 
 export function getTemplePda() {
   return anchor.web3.PublicKey.findProgramAddressSync([Buffer.from("temple")], program.programId);
-} 
+}
+
+export function getPlayerPda(wallet: anchor.Wallet) {
+  return anchor.web3.PublicKey.findProgramAddressSync([Buffer.from("playerState"), wallet.publicKey.toBuffer()], program.programId);
+}

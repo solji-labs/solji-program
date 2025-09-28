@@ -7,6 +7,8 @@ use anchor_spl::{
     token::{freeze_account, mint_to, FreezeAccount, MintTo},
 };
 
+use crate::global_error::GlobalError;
+
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct CreateNftArgs {
     pub name: String,
@@ -24,8 +26,9 @@ pub struct SbtNftCount {
 }
 
 impl SbtNftCount {
-    pub fn increment(&mut self) {
-        self.count += 1;
+    pub fn increment(&mut self) -> Result<()> {
+        self.count = self.count.checked_add(1).ok_or(GlobalError::MathOverflow)?;
+        Ok(())
     }
 }
 pub struct NftAccounts<'info> {

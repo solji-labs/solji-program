@@ -163,7 +163,7 @@ pub fn mint_sbt_nft(ctx: Context<MintSbtNft>, args: CreateNftArgs) -> Result<()>
   msg!("SBT mint success ata: {}", ctx.accounts.sbt_nft_associated_token_account.key());
 
   {
-    ctx.accounts.sbt_nft_count.increment();
+    ctx.accounts.sbt_nft_count.increment()?;
   }
   
   {

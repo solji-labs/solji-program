@@ -15,6 +15,7 @@ pub struct WishUser {
 }
 
 impl WishUser {
+    pub const WISH_FEE: u8 = 5;
     pub fn new(user: Pubkey) -> Self {
         Self {
             total_count: 0,

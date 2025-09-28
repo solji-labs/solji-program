@@ -1,3 +1,9 @@
-**/target/
+**/target/*
 **/test-ledger/
 **/node_modules/
+
+#保留
+!**/target/idl/
+!**/target/idl/**
+!**/target/types/
+!**/target/types/**
