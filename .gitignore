@@ -1,0 +1,33 @@
+# Anchor 相关
+.anchor/
+target/
+test-ledger/
+.DS_Store
+
+# 私钥文件（重要！）
+**/*-keypair.json
+**/deploy/*-keypair.json
+
+# 环境变量
+.env
+.env.local
+
+# 构建产物
+dist/
+build/
+
+# 依赖目录
+node_modules/
+
+# IDE 文件
+.vscode/settings.json
+.idea/
+
+# 临时文件
+*.tmp
+*.log
+
+# 钱包文件
+*.json
+!tsconfig.json
+!package.json
