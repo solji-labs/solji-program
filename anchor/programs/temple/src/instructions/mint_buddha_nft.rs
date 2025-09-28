@@ -19,18 +19,18 @@ pub fn mint_buddha_nft(ctx: Context<MintBuddhaNFT>) -> Result<()> {
     let clock = Clock::get()?;
     let current_time = clock.unix_timestamp as u64;
 
-    // 检查寺庙状态
+    // Check temple status
     ctx.accounts.temple_config.can_perform_operation(
         crate::state::temple_config::TempleStatusBitIndex::MintNFT,
         current_time,
     )?;
 
-    // 供应量
+    // Check supply limit
     require!(
         ctx.accounts.temple_config.total_buddha_nft < 10000,
         ErrorCode::BuddhaNFTSupplyExceeded
     );
-    // 检查用户是否已经拥有佛像
+    // Check if user already owns a Buddha NFT
     require!(
         !ctx.accounts.user_state.has_buddha_nft,
         ErrorCode::UserHasBuddhaNFT
@@ -41,7 +41,7 @@ pub fn mint_buddha_nft(ctx: Context<MintBuddhaNFT>) -> Result<()> {
         ErrorCode::InsufficientDonation
     );
 
-    // 铸造佛像
+    // Mint Buddha NFT
     let serial_number = ctx.accounts.temple_config.total_buddha_nft;
 
     let nft_name = format!(
@@ -49,7 +49,7 @@ pub fn mint_buddha_nft(ctx: Context<MintBuddhaNFT>) -> Result<()> {
         ctx.accounts.temple_config.total_buddha_nft
     );
 
-    // 创建元数据账户
+    // Create metadata account
     let temple_signer_seeds: &[&[&[u8]]] = &[&[
         TempleConfig::SEED_PREFIX.as_bytes(),
         &[ctx.bumps.temple_config],
@@ -78,12 +78,12 @@ pub fn mint_buddha_nft(ctx: Context<MintBuddhaNFT>) -> Result<()> {
             collection: None,
             uses: None,
         },
-        false, // 不可变
+        false, // immutable
         true,
         None,
     )?;
 
-    // Mint 佛像
+    // Mint Buddha NFT token
     let temple_signer_seeds: &[&[&[u8]]] = &[&[
         TempleConfig::SEED_PREFIX.as_bytes(),
         &[ctx.bumps.temple_config],
@@ -103,14 +103,14 @@ pub fn mint_buddha_nft(ctx: Context<MintBuddhaNFT>) -> Result<()> {
     )?;
     msg!("NFT minted successfully");
 
-    // 初始化BuddhaNFT账户数据
+    // Initialize BuddhaNFT account data
     ctx.accounts.buddha_nft_account.owner = ctx.accounts.authority.key();
     ctx.accounts.buddha_nft_account.mint = ctx.accounts.nft_mint_account.key();
     ctx.accounts.buddha_nft_account.serial_number = serial_number as u32;
     ctx.accounts.buddha_nft_account.minted_at = Clock::get()?.unix_timestamp;
     ctx.accounts.buddha_nft_account.is_active = true;
 
-    // 冻结NFT代币账户，防止转让
+    // Freeze NFT token account to prevent transfers
     let temple_signer_seeds: &[&[&[u8]]] = &[&[
         TempleConfig::SEED_PREFIX.as_bytes(),
         &[ctx.bumps.temple_config],
@@ -126,7 +126,7 @@ pub fn mint_buddha_nft(ctx: Context<MintBuddhaNFT>) -> Result<()> {
         temple_signer_seeds,
     ))?;
 
-    // 更新用户状态
+    // Update user state
     ctx.accounts.user_state.has_buddha_nft = true;
 
     // 更新寺庙配置
