@@ -113,6 +113,4 @@ pub enum ErrorCode {
     InvalidShopItemId,
     #[msg("Shop item not available")]
     ShopItemNotAvailable,
-    #[msg("Invalid account")]
-    InvalidAccount,
 }

@@ -32,7 +32,7 @@ pub struct GetUserAmulets<'info> {
 pub fn get_user_amulets(ctx: Context<GetUserAmulets>) -> Result<UserAmuletsInfo> {
     let user = *ctx.accounts.user.key;
 
-    // 直接从用户状态获取御守信息
+    // TODO 直接从用户状态获取御守信息
     Ok(UserAmuletsInfo {
         user,
         total_amulets: 0,      // 暂时设为0，后续可以从其他地方统计

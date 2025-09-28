@@ -1,5 +1,6 @@
+use crate::state::shop_config::ShopConfig;
 use crate::state::shop_item::ShopItemInfo;
-use crate::state::temple_config::{ShopConfig, TempleConfig};
+use crate::state::temple_config::TempleConfig;
 use anchor_lang::prelude::*;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
@@ -31,13 +32,14 @@ pub fn get_shop_items(ctx: Context<GetShopItems>) -> Result<ShopItemsResult> {
 #[derive(Accounts)]
 pub struct GetShopItems<'info> {
     #[account(
+        seeds = [ShopConfig::SEED_PREFIX.as_bytes(), temple_config.key().as_ref()],
+        bump,
+    )]
+    pub shop_config: Box<Account<'info, ShopConfig>>,
+
+    #[account(
         seeds = [TempleConfig::SEED_PREFIX.as_bytes()],
         bump,
     )]
     pub temple_config: Box<Account<'info, TempleConfig>>,
-
-    #[account(
-        address = temple_config.shop_config @ crate::error::ErrorCode::InvalidAccount
-    )]
-    pub shop_config: Box<Account<'info, ShopConfig>>,
 }

@@ -182,20 +182,16 @@ export class TestContext {
         buddhaFortune = TEST_CONFIG.defaultBuddhaFortune,
         donationLevels = TEST_CONFIG.defaultDonationLevels,
         donationRewards = TEST_CONFIG.defaultDonationRewards,
-        templeLevels: any[] = [], // Default empty array for temple levels
-        shopItems = this.getDefaultShopItems() // Default shop items
+        templeLevels: any[] = [] // Default empty array for temple levels
     ): Promise<string> {
         console.log("Creating temple config...");
 
         const tx = await this.program.methods
-            .createTempleConfig(treasury, regularFortune, buddhaFortune, donationLevels, donationRewards, templeLevels, shopItems)
+            .createTempleConfig(treasury, regularFortune, buddhaFortune, donationLevels, donationRewards, templeLevels)
             .accounts({
                 owner: this.owner.publicKey,
                 templeConfig: this.templeConfigPda,
                 globalStats: this.getGlobalStatsPda(),
-                shopConfig: this.getShopConfigPda(),
-                fortuneConfig: this.getFortuneConfigPda(),
-                rewardConfig: this.getRewardConfigPda(),
                 systemProgram: anchor.web3.SystemProgram.programId,
                 rent: anchor.web3.SYSVAR_RENT_PUBKEY,
             })
@@ -203,11 +199,18 @@ export class TestContext {
             .rpc();
 
         console.log(`Temple config created: ${tx}`);
+
+        // 初始化商城物品
+        await this.initShopItems();
+
         return tx;
     }
 
     public async initShopItems(): Promise<void> {
         console.log("Initializing shop items...");
+
+        // 首先创建ShopConfig账户
+        const shopConfigPda = this.getShopConfigPda();
 
         // 从defaultIncenseTypes创建商城物品
         const shopItems = TEST_CONFIG.defaultIncenseTypes.map(incenseType => ({
@@ -224,16 +227,28 @@ export class TestContext {
             },
         }));
 
-        const tx = await this.program.methods
-            .updateShopItems(shopItems)
+        // 创建ShopConfig
+        const createTx = await this.program.methods
+            .createShopConfig(shopItems)
             .accounts({
+                owner: this.owner.publicKey,
+                shopConfig: shopConfigPda,
                 templeConfig: this.templeConfigPda,
-                authority: this.owner.publicKey,
+                systemProgram: anchor.web3.SystemProgram.programId,
+                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
             })
             .signers([this.owner])
             .rpc();
 
-        console.log(`Shop items initialized: ${tx}`);
+        console.log(`Shop config created: ${createTx}`);
+    }
+
+    public getShopConfigPda(): PublicKey {
+        const [pda] = PublicKey.findProgramAddressSync(
+            [Buffer.from("shop_config"), this.templeConfigPda.toBuffer()],
+            this.program.programId
+        );
+        return pda;
     }
 
     public async updateDonationRewards(donationRewards = TEST_CONFIG.defaultDonationRewards): Promise<string> {
@@ -264,6 +279,27 @@ export class TestContext {
             this.program.programId
         );
 
+        // Calculate metadata and master edition PDAs
+        const tokenMetadataProgram = new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
+        const [metaAccount] = PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("metadata"),
+                tokenMetadataProgram.toBuffer(),
+                nftMintPda.toBuffer(),
+            ],
+            tokenMetadataProgram
+        );
+
+        const [masterEditionAccount] = PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("metadata"),
+                tokenMetadataProgram.toBuffer(),
+                nftMintPda.toBuffer(),
+                Buffer.from("edition"),
+            ],
+            tokenMetadataProgram
+        );
+
         try {
             const tx = await this.program.methods
                 .createNftMint(incenseId)
@@ -272,6 +308,12 @@ export class TestContext {
                     templeAuthority: this.owner.publicKey,
                     nftMintAccount: nftMintPda,
                     templeConfig: this.templeConfigPda,
+                    metaAccount: metaAccount,
+                    masterEditionAccount: masterEditionAccount,
+                    tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+                    tokenMetadataProgram: tokenMetadataProgram,
+                    systemProgram: anchor.web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                 })
                 .signers([this.owner])
                 .rpc();
@@ -352,8 +394,8 @@ export class TestContext {
         let price = pricePerUnit;
         if (price === undefined) {
             // 从商城配置中查找价格
-            const templeConfig = await this.program.account.templeConfig.fetch(this.templeConfigPda);
-            const shopItem = templeConfig.dynamicConfig.shopItems.find(
+            const shopConfig = await this.program.account.shopConfig.fetch(this.getShopConfigPda());
+            const shopItem = shopConfig.shopItems.find(
                 (item: any) => item.itemType.incense !== undefined && item.id === incenseId
             );
             if (!shopItem) {
@@ -368,6 +410,7 @@ export class TestContext {
             .accounts({
                 authority: user.publicKey,
                 templeTreasury: this.treasury,
+                shopConfig: this.getShopConfigPda(),
                 templeConfig: this.templeConfigPda,
                 userIncenseState: this.getUserIncenseStatePda(user.publicKey),
                 systemProgram: anchor.web3.SystemProgram.programId,
@@ -848,7 +891,7 @@ export class TestContext {
         console.log("Initializing leaderboard...");
 
         const tx = await this.program.methods
-            .initLeaderboard()
+            .initIncenseLeaderboard()
             .accounts({
                 authority: this.owner.publicKey,
                 leaderboard: this.leaderboardPda,
@@ -993,45 +1036,58 @@ export class TestContext {
         return pda;
     }
 
-    public getShopConfigPda(): PublicKey {
+    public getMedalNftPda(userPubkey: PublicKey): PublicKey {
         const [pda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("config_shop"), this.templeConfigPda.toBuffer()],
+            [
+                Buffer.from("medal_nft"),
+                Buffer.from("account"),
+                this.templeConfigPda.toBuffer(),
+                userPubkey.toBuffer()
+            ],
             this.program.programId
         );
         return pda;
     }
 
-    public getFortuneConfigPda(): PublicKey {
+    public getNftMintPda(userPubkey: PublicKey): PublicKey {
         const [pda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("config_fortune"), this.templeConfigPda.toBuffer()],
+            [
+                Buffer.from("medal_nft"),
+                this.templeConfigPda.toBuffer(),
+                userPubkey.toBuffer()
+            ],
             this.program.programId
         );
         return pda;
     }
 
-    public getRewardConfigPda(): PublicKey {
-        const [pda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("config_reward"), this.templeConfigPda.toBuffer()],
-            this.program.programId
-        );
-        return pda;
+    public async getAssociatedTokenAddress(mint: PublicKey, owner: PublicKey): Promise<PublicKey> {
+        return await anchor.utils.token.associatedAddress({
+            mint,
+            owner,
+        });
     }
 
-    public getDefaultShopItems(): any[] {
-        // 从defaultIncenseTypes创建商城物品
-        return TEST_CONFIG.defaultIncenseTypes.map(incenseType => ({
-            id: incenseType.id,
-            name: incenseType.name,
-            description: `${incenseType.name} - 寺庙供香`,
-            price: incenseType.priceLamports,
-            itemType: { incense: {} },
-            stock: new BN(1000000), // 无限库存
-            isAvailable: true,
-            incenseConfig: {
-                merit: incenseType.merit,
-                incensePoints: incenseType.incensePoints,
-            },
-        }));
+    public getMetadataPda(mint: PublicKey): PublicKey {
+        const [metadataAccount] = PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("metadata"),
+                new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s").toBuffer(),
+                mint.toBuffer(),
+            ],
+            new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s")
+        );
+        return metadataAccount;
+    }
+
+    // Token Metadata Program ID
+    public get TOKEN_METADATA_PROGRAM_ID(): PublicKey {
+        return new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
+    }
+
+    // Associated Token Program ID
+    public get ASSOCIATED_TOKEN_PROGRAM_ID(): PublicKey {
+        return anchor.utils.token.ASSOCIATED_PROGRAM_ID;
     }
 }
 

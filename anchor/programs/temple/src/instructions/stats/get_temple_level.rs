@@ -1,6 +1,6 @@
 use crate::error::ErrorCode;
 use crate::state::global_stats::GlobalStats;
-use crate::state::temple_config::{RewardConfig, TempleConfig};
+use crate::state::temple_config::TempleConfig;
 use anchor_lang::prelude::*;
 
 // 寺庙等级信息
@@ -35,11 +35,6 @@ pub struct GetTempleLevel<'info> {
     pub temple_config: Account<'info, TempleConfig>,
 
     #[account(
-        address = temple_config.reward_config @ ErrorCode::InvalidAccount
-    )]
-    pub reward_config: Account<'info, RewardConfig>,
-
-    #[account(
         seeds = [GlobalStats::SEED_PREFIX.as_bytes()],
         bump
     )]
@@ -48,15 +43,15 @@ pub struct GetTempleLevel<'info> {
 
 pub fn get_temple_level(ctx: Context<GetTempleLevel>) -> Result<TempleLevelInfo> {
     let temple_config = &ctx.accounts.temple_config;
-    let reward_config = &ctx.accounts.reward_config;
     let global_stats = &ctx.accounts.global_stats;
 
     // 计算当前等级
-    let current_level = TempleConfig::calculate_temple_level(reward_config, global_stats);
+    let current_level = temple_config.calculate_temple_level(global_stats);
 
     // 从配置中查找下一等级要求
-    let next_level_requirements = reward_config
-        .level_configs
+    let next_level_requirements = temple_config
+        .dynamic_config
+        .temple_levels
         .iter()
         .find(|level_config| level_config.level == current_level + 1)
         .map(|level_config| NextLevelRequirements {

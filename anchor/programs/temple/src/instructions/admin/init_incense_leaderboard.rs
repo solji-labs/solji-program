@@ -2,7 +2,7 @@ use crate::state::leaderboard::Leaderboard;
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-pub struct InitLeaderboard<'info> {
+pub struct InitIncenseLeaderboard<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
@@ -18,7 +18,7 @@ pub struct InitLeaderboard<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn init_leaderboard(ctx: Context<InitLeaderboard>) -> Result<()> {
+pub fn init_incense_leaderboard(ctx: Context<InitIncenseLeaderboard>) -> Result<()> {
     let leaderboard = &mut ctx.accounts.leaderboard;
     let bump = ctx.bumps.leaderboard;
 

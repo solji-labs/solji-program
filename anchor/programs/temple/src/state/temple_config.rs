@@ -19,7 +19,7 @@ use anchor_lang::prelude::*;
 #[derive(Clone, AnchorSerialize, AnchorDeserialize, Debug, InitSpace)]
 pub struct IncenseType {
     pub id: u8, // 香型ID
-    #[max_len(32)]
+    #[max_len(10)]
     pub name: String, // 名称
     pub price_lamports: u64, // 单支香的价格
     pub merit: u64, // 功德值
@@ -66,61 +66,27 @@ pub struct TempleLevelConfig {
     pub required_fortune_nfts: u64,   // 需要签文NFT数量
 }
 
-// ===== 商城配置账户 =====
-#[account]
-#[derive(InitSpace)]
-pub struct ShopConfig {
-    pub temple_config: Pubkey, // 关联的主配置账户
-
-    // 商城物品配置
+#[derive(Clone, AnchorSerialize, AnchorDeserialize, Debug, InitSpace)]
+pub struct DynamicConfig {
+    // 1. 烧香香型配置
     #[max_len(10)]
-    pub shop_items: Vec<ShopItem>,
+    pub incense_types: Vec<IncenseType>,
 
-    // 兑换比例配置
-    pub incense_points_rate: u64, // 香火值兑换比例
-    pub merit_rate: u64,          // 功德值兑换比例
-}
+    // 2. 抽签签文配置
+    pub regular_fortune: FortuneConfig, // 普通用户概率
+    pub buddha_fortune: FortuneConfig,  // 佛像持有者概率
 
-impl ShopConfig {
-    pub const SEED_PREFIX: &str = "config_shop";
-}
-
-// ===== 抽签配置账户 =====
-#[account]
-#[derive(InitSpace)]
-pub struct FortuneConfigAccount {
-    pub temple_config: Pubkey, // 关联的主配置账户
-
-    // 签文配置
-    pub fortune_config: FortuneConfig,        // 普通签概率配置
-    pub buddha_fortune_config: FortuneConfig, // 佛签概率配置
-}
-
-impl FortuneConfigAccount {
-    pub const SEED_PREFIX: &str = "config_fortune";
-}
-
-// ===== 奖励配置账户 =====
-#[account]
-#[derive(InitSpace)]
-pub struct RewardConfig {
-    pub temple_config: Pubkey, // 关联的主配置账户
-
-    // 捐助等级配置
-    #[max_len(5)]
+    // 3. 捐助等级配置
+    #[max_len(4)]
     pub donation_levels: Vec<DonationLevelConfig>,
 
-    // 捐助奖励配置
-    #[max_len(5)]
+    // 4. 捐助奖励配置
+    #[max_len(10)]
     pub donation_rewards: Vec<DonationRewardConfig>,
 
-    // 寺庙等级配置
-    #[max_len(5)]
-    pub level_configs: Vec<TempleLevelConfig>,
-}
-
-impl RewardConfig {
-    pub const SEED_PREFIX: &str = "config_reward";
+    // 5. 寺庙等级配置
+    #[max_len(4)]
+    pub temple_levels: Vec<TempleLevelConfig>,
 }
 
 // 寺庙配置 - 主账户，负责配置和核心状态
@@ -129,81 +95,71 @@ impl RewardConfig {
 pub struct TempleConfig {
     // 管理员配置
     pub owner: Pubkey,    // 寺庙管理员地址
-    pub treasury: Pubkey, // 寺庙国库地址
+    pub treasury: Pubkey, // 寺庙金库地址
 
     // 核心状态（需要签名权限的）
-    pub level: u8,             // 当前寺庙等级（实时计算）
+    pub level: u8,             // 当前寺庙等级，实时去计算
     pub created_at: i64,       // 创建时间
     pub total_buddha_nft: u32, // 佛像NFT数量（铸造权限）
     pub total_medal_nft: u32,  // 勋章NFT数量（铸造权限）
     pub total_amulets: u32,    // 御守数量（铸造权限）
 
     // 控制配置
-    pub status: u8,     // 状态位控制 0则全部启用 其他值按位禁用对应的功能
-    pub open_time: u64, // 上线时间戳
+    pub status: u8,             // 状态位控制 0则全部启用 其他值按位禁用对应的功能
+    pub open_time: u64,         // 上线时间戳
+    pub donation_deadline: u64, // 捐助截止时间戳，用于Buddha NFT分配
 
-    // 配置账户引用
-    pub shop_config: Pubkey,    // 商城配置账户
-    pub fortune_config: Pubkey, // 抽签配置账户
-    pub reward_config: Pubkey,  // 奖励配置账户
+    // 所有配置都放在动态配置中
+    pub dynamic_config: DynamicConfig,
 }
 
 impl TempleConfig {
     pub const SEED_PREFIX: &str = "temple_v1";
 
-    // 获取香型类型（从商城配置中查找）
-    pub fn find_incense_type(shop_config: &ShopConfig, id: u8) -> Option<&ShopItem> {
-        shop_config
-            .shop_items
+    // 获取香型类型（
+    pub fn find_incense_type(&self, id: u8) -> Option<&IncenseType> {
+        self.dynamic_config
+            .incense_types
             .iter()
-            .find(|item| item.id == id && matches!(item.item_type, ShopItemType::Incense))
+            .find(|t| t.id == id)
     }
 
     // 获取香型价格
-    pub fn get_fee_per_incense(shop_config: &ShopConfig, incense_id: u8) -> u64 {
-        Self::find_incense_type(shop_config, incense_id)
-            .map(|item| item.price)
+    pub fn get_fee_per_incense(&self, incense_id: u8) -> u64 {
+        self.find_incense_type(incense_id)
+            .map(|t: &IncenseType| t.price_lamports)
             .unwrap_or(0)
     }
 
-    // 注意：统计数据现在在GlobalStats中管理，此方法已废弃
-    // 直接调用 global_stats.add_incense_value_and_merit()
-
     // 获取抽签概率配置
-    pub fn get_fortune_config(
-        fortune_config: &FortuneConfigAccount,
-        has_buddha_nft: bool,
-    ) -> &FortuneConfig {
+    pub fn get_fortune_config(&self, has_buddha_nft: bool) -> &FortuneConfig {
         if has_buddha_nft {
-            &fortune_config.buddha_fortune_config
+            &self.dynamic_config.buddha_fortune
         } else {
-            &fortune_config.fortune_config
+            &self.dynamic_config.regular_fortune
         }
     }
 
     // 获取捐助等级配置
-    pub fn get_donation_level_config(
-        reward_config: &RewardConfig,
-        level: u8,
-    ) -> Option<&DonationLevelConfig> {
-        reward_config
+    pub fn get_donation_level_config(&self, level: u8) -> Option<&DonationLevelConfig> {
+        self.dynamic_config
             .donation_levels
             .iter()
             .find(|d| d.level == level)
     }
 
     // 检查香型是否存在
-    pub fn is_incense_available(shop_config: &ShopConfig, incense_id: u8) -> bool {
-        Self::find_incense_type(shop_config, incense_id).is_some()
+    pub fn is_incense_available(&self, incense_id: u8) -> bool {
+        self.find_incense_type(incense_id).is_some()
     }
 
     // 动态计算等级
-    pub fn calculate_temple_level(reward_config: &RewardConfig, global_stats: &GlobalStats) -> u8 {
+    pub fn calculate_temple_level(&self, global_stats: &GlobalStats) -> u8 {
         let incense_points = global_stats.total_incense_points;
         let donations_sol = global_stats.total_donations_sol();
 
         // 匹配等级要求
-        for level_config in reward_config.level_configs.iter().rev() {
+        for level_config in self.dynamic_config.temple_levels.iter().rev() {
             if incense_points >= level_config.required_incense_points
                 && global_stats.total_draw_fortune >= level_config.required_draw_fortune
                 && global_stats.total_wishes >= level_config.required_wishes
@@ -218,8 +174,8 @@ impl TempleConfig {
     }
 
     // 更新寺庙等级
-    pub fn update_level(&mut self, reward_config: &RewardConfig, global_stats: &GlobalStats) {
-        self.level = Self::calculate_temple_level(reward_config, global_stats);
+    pub fn update_level(&mut self, global_stats: &GlobalStats) {
+        self.level = self.calculate_temple_level(global_stats);
     }
 
     // 状态管理方法

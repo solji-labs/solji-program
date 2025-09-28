@@ -1,6 +1,6 @@
 use crate::error::ErrorCode;
 use crate::state::global_stats::GlobalStats;
-use crate::state::temple_config::{FortuneConfigAccount, TempleConfig};
+use crate::state::temple_config::TempleConfig;
 use crate::state::user_state::{UserIncenseState, UserState};
 use anchor_lang::prelude::*;
 
@@ -64,15 +64,11 @@ pub struct DrawFortune<'info> {
     pub user_incense_state: Box<Account<'info, UserIncenseState>>,
 
     #[account(
+        mut,
         seeds = [TempleConfig::SEED_PREFIX.as_bytes()],
         bump,
     )]
     pub temple_config: Box<Account<'info, TempleConfig>>,
-
-    #[account(
-        address = temple_config.fortune_config @ ErrorCode::InvalidAccount
-    )]
-    pub fortune_config: Box<Account<'info, FortuneConfigAccount>>,
 
     #[account(
         mut,
@@ -145,9 +141,11 @@ pub fn draw_fortune(ctx: Context<DrawFortune>, use_merit: bool) -> Result<DrawRe
         (random_u64 % 100) as u8
     };
 
-    // 从fortune_config账户中获取签文配置
-    let fortune_config =
-        TempleConfig::get_fortune_config(&ctx.accounts.fortune_config, user_state.has_buddha_nft);
+    // 从动态配置中获取概率设置
+    let fortune_config = ctx
+        .accounts
+        .temple_config
+        .get_fortune_config(user_state.has_buddha_nft);
 
     // 根据动态配置的概率分配签文
     if user_state.has_buddha_nft {
@@ -185,9 +183,10 @@ pub fn draw_fortune(ctx: Context<DrawFortune>, use_merit: bool) -> Result<DrawRe
     // 更新全局统计
     ctx.accounts.global_stats.increment_draw_fortune();
 
-    // 需要添加reward_config账户到DrawFortune结构体中
-    // 暂时注释掉寺庙等级更新，待后续重构
-    // ctx.accounts.temple_config.update_level(reward_config, &ctx.accounts.global_stats);
+    // 更新寺庙等级
+    ctx.accounts
+        .temple_config
+        .update_level(&ctx.accounts.global_stats);
 
     // 给予功德奖励
     if !use_merit {

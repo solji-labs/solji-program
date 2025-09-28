@@ -128,7 +128,7 @@ impl Leaderboard {
     }
 
     // 获取用户排名（返回排名位置，0-based）
-    pub fn get_user_rank(&self, user: &Pubkey, period: LeaderboardPeriod) -> Option<u32> {
+    pub fn get_incense_leaderboard(&self, user: &Pubkey, period: LeaderboardPeriod) -> Option<u32> {
         let user_list = match period {
             LeaderboardPeriod::Daily => &self.daily_users,
             LeaderboardPeriod::Weekly => &self.weekly_users,
@@ -143,7 +143,7 @@ impl Leaderboard {
 
     // 检查用户是否有视觉特效奖励（前3名）
     pub fn has_visual_effect(&self, user: &Pubkey, period: LeaderboardPeriod) -> bool {
-        if let Some(rank) = self.get_user_rank(user, period) {
+        if let Some(rank) = self.get_incense_leaderboard(user, period) {
             rank <= 3
         } else {
             false

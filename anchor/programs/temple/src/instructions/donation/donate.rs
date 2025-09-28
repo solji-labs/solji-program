@@ -1,7 +1,7 @@
 use crate::error::ErrorCode;
 use crate::state::global_stats::GlobalStats;
 use crate::state::medal_nft::*;
-use crate::state::temple_config::{RewardConfig, TempleConfig};
+use crate::state::temple_config::TempleConfig;
 use crate::state::user_state::{UserDonationState, UserIncenseState, UserState};
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
@@ -16,22 +16,18 @@ use anchor_spl::token::Mint;
 use anchor_spl::token::MintTo;
 use anchor_spl::token::Token;
 use anchor_spl::token::TokenAccount;
-
+/// ⚠️废弃 已拆分成多个指令 这个指令太大了
 #[derive(Accounts)]
 pub struct Donate<'info> {
     #[account(mut)]
     pub donor: Signer<'info>,
 
     #[account(
+        mut,
         seeds = [TempleConfig::SEED_PREFIX.as_bytes()],
         bump,
     )]
     pub temple_config: Box<Account<'info, TempleConfig>>,
-
-    #[account(
-        address = temple_config.reward_config @ ErrorCode::InvalidAccount
-    )]
-    pub reward_config: Box<Account<'info, RewardConfig>>,
 
     #[account(
         mut,
@@ -159,16 +155,35 @@ pub fn donate(mut ctx: Context<Donate>, amount: u64) -> Result<()> {
     // 处理捐助逻辑
     ctx.accounts.user_donation_state.process_donation(amount);
 
+    // 获取捐助等级奖励
+    let (merit_reward, incense_points_reward) =
+        ctx.accounts.user_donation_state.get_donation_rewards();
+
+    // 更新用户香火状态
+    if merit_reward > 0 || incense_points_reward > 0 {
+        ctx.accounts
+            .user_incense_state
+            .add_incense_value_and_merit(incense_points_reward, merit_reward);
+        msg!(
+            "捐助获得奖励 - 功德值: {}, 香火值: {}",
+            merit_reward,
+            incense_points_reward
+        );
+    }
+
     // 更新全局统计
     ctx.accounts.global_stats.add_donation(amount);
+    ctx.accounts
+        .global_stats
+        .add_incense_value_and_merit(incense_points_reward, merit_reward);
 
     // 处理捐助解锁香逻辑 - 从动态配置读取
     let donation_sol = amount as f64 / 1_000_000_000.0;
     let total_donation_sol =
         ctx.accounts.user_donation_state.donation_amount as f64 / 1_000_000_000.0;
 
-    // 遍历所有捐助奖励配置
-    for reward_config in &ctx.accounts.reward_config.donation_rewards {
+    // 捐助关联烧香奖励
+    for reward_config in &ctx.accounts.temple_config.dynamic_config.donation_rewards {
         // 检查是否达到最低捐助金额门槛
         if total_donation_sol >= reward_config.min_donation_sol {
             let previous_donation_sol = total_donation_sol - donation_sol;
@@ -320,63 +335,6 @@ pub fn donate(mut ctx: Context<Donate>, amount: u64) -> Result<()> {
             msg!("总捐款金额: {:.6} SOL", current_donation_sol);
         }
     } else {
-        // 用户已有勋章，检查是否可以升级
-        let next_upgrade_level = ctx
-            .accounts
-            .medal_nft_account
-            .get_next_upgrade_level(current_donation_sol);
-        if let Some(new_level) = next_upgrade_level {
-            // 构建更新后的元数据
-            let serial_number = ctx.accounts.medal_nft_account.serial_number;
-            let new_name = if new_level == 4 {
-                format!("至尊龙章 #{}", serial_number)
-            } else if new_level == 3 {
-                format!("护法金章 #{}", serial_number)
-            } else if new_level == 2 {
-                format!("精进银章 #{}", serial_number)
-            } else {
-                format!("入门功德铜章 #{}", serial_number)
-            };
-
-            let new_uri = format!(
-                "https://api.foxverse.co/temple/medal/{}/metadata.json",
-                new_level
-            );
-
-            // 使用update_metadata_accounts_v2更新元数据
-            update_metadata_accounts_v2(
-                CpiContext::new(
-                    ctx.accounts.token_metadata_program.to_account_info(),
-                    UpdateMetadataAccountsV2 {
-                        metadata: ctx.accounts.meta_account.to_account_info(),
-                        update_authority: ctx.accounts.donor.to_account_info(), // donor作为update_authority
-                    },
-                ),
-                None, // 保持现有的 update_authority
-                Some(DataV2 {
-                    name: new_name.clone(),
-                    symbol: "TMM".to_string(),
-                    uri: new_uri,
-                    seller_fee_basis_points: 0,
-                    creators: None,
-                    collection: None,
-                    uses: None,
-                }),
-                None,
-                Some(true), // 设置为不可变
-            )?;
-
-            // 更新MedalNFT账户数据
-            let now = Clock::get()?.unix_timestamp;
-            ctx.accounts.medal_nft_account.level = new_level;
-            ctx.accounts.medal_nft_account.total_donation =
-                ctx.accounts.user_donation_state.donation_amount;
-            ctx.accounts.medal_nft_account.last_upgrade = now;
-
-            msg!("寺庙勋章NFT升级成功: {}", new_name);
-            msg!("新等级: {}", new_level);
-            msg!("总捐款金额: {:.6} SOL", current_donation_sol);
-        }
     }
 
     // 记录捐助事件

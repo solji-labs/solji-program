@@ -2,6 +2,7 @@ use crate::state::leaderboard::{Leaderboard, LeaderboardPeriod};
 use crate::state::user_state::{UserIncenseState, UserState};
 use anchor_lang::prelude::*;
 
+// TODO 只要是监听到香火相关的事件就更新香火排行榜
 #[derive(Accounts)]
 #[instruction(period: LeaderboardPeriod)]
 pub struct UpdateLeaderboard<'info> {
@@ -61,57 +62,4 @@ pub fn update_leaderboard(
     );
 
     Ok(())
-}
-
-#[derive(Accounts)]
-pub struct GetUserRank<'info> {
-    pub user: Signer<'info>,
-
-    #[account(
-        seeds = [Leaderboard::SEED_PREFIX.as_bytes()],
-        bump = leaderboard.bump,
-    )]
-    pub leaderboard: Box<Account<'info, Leaderboard>>,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize)]
-pub struct UserRankResult {
-    pub daily_rank: Option<u32>,   // 每日排名
-    pub weekly_rank: Option<u32>,  // 每周排名
-    pub monthly_rank: Option<u32>, // 每月排名
-    pub has_visual_effect: bool,   // 是否有视觉特效奖励
-}
-
-pub fn get_user_rank(ctx: Context<GetUserRank>) -> Result<UserRankResult> {
-    let leaderboard = &ctx.accounts.leaderboard;
-    let user = &ctx.accounts.user.key();
-
-    // 获取每日排名
-    let daily_rank = leaderboard.get_user_rank(user, LeaderboardPeriod::Daily);
-
-    // 获取每周排名
-    let weekly_rank = leaderboard.get_user_rank(user, LeaderboardPeriod::Weekly);
-
-    // 获取每月排名
-    let monthly_rank = leaderboard.get_user_rank(user, LeaderboardPeriod::Monthly);
-
-    // 检查是否有视觉特效奖励（任意周期前3名）
-    let has_visual_effect = leaderboard.has_visual_effect(user, LeaderboardPeriod::Daily)
-        || leaderboard.has_visual_effect(user, LeaderboardPeriod::Weekly)
-        || leaderboard.has_visual_effect(user, LeaderboardPeriod::Monthly);
-
-    msg!(
-        "用户排名查询完成 - 每日排名: {:?}, 每周排名: {:?}, 每月排名: {:?}, 视觉特效: {}",
-        daily_rank,
-        weekly_rank,
-        monthly_rank,
-        has_visual_effect
-    );
-
-    Ok(UserRankResult {
-        daily_rank,
-        weekly_rank,
-        monthly_rank,
-        has_visual_effect,
-    })
 }

@@ -1,5 +1,5 @@
 use crate::incense_nft::IncenseNFT;
-use crate::state::temple_config::{ShopConfig, TempleConfig};
+use crate::state::temple_config::*;
 use anchor_lang::prelude::*;
 use anchor_spl::metadata::create_metadata_accounts_v3;
 use anchor_spl::metadata::mpl_token_metadata::types::DataV2;
@@ -9,11 +9,14 @@ use anchor_spl::token::{Mint, Token};
 
 pub fn create_nft_mint(ctx: Context<CreateNftMint>, incense_id: u8) -> Result<()> {
     // 获取香型信息
-    let shop_item = TempleConfig::find_incense_type(&ctx.accounts.shop_config, incense_id)
+    let incense_type = ctx
+        .accounts
+        .temple_config
+        .find_incense_type(incense_id)
         .ok_or(crate::error::ErrorCode::InvalidIncenseId)?;
 
     // 生成NFT名称
-    let nft_name = format!("{} NFT", shop_item.name);
+    let nft_name = format!("{} NFT", incense_type.name);
 
     // 构建签名种子
     let temple_config_key = ctx.accounts.temple_config.key();
@@ -88,15 +91,11 @@ pub struct CreateNftMint<'info> {
     pub nft_mint_account: Box<Account<'info, Mint>>,
 
     #[account(
+        mut,
         seeds = [TempleConfig::SEED_PREFIX.as_bytes()],
         bump,
     )]
     pub temple_config: Box<Account<'info, TempleConfig>>,
-
-    #[account(
-        address = temple_config.shop_config @ crate::error::ErrorCode::InvalidAccount
-    )]
-    pub shop_config: Box<Account<'info, ShopConfig>>,
 
     /// CHECK: this is the metadata account
     #[account(

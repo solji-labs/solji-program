@@ -13,8 +13,11 @@ describe("Shop System", () => {
             const templeConfig = await ctx.program.account.templeConfig.fetch(ctx.templeConfigPda);
             console.log("Temple config exists");
 
-            // Check if shop items are initialized
-            if (templeConfig.dynamicConfig.shopItems.length === 0) {
+            // Check if shop config exists
+            try {
+                await ctx.program.account.shopConfig.fetch(ctx.getShopConfigPda());
+                console.log("Shop config exists");
+            } catch {
                 console.log("Initializing shop items...");
                 await ctx.initShopItems();
             }
@@ -31,6 +34,7 @@ describe("Shop System", () => {
         const shopItemsResult = await ctx.program.methods
             .getShopItems()
             .accounts({
+                shopConfig: ctx.getShopConfigPda(),
                 templeConfig: ctx.templeConfigPda,
             })
             .view();
@@ -63,6 +67,7 @@ describe("Shop System", () => {
             .accounts({
                 authority: user.publicKey,
                 templeTreasury: ctx.treasury,
+                shopConfig: ctx.getShopConfigPda(),
                 templeConfig: ctx.templeConfigPda,
                 userIncenseState: ctx.getUserIncenseStatePda(user.publicKey),
                 systemProgram: anchor.web3.SystemProgram.programId,
@@ -91,6 +96,7 @@ describe("Shop System", () => {
                 .accounts({
                     authority: poorUser.publicKey,
                     templeTreasury: ctx.treasury,
+                    shopConfig: ctx.getShopConfigPda(),
                     templeConfig: ctx.templeConfigPda,
                     userIncenseState: ctx.getUserIncenseStatePda(poorUser.publicKey),
                     systemProgram: anchor.web3.SystemProgram.programId,
@@ -120,6 +126,7 @@ describe("Shop System", () => {
                 .accounts({
                     authority: user.publicKey,
                     templeTreasury: ctx.treasury,
+                    shopConfig: ctx.getShopConfigPda(),
                     templeConfig: ctx.templeConfigPda,
                     userIncenseState: ctx.getUserIncenseStatePda(user.publicKey),
                     systemProgram: anchor.web3.SystemProgram.programId,
@@ -145,8 +152,8 @@ describe("Shop System", () => {
         const amount = 2;
 
         // Get price from shop config
-        const templeConfig = await ctx.program.account.templeConfig.fetch(ctx.templeConfigPda);
-        const shopItem = templeConfig.dynamicConfig.shopItems.find(
+        const shopConfig = await ctx.program.account.shopConfig.fetch(ctx.getShopConfigPda());
+        const shopItem = shopConfig.shopItems.find(
             (item: any) => item.itemType.incense !== undefined && item.id === incenseId
         );
         expect(shopItem).to.not.be.undefined;

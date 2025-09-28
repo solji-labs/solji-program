@@ -1,6 +1,7 @@
 use crate::error::ErrorCode;
+use crate::state::shop_config::ShopConfig;
 use crate::state::shop_item::ShopItemType;
-use crate::state::temple_config::{ShopConfig, TempleConfig};
+use crate::state::temple_config::TempleConfig;
 use crate::state::user_state::UserIncenseState;
 use anchor_lang::prelude::*;
 use anchor_lang::system_program::transfer;
@@ -25,9 +26,7 @@ pub fn purchase_item(ctx: Context<PurchaseItem>, item_id: u8, quantity: u64) -> 
     let shop_item = ctx
         .accounts
         .shop_config
-        .shop_items
-        .iter()
-        .find(|item| item.id == item_id)
+        .find_item(item_id)
         .ok_or(ErrorCode::InvalidShopItemId)?;
 
     // 4. 检查物品是否可用
@@ -113,15 +112,16 @@ pub struct PurchaseItem<'info> {
     pub temple_treasury: AccountInfo<'info>, // 寺庙国库
 
     #[account(
+        seeds = [ShopConfig::SEED_PREFIX.as_bytes(), temple_config.key().as_ref()],
+        bump,
+    )]
+    pub shop_config: Box<Account<'info, ShopConfig>>,
+
+    #[account(
         seeds = [TempleConfig::SEED_PREFIX.as_bytes()],
         bump,
     )]
     pub temple_config: Box<Account<'info, TempleConfig>>,
-
-    #[account(
-        address = temple_config.shop_config @ ErrorCode::InvalidAccount
-    )]
-    pub shop_config: Box<Account<'info, ShopConfig>>,
 
     // 用户香火状态账户（始终传递，但只在购买香火物品时使用）
     #[account(

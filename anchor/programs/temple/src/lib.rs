@@ -8,8 +8,7 @@ pub mod state;
 use crate::state::leaderboard::LeaderboardPeriod;
 use crate::state::shop_item::ShopItem;
 use crate::state::temple_config::{
-    DonationLevelConfig, DonationRewardConfig, FortuneConfig, IncenseType, TempleConfig,
-    TempleLevelConfig,
+    DonationLevelConfig, DonationRewardConfig, FortuneConfig, IncenseType, TempleLevelConfig,
 };
 use instructions::*;
 use state::*;
@@ -40,7 +39,6 @@ pub mod temple {
         donation_levels: Vec<DonationLevelConfig>,
         donation_rewards: Vec<DonationRewardConfig>,
         temple_levels: Vec<TempleLevelConfig>,
-        shop_items: Vec<ShopItem>,
     ) -> Result<()> {
         instructions::create_temple_config(
             ctx,
@@ -50,13 +48,25 @@ pub mod temple {
             donation_levels,
             donation_rewards,
             temple_levels,
-            shop_items,
         )
     }
 
     /// 创建NFT mint
     pub fn create_nft_mint(ctx: Context<CreateNftMint>, incense_id: u8) -> Result<()> {
         instructions::create_nft_mint(ctx, incense_id)
+    }
+
+    /// 初始化捐助排行榜
+    pub fn init_donation_leaderboard(
+        ctx: Context<InitDonationLeaderboard>,
+        donation_deadline: u64,
+    ) -> Result<()> {
+        instructions::init_donation_leaderboard(ctx, donation_deadline)
+    }
+
+    /// 分配Buddha NFT给前10,000名捐助者
+    pub fn distribute_buddha_nfts(ctx: Context<DistributeBuddhaNfts>) -> Result<()> {
+        instructions::distribute_buddha_nfts(ctx)
     }
 
     /// 烧香
@@ -74,6 +84,10 @@ pub mod temple {
         instructions::draw_fortune(ctx, use_merit)
     }
 
+    /// 分享签文获得奖励
+    pub fn share_fortune(ctx: Context<ShareFortune>, share_hash: [u8; 32]) -> Result<()> {
+        instructions::share_fortune(ctx, share_hash)
+    }
     /// 许愿
     pub fn create_wish(
         ctx: Context<CreateWish>,
@@ -94,15 +108,31 @@ pub mod temple {
         instructions::mint_buddha_nft(ctx)
     }
 
+    /// ===== 捐赠指令 =====
+    /// 捐助资金（核心捐助逻辑）
+    pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
+        instructions::donate_fund(ctx, amount)
+    }
+
+    /// 处理捐助奖励
+    pub fn process_donation_rewards(ctx: Context<ProcessDonationRewards>) -> Result<()> {
+        instructions::process_donation_rewards(ctx)
+    }
+
     /// Mint寺庙勋章NFT
     pub fn mint_medal_nft(ctx: Context<MintMedalNFT>) -> Result<()> {
         instructions::mint_medal_nft(ctx)
     }
 
-    /// 捐助
-    pub fn donate(ctx: Context<Donate>, amount: u64) -> Result<()> {
-        instructions::donate(ctx, amount)
+    /// 领取免费佛像NFT (仅限前10000名)
+    pub fn claim_buddha_nft(ctx: Context<ClaimBuddhaNft>) -> Result<()> {
+        instructions::claim_buddha_nft(ctx)
     }
+
+    // /// 捐助（完整流程，已废弃，存个档）
+    // pub fn donate(ctx: Context<Donate>, amount: u64) -> Result<()> {
+    //     instructions::donation::donate(ctx, amount)
+    // }
 
     /// 质押勋章NFT
     pub fn stake_medal_nft(ctx: Context<StakeMedalNFT>) -> Result<()> {
@@ -114,53 +144,19 @@ pub mod temple {
         instructions::unstake_medal_nft(ctx)
     }
 
-    /// 分享签文获得奖励
-    pub fn share_fortune(ctx: Context<ShareFortune>, share_hash: [u8; 32]) -> Result<()> {
-        instructions::share_fortune(ctx, share_hash)
-    }
-
     // ===== 核心动态配置管理指令 =====
 
-    /// 初始化商城配置账户
-    pub fn init_shop_config(
-        ctx: Context<InitShopConfig>,
-        shop_items: Vec<ShopItem>,
-        incense_points_rate: u64,
-        merit_rate: u64,
+    /// 更新烧香香型配置
+    pub fn update_incense_types(
+        ctx: Context<UpdateDynamicConfig>,
+        incense_types: Vec<IncenseType>,
     ) -> Result<()> {
-        instructions::init_shop_config(ctx, shop_items, incense_points_rate, merit_rate)
-    }
-
-    /// 初始化抽签配置账户
-    pub fn init_fortune_config(
-        ctx: Context<InitFortuneConfig>,
-        fortune_config: FortuneConfig,
-        buddha_fortune_config: FortuneConfig,
-    ) -> Result<()> {
-        instructions::init_fortune_config(ctx, fortune_config, buddha_fortune_config)
-    }
-
-    /// 初始化奖励配置账户
-    pub fn init_reward_config(
-        ctx: Context<InitRewardConfig>,
-        donation_levels: Vec<DonationLevelConfig>,
-        donation_rewards: Vec<DonationRewardConfig>,
-        temple_levels: Vec<TempleLevelConfig>,
-    ) -> Result<()> {
-        instructions::init_reward_config(ctx, donation_levels, donation_rewards, temple_levels)
-    }
-
-    /// 更新商城物品配置
-    pub fn update_shop_items(
-        ctx: Context<UpdateShopConfig>,
-        shop_items: Vec<ShopItem>,
-    ) -> Result<()> {
-        instructions::update_shop_items(ctx, shop_items)
+        instructions::update_incense_types(ctx, incense_types)
     }
 
     /// 更新抽签签文配置
     pub fn update_fortune_config(
-        ctx: Context<UpdateFortuneConfig>,
+        ctx: Context<UpdateDynamicConfig>,
         regular_fortune: FortuneConfig,
         buddha_fortune: FortuneConfig,
     ) -> Result<()> {
@@ -169,7 +165,7 @@ pub mod temple {
 
     /// 更新捐助等级配置
     pub fn update_donation_levels(
-        ctx: Context<UpdateRewardConfig>,
+        ctx: Context<UpdateDynamicConfig>,
         donation_levels: Vec<DonationLevelConfig>,
     ) -> Result<()> {
         instructions::update_donation_levels(ctx, donation_levels)
@@ -177,7 +173,7 @@ pub mod temple {
 
     /// 更新捐助奖励配置
     pub fn update_donation_rewards(
-        ctx: Context<UpdateRewardConfig>,
+        ctx: Context<UpdateDynamicConfig>,
         donation_rewards: Vec<DonationRewardConfig>,
     ) -> Result<()> {
         instructions::update_donation_rewards(ctx, donation_rewards)
@@ -185,7 +181,7 @@ pub mod temple {
 
     /// 更新寺庙等级配置
     pub fn update_temple_levels(
-        ctx: Context<UpdateRewardConfig>,
+        ctx: Context<UpdateDynamicConfig>,
         temple_levels: Vec<TempleLevelConfig>,
     ) -> Result<()> {
         instructions::update_temple_levels(ctx, temple_levels)
@@ -207,8 +203,8 @@ pub mod temple {
 
     /// ====== 排行榜 =========
     /// 初始化排行榜
-    pub fn init_leaderboard(ctx: Context<InitLeaderboard>) -> Result<()> {
-        instructions::init_leaderboard(ctx)
+    pub fn init_incense_leaderboard(ctx: Context<InitIncenseLeaderboard>) -> Result<()> {
+        instructions::init_incense_leaderboard(ctx)
     }
 
     /// 更新排行榜
@@ -220,8 +216,10 @@ pub mod temple {
     }
 
     /// 获取用户排名
-    pub fn get_user_rank(ctx: Context<GetUserRank>) -> Result<UserRankResult> {
-        instructions::get_user_rank(ctx)
+    pub fn get_incense_leaderboard(
+        ctx: Context<GetIncenseLeaderboard>,
+    ) -> Result<IncenseLeaderBoard> {
+        instructions::get_incense_leaderboard(ctx)
     }
 
     /// ===== 寺庙统计相关 ======
@@ -245,6 +243,22 @@ pub mod temple {
     /// 购买商城物品
     pub fn purchase_item(ctx: Context<PurchaseItem>, item_id: u8, quantity: u64) -> Result<()> {
         instructions::purchase_item(ctx, item_id, quantity)
+    }
+
+    /// 创建商城配置
+    pub fn create_shop_config(
+        ctx: Context<CreateShopConfig>,
+        shop_items: Vec<ShopItem>,
+    ) -> Result<()> {
+        instructions::create_shop_config(ctx, shop_items)
+    }
+
+    /// 更新商城物品配置
+    pub fn update_shop_items(
+        ctx: Context<UpdateShopItems>,
+        shop_items: Vec<ShopItem>,
+    ) -> Result<()> {
+        instructions::update_shop_items(ctx, shop_items)
     }
 
     /// ==== 用户面板相关 ====

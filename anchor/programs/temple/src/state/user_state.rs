@@ -56,7 +56,7 @@ pub struct UserState {
     pub pending_random_request_id: Option<[u8; 32]>, // 待处理的随机数请求ID
 
     // 御守相关
-    pub pending_amulets: u32, // 可铸造的御守数量
+    pub pending_amulets: u32, // 御守余额：铸造使用
 }
 
 impl UserState {

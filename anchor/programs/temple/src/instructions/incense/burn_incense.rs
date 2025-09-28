@@ -1,8 +1,7 @@
 use crate::error::ErrorCode;
 use crate::incense_nft::IncenseNFT;
 use crate::state::global_stats::GlobalStats;
-use crate::state::shop_item::ShopItemType;
-use crate::state::temple_config::{ShopConfig, TempleConfig};
+use crate::state::temple_config::*;
 use crate::state::user_state::{UserIncenseState, UserState};
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
@@ -24,21 +23,14 @@ pub fn burn_incense(ctx: Context<BurnIncense>, incense_id: u8, amount: u64) -> R
         current_time,
     )?;
 
-    // 从shop_config中查找香的配置信息
-    let shop_item = TempleConfig::find_incense_type(&ctx.accounts.shop_config, incense_id)
+    let incense_type = ctx
+        .accounts
+        .temple_config
+        .find_incense_type(incense_id)
         .ok_or(ErrorCode::InvalidIncenseId)?;
 
-    // 获取香的功德值和香火值
-    let incense_points = shop_item
-        .incense_config
-        .as_ref()
-        .map(|config| config.incense_points as u64)
-        .unwrap_or(100); // 默认值，如果没有配置
-    let merit = shop_item
-        .incense_config
-        .as_ref()
-        .map(|config| config.merit as u64)
-        .unwrap_or(10); // 默认值，如果没有配置
+    let incense_points = incense_type.incense_points as u64;
+    let merit = incense_type.merit as u64;
 
     // 检查用户烧香次数是否超过每日限制
     ctx.accounts
@@ -141,15 +133,11 @@ pub struct BurnIncense<'info> {
     pub temple_treasury: AccountInfo<'info>,
 
     #[account(
+        mut,
         seeds = [TempleConfig::SEED_PREFIX.as_bytes()],
         bump,
     )]
     pub temple_config: Box<Account<'info, TempleConfig>>,
-
-    #[account(
-        address = temple_config.shop_config @ ErrorCode::InvalidAccount
-    )]
-    pub shop_config: Box<Account<'info, ShopConfig>>,
 
     #[account(
         mut,
