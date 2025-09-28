@@ -48,7 +48,6 @@ pub fn coin_flip(ctx: Context<CoinFlip>) -> Result<()> {
         clock.slot
     );
 
-    // 存承诺
     let state = &mut ctx.accounts.player_state;
     require!(state.settled, DrawLotsCode::AlreadySettled);
     state.randomness_account = ctx.accounts.randomness_account_data.key();
@@ -64,7 +63,6 @@ pub fn coin_flip(ctx: Context<CoinFlip>) -> Result<()> {
     Ok(())
 }
 
-// 抽签 value是扣除功德值
 pub fn draw_lots(ctx: Context<DrawLots>) -> Result<()> {
     // {
     //     let st = &ctx.accounts.player_state;
@@ -76,7 +74,6 @@ pub fn draw_lots(ctx: Context<DrawLots>) -> Result<()> {
     //     require!(!st.settled, DrawLotsCode::AlreadySettled);
     // }
 
-    // 判断是否第一次抽签
     let clock = Clock::get()?;
     let now_ts = clock.unix_timestamp;
     {
@@ -84,7 +81,6 @@ pub fn draw_lots(ctx: Context<DrawLots>) -> Result<()> {
         check_is_free(user_info, now_ts);
     }
 
-    // 扣除功德值
     {
         let user_info = &mut ctx.accounts.user_info;
         if !user_info.lottery_is_free {
@@ -103,7 +99,6 @@ pub fn draw_lots(ctx: Context<DrawLots>) -> Result<()> {
         }
     }
 
-    // 获取下标随机数
     let lottery_type = {
         #[cfg(feature = "mainnet")]
         {
@@ -121,7 +116,6 @@ pub fn draw_lots(ctx: Context<DrawLots>) -> Result<()> {
             let revealed_random_value = randomness_data
                 .get_value(&clock)
                 .map_err(|_| DrawLotsCode::RandomnessNotResolved)?;
-            // 取前8字节做 u64
             let r = u64::from_le_bytes(revealed_random_value[..8].try_into().unwrap());
             #[inline]
             fn unbiased_u64(x: u64, n: u64) -> u64 {
@@ -134,12 +128,9 @@ pub fn draw_lots(ctx: Context<DrawLots>) -> Result<()> {
             lottery_type
         }
         #[cfg(not(feature = "mainnet"))]
-        // 非主网环境：简单随机数生成
         {
-            // 使用时间戳 + 账户地址哈希作为简单随机种子
             let seed =
                 clock.unix_timestamp as u64 ^ ctx.accounts.authority.key().to_bytes()[0] as u64;
-            // 简单的取模运算生成 0-6 的随机下标（非主网调试用）
             let idx = seed % 7;
 
             let lottery_type = ctx.accounts.lottery_array.get_lottery_type(idx);
@@ -148,20 +139,17 @@ pub fn draw_lots(ctx: Context<DrawLots>) -> Result<()> {
         }
     };
 
-    // 抽签功德值+2,大吉另外加 1
     let reward: u64 = if lottery_type == LotteryType::GreatFortune {
         3
     } else {
         2
     };
 
-    // 更新抽签次数 + 功德值
     {
         let user_info = &mut ctx.accounts.user_info;
         user_info.update_lottery_count(now_ts, reward)?;
     }
 
-    // 创建抽签记录
     {
         let merit_value = if ctx.accounts.user_info.lottery_is_free {
             0
@@ -200,7 +188,7 @@ pub fn check_is_free(user_info: &mut UserInfo, now_ts: i64) {
     let last_day = (user_info.lottery_time + 8 * 3600) / 86400;
     let current_day = (now_ts + 8 * 3600) / 86400;
     if current_day > last_day {
-        user_info.lottery_is_free = true; // 每天第一次默认免费
+        user_info.lottery_is_free = true;
     }
 }
 
@@ -241,7 +229,6 @@ pub struct DrawLots<'info> {
     )]
     pub lottery_array: Account<'info, LotteryConfig>,
 
-    // 存储每次抽签结果
     #[account(
       init,
       payer = authority,
@@ -251,7 +238,6 @@ pub struct DrawLots<'info> {
     )]
     pub lottery_record: Account<'info, LotteryRecord>,
 
-    // 功德值->在这个账户中
     #[account(
       mut,
       seeds = [b"user_info",authority.key().as_ref()],

@@ -4,7 +4,6 @@ use anchor_lang::{
 };
 use anchor_spl::{associated_token::AssociatedToken, metadata::{mpl_token_metadata::types::DataV2, update_metadata_accounts_v2, Metadata, UpdateMetadataAccountsV2}, token::{Mint, Token, TokenAccount}};
 use crate::{ events::{DonateEvent, MedalMintedEvent, MedalUpgradedEvent}, states::{create_nft, donate, CreateNftArgs, DonateCounter, DonateRecord, MedalLevel, NftAccounts, Temple, UserInfo}};
-// 创建计数器
 pub fn create_donate_count(ctx: Context<CreateDonateCount>) -> Result<()> {
     let donate_count =  DonateCounter::new(ctx.accounts.authority.key());
     ctx.accounts.donate_count.set_inner(donate_count);
@@ -18,10 +17,8 @@ pub fn create_donate_count(ctx: Context<CreateDonateCount>) -> Result<()> {
 
 #[event]
 pub struct DonateCountCreated {
-    /// 创建人
     pub authority: Pubkey,
 
-    /// 创建时间（链上时间戳）
     pub timestamp: i64,
 }
 
@@ -56,7 +53,6 @@ pub struct CreateDonateCount<'info> {
     pub system_program: Program<'info, System>,
 }
 
-// 创建捐赠记录
 pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Result<()> {
     require!(amount > 0, DonateError::InvalidDonateAmount);
     require!(ctx.accounts.authority.to_account_info().lamports() >= amount, DonateError::InsufficientLamports);
@@ -105,7 +101,6 @@ pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Re
         return Ok(());
     }
 
-    // ====== 铸徽章 / 升级徽章（外部 CPI）======
     let a = ctx.accounts.authority.key();
     let seeds: &[&[&[u8]]] = &[&[
         b"create_feats_nft",
@@ -115,7 +110,6 @@ pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Re
 
     if matches!(user_info.current_medal_level, Some(MedalLevel::None))
         && donate_amount > 50_000_000{
-        // 首次获得徽章 → mint
         emit!(MedalMintedEvent {
             user: ctx.accounts.authority.key(),
             level: level.get_symbol(),
@@ -124,7 +118,7 @@ pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Re
         });
 
         user_info.current_medal_level = Some(level.clone());
-        // mint_nft 是 CPI，属于 Interactions，放在此阶段
+
         mint_nft(
             ctx,
             seeds,
@@ -140,7 +134,6 @@ pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Re
         )?;
     } else if let Some(current_medal_level) = user_info.current_medal_level.as_ref() {
         if level != *current_medal_level {
-            // 升级 → 更新元数据（CPI）
             msg!(
                 "Upgrade medal level:{}, existing grade:{}",
                 level.get_nft_name(),
@@ -182,7 +175,6 @@ pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Re
                 Some(true),    
             )?;
 
-            // 升级时把奖励累计到用户侧 & 记录里
             user_info.update_user_donate_info(merit_value, incense_value)?;
             DonateRecord::update_rewards(&mut ctx.accounts.donate_record, merit_value, incense_value);
         }
@@ -258,7 +250,7 @@ pub struct CreateDonateRecord<'info> {
    pub user_info: Account<'info, UserInfo>,
 
 
-   /// CHECK:创建唯一不可分割的nft
+   /// CHECK: Create a unique and indivisible NFT
     #[account(
         mut,
         seeds = [b"metadata",token_metadata_program.key().as_ref(),feats_nft_mint_account.key().as_ref(),  b"edition".as_ref(),],
@@ -283,7 +275,7 @@ pub struct CreateDonateRecord<'info> {
     )]
     pub feats_nft_mint_account: Account<'info, Mint>,
 
-    // 接收nft账户
+    // Receive NFT account
     #[account(
         init_if_needed,
         payer = authority,

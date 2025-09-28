@@ -62,6 +62,6 @@ pub struct UpdateIncense<'info> {
 }
 #[error_code]
 pub enum ErrorCode {
-    #[msg("不是管理员")]
+    #[msg("Not an administrator")]
     NonAdministrator,
 }

@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::{associated_token::AssociatedToken, metadata::{create_master_edition_v3, create_metadata_accounts_v3, mpl_token_metadata::types::DataV2, CreateMasterEditionV3, CreateMetadataAccountsV3, Metadata}, token::{ mint_to,  Mint, MintTo, Token, TokenAccount}};
 
 use crate::{ states::{create_master_edition, create_metadata, creatre_freeze_account, mint_nft, CreateNftArgs, NftAccounts, SbtNftCount, UserInfo}};
-// 已废弃
+// deprecated
 pub fn nft_mint(ctx: Context<CreateBurnToken>, args: CreateNftArgs) -> Result<()> {
   let signer_seeds: &[&[&[u8]]] = &[&[
       b"create_burn_token",
@@ -80,7 +80,7 @@ pub struct CreateBurnToken<'info> {
       )]
     pub nft_mint_account: Account<'info, Mint>,
 
-    /// CHECK:创建唯一不可分割的nft
+    /// CHECK:
     #[account(
       mut,
       seeds = [b"metadata",token_metadata_program.key().as_ref(),nft_mint_account.key().as_ref(),  b"edition".as_ref(),],
@@ -119,7 +119,7 @@ pub struct CreateBurnToken<'info> {
 pub fn mint_sbt_nft(ctx: Context<MintSbtNft>, args: CreateNftArgs) -> Result<()> {
   require!(ctx.accounts.sbt_nft_count.count <= 10_000, NftErrorCode::NftCountOver);
   {
-      let ui = &ctx.accounts.user_info; // 只读
+      let ui = &ctx.accounts.user_info; 
       require!(!ui.has_sbt_token, NftErrorCode::HasSbtToken);
       require!(ui.donate_amount >= 500_000_000, NftErrorCode::DonateAmountNotEnough);
   }
@@ -178,17 +178,15 @@ pub fn mint_sbt_nft(ctx: Context<MintSbtNft>, args: CreateNftArgs) -> Result<()>
 #[derive(Accounts)]
 #[instruction(args: CreateNftArgs)]
 pub struct MintSbtNft<'info> {
-    // 用户
     #[account(mut)]
     pub authority: Signer<'info>,
 
     /*
-     * 管理员创建的SBT NFT 给 用户   payer->管理员
-     * 用户自己给自己 mint SBT NFT   payer->用户
+     * SBT NFT created by administrator for user payer ->administrator
+     * Users can mint their own SBT NFT payer ->Users
      */
     #[account(mut)]
     pub payer:Signer<'info>,
-
   
     #[account(
        init,

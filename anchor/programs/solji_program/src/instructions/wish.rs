@@ -4,14 +4,11 @@ use crate::{
     events::{LikeCreated, WishCreated},
     states::{PublishWish, Temple, UserInfo, WishLike, WishUser},
 };
-// 许愿 value是扣除功德值
 pub fn create_wish(ctx: Context<CreateWish>, content: String, is_anonymous: bool) -> Result<()> {
     {
         let user_info = &mut ctx.accounts.user_info;
         user_info.check_is_free();
-        // 扣除功德值
         user_info.check_wish_daily_count(WishUser::WISH_FEE as u64)?;
-        // 许愿一次功德值+1
         user_info.update_user_wish_count()?;
     }
 
@@ -109,7 +106,6 @@ pub struct CreateLike<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    // 许愿
     #[account(mut)]
     pub publish_wish: Account<'info, PublishWish>,
 
@@ -120,7 +116,6 @@ pub struct CreateLike<'info> {
       )]
     pub user_info: Account<'info, UserInfo>,
 
-    // 点赞
     #[account(
       init,
       payer = authority,

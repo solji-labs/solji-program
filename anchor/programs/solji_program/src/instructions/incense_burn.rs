@@ -8,10 +8,7 @@ use anchor_spl::{
 
 use crate::{events::{DestroyEvent, IncenseBoughtEvent, IncenseBurned}, states::{create_master_edition, create_metadata, mint_nft, CreateNftArgs, IncenseBurnArgs, IncenseRulesConfig, IncenseType, NftAccounts, Temple, UserInfo}};
 
-// 香的类型 incense_type
-// count 购买香的数量
 pub fn incense_buy(ctx:Context<IncenseBuy>,incense_type: IncenseType,number:u64)->Result<()>{
-    // 秘制香,天界香无法购买
     if incense_type == IncenseType::SecretIncense || incense_type == IncenseType::CelestialIncense {
         return err!(BurnCode::InvalidIncenseType);
     }
@@ -25,7 +22,6 @@ pub fn incense_buy(ctx:Context<IncenseBuy>,incense_type: IncenseType,number:u64)
 
     ctx.accounts.user_info.update_incense_property_count(incense_type, number)?;
 
-    // 转账
     let tx = transfer(
         &ctx.accounts.authority.key(),
         &ctx.accounts.temple.key(),
@@ -133,12 +129,10 @@ pub fn incense_burn(ctx: Context<CreateIncense> ,args: IncenseBurnArgs) -> Resul
         incense_rules_config.get_rule(incense_type)
     };
 
-    // 增加用户烧香次数
     {
         user_info.update_user_info(ctx.accounts.authority.key(), incense_type, incense_rule)?;
     }
 
-    // 增加寺庙香火值
     {
         let temple =  &mut ctx.accounts.temple;
         temple.add_temple_incense_and_merit_attribute(incense_rule.incense_value, incense_rule.merit_value)?;
@@ -183,8 +177,6 @@ pub fn destroy(ctx: Context<Destroy>) -> Result<()> {
     Ok(())
 }
 
-
-// 提取的检查函数
 pub fn check_daily_reset_and_limit(
     user_info: &mut Account<UserInfo>,
     incense_type: IncenseType,
@@ -192,13 +184,12 @@ pub fn check_daily_reset_and_limit(
     let now_ts = Clock::get()?.unix_timestamp;
     let last_day = (user_info.incense_time + 8 * 3600) / 86400;
     let current_day = (now_ts + 8 * 3600) / 86400;
-    // 处理每日重置逻辑
+
     if current_day > last_day {
         user_info.burn_count = [0; 6];
         user_info.donate_count = 0;
         user_info.incense_time = now_ts;
     }
-    // 检查是否超过最大次数
     if user_info.get_burn_count(incense_type) >= 10 && user_info.donate_count == 0 {
         return err!(BurnCode::TooManyBurns);
     }
@@ -225,7 +216,7 @@ pub struct CreateIncense<'info> {
       )]
       pub user_info: Account<'info, UserInfo>,
 
-     /// CHECK:创建唯一不可分割的nft
+     /// CHECK:
      #[account(
         mut,
         seeds = [b"metadata",token_metadata_program.key().as_ref(),nft_mint_account.key().as_ref(),  b"edition".as_ref(),],
@@ -254,7 +245,7 @@ pub struct CreateIncense<'info> {
        )]
      pub nft_mint_account: Account<'info, Mint>,
 
-    // 接收nft账户
+    // Receive NFT account
     #[account(
         init_if_needed,
         payer = authority,
@@ -297,7 +288,6 @@ pub struct Destroy<'info> {
     )]
     pub user_info: Account<'info, UserInfo>,
 
-    // 接收nft账户
     #[account(
         mut,
         associated_token::mint = nft_mint_account,
