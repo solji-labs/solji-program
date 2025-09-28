@@ -1,7 +1,4 @@
-use anchor_lang::{
-    prelude::*,
-    system_program::{transfer, Transfer},
-};
+use anchor_lang::prelude::*;
 
 use crate::{events::TempleWithdrawal, states::Temple};
 

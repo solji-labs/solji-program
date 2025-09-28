@@ -1,5 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { program, provider } from "./wallet";
+
 // 获取烧香规则pda
 export function getIncenseRulesConfig() {
   return anchor.web3.PublicKey.findProgramAddressSync([Buffer.from("incense_rules_config")], program.programId);
@@ -22,8 +23,7 @@ export function getUserBurnInfo(wallet: anchor.Wallet) {
 export function getLotteryArrayPda() {
   return anchor.web3.PublicKey.findProgramAddressSync([Buffer.from("lottery_array")], program.programId);
 }
-
-
+// 抽签记录pda
 export function getLotteryRecordPda(count: number, wallet: anchor.Wallet) {
   let [pda] = anchor.web3.PublicKey.findProgramAddressSync(
     [
@@ -58,7 +58,6 @@ export function getDonateCountPda(wallet: anchor.Wallet) {
 export function getDonateRecordPda(count: number, wallet: anchor.Wallet) {
   return anchor.web3.PublicKey.findProgramAddressSync([Buffer.from("donate_record"), wallet.publicKey.toBuffer(), Buffer.from(`${count + 1}`)], program.programId);
 }
-
 
 export function getTemplePda() {
   return anchor.web3.PublicKey.findProgramAddressSync([Buffer.from("temple")], program.programId);

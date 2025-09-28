@@ -219,13 +219,11 @@ pub struct CreateIncense<'info> {
     pub incense_rules_config: Account<'info, IncenseRulesConfig>,
 
     #[account(
-      init_if_needed,
-      payer = authority,
-      space = 8 + UserInfo::INIT_SPACE,
-      seeds = [b"user_info",authority.key().as_ref()],
-      bump
-    )]
-    pub user_info: Account<'info, UserInfo>,
+        mut,
+        seeds = [b"user_info",authority.key().as_ref()],
+        bump
+      )]
+      pub user_info: Account<'info, UserInfo>,
 
      /// CHECK:创建唯一不可分割的nft
      #[account(
