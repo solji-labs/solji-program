@@ -1,4 +1,5 @@
 use crate::error::ErrorCode;
+use crate::state::event::FortuneDrawn;
 use crate::state::global_stats::GlobalStats;
 use crate::state::temple_config::TempleConfig;
 use crate::state::user_state::{UserIncenseState, UserState};
@@ -201,9 +202,10 @@ pub fn draw_fortune(ctx: Context<DrawFortune>, use_merit: bool) -> Result<DrawRe
     msg!("抽签结果: {}", fortune_str);
     msg!("签文解释: {}", fortune_desc);
 
-    // 御守概率掉落逻辑：10%概率
-    let amulet_drop_random = (random_value.wrapping_add(42) % 100) as u8; // 使用不同的种子避免冲突
-    if amulet_drop_random < 10 {
+    // TODO 御守概率掉落逻辑：10%概率（是否需要优化为预言机随机数）
+    let amulet_drop_random = (random_value.wrapping_add(42) % 100) as u8;
+    let amulet_dropped = amulet_drop_random < 10;
+    if amulet_dropped {
         // 增加用户可铸造御守余额
         ctx.accounts.user_state.pending_amulets += 1;
         msg!(
@@ -211,6 +213,15 @@ pub fn draw_fortune(ctx: Context<DrawFortune>, use_merit: bool) -> Result<DrawRe
             ctx.accounts.user_state.pending_amulets
         );
     }
+
+    // 发出抽签事件
+    emit!(FortuneDrawn {
+        user: ctx.accounts.user.key(),
+        fortune_result: fortune.as_str().to_string(),
+        used_merit: use_merit,
+        amulet_dropped,
+        timestamp: now,
+    });
 
     let result = DrawResult {
         fortune,

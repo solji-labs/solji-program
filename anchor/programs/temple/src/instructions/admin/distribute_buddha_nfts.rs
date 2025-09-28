@@ -2,7 +2,7 @@ use crate::error::ErrorCode;
 use crate::state::donation_leaderboard::DonationLeaderboard;
 use crate::state::temple_config::*;
 use anchor_lang::prelude::*;
-
+/// 分配Buddha NFT给前10,000名捐助者
 #[derive(Accounts)]
 pub struct DistributeBuddhaNfts<'info> {
     #[account(

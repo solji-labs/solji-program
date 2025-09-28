@@ -42,8 +42,6 @@ pub fn mint_buddha_nft(ctx: Context<MintBuddhaNFT>) -> Result<()> {
     );
 
     // 铸造佛像
-    let temple_config_key = ctx.accounts.temple_config.key();
-    let authority_key = ctx.accounts.authority.key();
     let serial_number = ctx.accounts.temple_config.total_buddha_nft;
 
     let nft_name = format!(

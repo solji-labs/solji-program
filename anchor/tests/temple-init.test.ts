@@ -1,3 +1,4 @@
+import * as anchor from "@coral-xyz/anchor";
 import { getTestContext, generateUserKeypair, logTestStart, logTestEnd } from "./utils/setup";
 import { expect } from "chai";
 
@@ -35,6 +36,47 @@ describe("Temple Initialize Tests", () => {
             }
 
             logTestEnd("Create Temple Config");
+        });
+
+        it("should initialize leaderboards successfully", async () => {
+            logTestStart("Initialize Leaderboards");
+
+
+            // try {
+            //     await ctx.program.account.donationLeaderboard.fetch(ctx.getDonationLeaderboardPda());
+            //     console.log("Donation leaderboard already exists, skipping initialization");
+            // } catch {
+            //     const deadline = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60; // 30 days from now
+            //     await ctx.program.methods
+            //         .initDonationLeaderboard(new anchor.BN(deadline))
+            //         .accounts({
+            //             owner: ctx.owner.publicKey,
+            //             donationLeaderboard: ctx.getDonationLeaderboardPda(),
+            //             templeConfig: ctx.templeConfigPda,
+            //             systemProgram: anchor.web3.SystemProgram.programId,
+            //             rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+            //         })
+            //         .signers([ctx.owner])
+            //         .rpc();
+            // }
+
+            // 初始化香火排行榜
+            try {
+                await ctx.program.account.leaderboard.fetch(ctx.leaderboardPda);
+                console.log("Incense leaderboard already exists, skipping initialization");
+            } catch {
+                await ctx.program.methods
+                    .initIncenseLeaderboard()
+                    .accounts({
+                        authority: ctx.owner.publicKey,
+                        leaderboard: ctx.leaderboardPda,
+                        systemProgram: anchor.web3.SystemProgram.programId,
+                    })
+                    .signers([ctx.owner])
+                    .rpc();
+            }
+
+            logTestEnd("Initialize Leaderboards");
         });
     });
 

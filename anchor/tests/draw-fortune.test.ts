@@ -83,4 +83,62 @@ describe("Fortune Drawing", () => {
         logTestEnd("Merit Fortune Draw");
     });
 
+    describe("Fortune Amulet Minting", () => {
+        it("should mint amulet NFT after drawing fortune", async () => {
+            logTestStart("Mint Amulet NFT from Fortune Draw");
+
+            const [userStatePda] = PublicKey.findProgramAddressSync(
+                [Buffer.from("user_state"), user.publicKey.toBuffer()],
+                ctx.program.programId
+            );
+
+            // 获取抽签前的pending_amulets
+            const initialUserState = await ctx.program.account.userState.fetch(userStatePda);
+            const initialPendingAmulets = initialUserState.pendingAmulets;
+
+            // 抽签（应该获得1个pending_amulets）
+            await ctx.drawFortune(user, false);
+
+            // 验证获得了pending_amulets
+            const userStateAfterDraw = await ctx.program.account.userState.fetch(userStatePda);
+            expect(userStateAfterDraw.pendingAmulets).to.equal(initialPendingAmulets + 1);
+
+            // 铸造御守NFT
+            await ctx.mintAmuletNft(user, 0); // source=0 表示抽签获得
+
+            // 验证pending_amulets被消耗
+            const userStateAfterMint = await ctx.program.account.userState.fetch(userStatePda);
+            expect(userStateAfterMint.pendingAmulets).to.equal(userStateAfterDraw.pendingAmulets - 1);
+
+            // 验证寺庙配置中的total_amulets增加
+            const templeConfig = await ctx.program.account.templeConfig.fetch(ctx.templeConfigPda);
+            expect(templeConfig.totalAmulets).to.equal(1);
+
+            logTestEnd("Mint Amulet NFT from Fortune Draw");
+        });
+
+        it("should fail to mint amulet NFT without pending amulets", async () => {
+            logTestStart("Fail Mint Amulet NFT without Pending Amulets from Fortune");
+
+            const [userStatePda] = PublicKey.findProgramAddressSync(
+                [Buffer.from("user_state"), user.publicKey.toBuffer()],
+                ctx.program.programId
+            );
+
+            // 确保用户没有pending_amulets
+            const userState = await ctx.program.account.userState.fetch(userStatePda);
+            expect(userState.pendingAmulets).to.equal(0);
+
+            // 尝试铸造御守NFT，应该失败
+            try {
+                await ctx.mintAmuletNft(user, 0);
+                expect.fail("Should have thrown insufficient pending amulets error");
+            } catch (error: any) {
+                expect(error.message).to.include("InsufficientPendingAmulets");
+            }
+
+            logTestEnd("Fail Mint Amulet NFT without Pending Amulets from Fortune");
+        });
+    });
+
 });

@@ -168,6 +168,14 @@ export class TestContext {
         return pda;
     }
 
+    public getDonationLeaderboardPda(): PublicKey {
+        const [pda] = PublicKey.findProgramAddressSync(
+            [Buffer.from("donation_leaderboard")],
+            this.program.programId
+        );
+        return pda;
+    }
+
     public async airdropToUser(user: PublicKey, amount: number = TEST_CONFIG.airdropAmount): Promise<string> {
         console.log(`Airdropping ${amount / LAMPORTS_PER_SOL} SOL to ${user.toString()}`);
         const tx = await this.provider.connection.requestAirdrop(user, amount);
@@ -199,6 +207,7 @@ export class TestContext {
             .rpc();
 
         console.log(`Temple config created: ${tx}`);
+
 
         // 初始化商城物品
         await this.initShopItems();
@@ -264,6 +273,45 @@ export class TestContext {
             .rpc();
 
         console.log(`Donation rewards updated: ${tx}`);
+        return tx;
+    }
+
+    public async initDonationLeaderboard(donationDeadline?: number): Promise<string> {
+        console.log("Initializing donation leaderboard...");
+
+        // 如果没有提供截止时间，使用默认值（当前时间 + 30天）
+        const deadline = donationDeadline || (Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60);
+
+        const tx = await this.program.methods
+            .initDonationLeaderboard(new BN(deadline))
+            .accounts({
+                owner: this.owner.publicKey,
+                donationLeaderboard: this.getDonationLeaderboardPda(),
+                templeConfig: this.templeConfigPda,
+                systemProgram: anchor.web3.SystemProgram.programId,
+                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+            })
+            .signers([this.owner])
+            .rpc();
+
+        console.log(`Donation leaderboard initialized: ${tx}`);
+        return tx;
+    }
+
+    public async initIncenseLeaderboard(): Promise<string> {
+        console.log("Initializing incense leaderboard...");
+
+        const tx = await this.program.methods
+            .initIncenseLeaderboard()
+            .accounts({
+                authority: this.owner.publicKey,
+                leaderboard: this.leaderboardPda,
+                systemProgram: anchor.web3.SystemProgram.programId,
+            })
+            .signers([this.owner])
+            .rpc();
+
+        console.log(`Incense leaderboard initialized: ${tx}`);
         return tx;
     }
 
@@ -1003,13 +1051,18 @@ export class TestContext {
         return result;
     }
 
-    // Helper functions to get sub-account PDAs
-    public getUserStatePda(userPubkey: PublicKey): PublicKey {
-        const [pda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("user_state"), userPubkey.toBuffer()],
-            this.program.programId
-        );
-        return pda;
+    public async getIncenseLeaderboard(user: Keypair): Promise<any> {
+        console.log(`Getting incense leaderboard for: ${user.publicKey.toString()}`);
+
+        const result = await this.program.methods
+            .getIncenseLeaderboard()
+            .accounts({
+                user: user.publicKey,
+                leaderboard: this.leaderboardPda,
+            })
+            .view();
+
+        return result;
     }
 
     public getUserIncenseStatePda(userPubkey: PublicKey): PublicKey {
@@ -1059,6 +1112,73 @@ export class TestContext {
             this.program.programId
         );
         return pda;
+    }
+
+    public async mintAmuletNft(user: Keypair, source: number): Promise<string> {
+        console.log(`User minting amulet NFT with source: ${source}`);
+
+        const [userStatePda] = PublicKey.findProgramAddressSync(
+            [Buffer.from("user_state"), user.publicKey.toBuffer()],
+            this.program.programId
+        );
+
+        const [globalStatsPda] = PublicKey.findProgramAddressSync(
+            [Buffer.from("global_stats_v1")],
+            this.program.programId
+        );
+
+        // 获取当前total_amulets作为序列号
+        const templeConfig = await this.program.account.templeConfig.fetch(this.templeConfigPda);
+        const serialNumber = templeConfig.totalAmulets;
+
+        const [nftMintPda] = PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("AmuletNFT"),
+                this.templeConfigPda.toBuffer(),
+                user.publicKey.toBuffer(),
+                Buffer.from([serialNumber]),
+            ],
+            this.program.programId
+        );
+
+        const [amuletNftPda] = PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("AmuletNFT"),
+                Buffer.from("account"),
+                this.templeConfigPda.toBuffer(),
+                user.publicKey.toBuffer(),
+                Buffer.from([serialNumber]),
+            ],
+            this.program.programId
+        );
+
+        const nftAssociatedTokenAccount = await anchor.utils.token.associatedAddress({
+            mint: nftMintPda,
+            owner: user.publicKey,
+        });
+
+        const tx = await this.program.methods
+            .mintAmuletNft(source)
+            .accounts({
+                authority: user.publicKey,
+                templeConfig: this.templeConfigPda,
+                globalStats: globalStatsPda,
+                userState: userStatePda,
+                nftMintAccount: nftMintPda,
+                nftAssociatedTokenAccount,
+                amuletNftAccount: amuletNftPda,
+                metaAccount: this.getMetadataPda(nftMintPda),
+                tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+                systemProgram: anchor.web3.SystemProgram.programId,
+                tokenMetadataProgram: new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"),
+                associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
+                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+            })
+            .signers([user])
+            .rpc();
+
+        console.log(`Amulet NFT minted: ${tx}`);
+        return tx;
     }
 
     public async getAssociatedTokenAddress(mint: PublicKey, owner: PublicKey): Promise<PublicKey> {

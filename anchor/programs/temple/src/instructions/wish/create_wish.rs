@@ -1,4 +1,5 @@
 use crate::error::ErrorCode;
+use crate::state::event::WishCreated;
 use crate::state::global_stats::GlobalStats;
 use crate::state::temple_config::TempleConfig;
 use crate::state::user_state::{UserIncenseState, UserState};
@@ -96,6 +97,28 @@ pub fn create_wish(
     wish.created_at = clock.unix_timestamp;
     wish.likes = 0;
     wish.bump = ctx.bumps.wish_account;
+
+    // 御守概率掉落逻辑：10%概率
+    let random_seed = (clock.unix_timestamp as u64).wrapping_add(wish_id);
+    let amulet_drop_random = (random_seed % 100) as u8;
+    let amulet_dropped = amulet_drop_random < 10;
+    if amulet_dropped {
+        // 增加用户可铸造御守余额
+        ctx.accounts.user_state.pending_amulets += 1;
+        msg!(
+            "恭喜！许愿时获得了1个御守铸造机会！当前余额: {}",
+            ctx.accounts.user_state.pending_amulets
+        );
+    }
+
+    // 发出许愿事件
+    emit!(WishCreated {
+        user: ctx.accounts.user.key(),
+        wish_id,
+        is_anonymous,
+        amulet_dropped,
+        timestamp: clock.unix_timestamp,
+    });
 
     Ok(())
 }

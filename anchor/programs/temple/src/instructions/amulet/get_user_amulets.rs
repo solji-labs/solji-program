@@ -2,7 +2,7 @@ use crate::error::ErrorCode;
 use crate::state::user_state::UserState;
 use anchor_lang::prelude::*;
 
-// 用户御守收藏信息
+// 用户御守（护符）收藏信息面板
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct UserAmuletsInfo {
     pub user: Pubkey,

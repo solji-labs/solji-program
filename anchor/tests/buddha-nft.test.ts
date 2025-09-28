@@ -1,9 +1,11 @@
 import { getTestContext, generateUserKeypair, logTestStart, logTestEnd } from "./utils/setup";
 import { expect } from "chai";
 import { PublicKey } from "@solana/web3.js";
+import { DonationTestHelpers, createDonationTestHelpers } from "./utils/donation-helpers";
 
 describe("Buddha NFT Tests", () => {
     const ctx = getTestContext();
+    const donationHelpers = createDonationTestHelpers(ctx);
 
     beforeEach(async () => {
         try {
@@ -18,15 +20,15 @@ describe("Buddha NFT Tests", () => {
             logTestStart("Mint Buddha NFT");
 
             const user = generateUserKeypair();
-            await ctx.airdropToUser(user.publicKey, 1 * 1000000000);
+            await ctx.airdropToUser(user.publicKey, 2 * 1000000000);
             await ctx.initUser(user);
 
             // 需要先捐助0.5 SOL以上才能铸造佛像NFT
-            await ctx.donate(user, 0.5 * 1000000000);
+            await donationHelpers.donateFund(user, 0.5 * 1000000000);
 
             const tx = await ctx.mintBuddhaNft(user);
             expect(tx).to.be.a('string');
-            expect(tx.length).to.be.greaterThan(0);
+            expect(tx.length).to.be.greaterThan(0)
 
             logTestEnd("Mint Buddha NFT");
         });
@@ -39,7 +41,7 @@ describe("Buddha NFT Tests", () => {
             await ctx.initUser(user);
 
             // 需要先捐助0.5 SOL以上才能铸造佛像NFT
-            await ctx.donate(user, 0.5 * 1000000000);
+            await donationHelpers.donateFund(user, 0.5 * 1000000000);
 
             const tx1 = await ctx.mintBuddhaNft(user);
             expect(tx1).to.be.a('string');

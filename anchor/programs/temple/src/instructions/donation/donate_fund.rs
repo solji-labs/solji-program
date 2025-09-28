@@ -35,15 +35,14 @@ pub struct DonateFund<'info> {
     )]
     pub user_donation_state: Box<Account<'info, UserDonationState>>,
 
-    #[account(
-        init_if_needed,
-        payer = donor,
-        seeds = [DonationLeaderboard::SEED_PREFIX.as_bytes()],
-        bump,
-        space = 8 + DonationLeaderboard::INIT_SPACE,
-    )]
-    pub donation_leaderboard: Box<Account<'info, DonationLeaderboard>>,
-
+    // #[account(
+    //     init_if_needed,
+    //     payer = donor,
+    //     seeds = [DonationLeaderboard::SEED_PREFIX.as_bytes()],
+    //     bump,
+    //     space = 8 + DonationLeaderboard::INIT_SPACE,
+    // )]
+    // pub donation_leaderboard: Box<Account<'info, DonationLeaderboard>>,
     /// CHECK: 寺庙国库账户
     #[account(
         mut,
@@ -69,7 +68,6 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
 
     // 验证捐助金额
     require!(amount > 0, ErrorCode::InvalidAmount);
-    require!(amount >= 1000, ErrorCode::InvalidAmount); // 最少0.000001 SOL
 
     // 转账SOL到寺庙国库
     let transfer_ix = anchor_lang::solana_program::system_instruction::transfer(
@@ -90,19 +88,10 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
     // 处理捐助记录
     ctx.accounts.user_donation_state.process_donation(amount);
 
-    // 初始化或更新捐助排行榜
-    if ctx.accounts.donation_leaderboard.total_donors == 0 {
-        // 首次捐助，初始化排行榜
-        ctx.accounts.donation_leaderboard.initialize(
-            ctx.bumps.donation_leaderboard,
-            ctx.accounts.temple_config.donation_deadline,
-        );
-    }
-
-    // 更新排行榜
-    ctx.accounts
-        .donation_leaderboard
-        .update_donation(donor.key(), amount);
+    // // 更新排行榜
+    // ctx.accounts
+    //     .donation_leaderboard
+    //     .update_donation(donor.key(), amount);
 
     // 更新全局统计
     ctx.accounts.global_stats.add_donation(amount);

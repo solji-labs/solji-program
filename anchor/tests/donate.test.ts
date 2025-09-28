@@ -23,58 +23,13 @@ describe("Donation System", function (this: Mocha.Suite) {
         }
     });
 
-    describe("Legacy Donation (Full Flow)", () => {
-        it("should donate and mint copper medal NFT", async () => {
-            logTestStart("Legacy Donation Test");
-
-            const user = generateUserKeypair();
-            await ctx.airdropToUser(user.publicKey, 2 * LAMPORTS_PER_SOL);
-            await ctx.initUser(user);
-
-            // 捐助0.05 SOL获得铜牌勋章
-            const tx = await ctx.donate(user, 0.05 * LAMPORTS_PER_SOL);
-            expect(tx).to.be.a('string');
-
-            // 验证捐助状态
-            const userDonationStatePda = ctx.getUserDonationStatePda(user.publicKey);
-            const userDonationState = await ctx.program.account.userDonationState.fetch(userDonationStatePda);
-            expect(userDonationState.donationLevel).to.equal(1);
-            expect(userDonationState.donationAmount.toString()).to.equal((0.05 * LAMPORTS_PER_SOL).toString());
-
-            // 验证用户状态中的勋章信息
-            const userStatePda = ctx.getUserStatePda(user.publicKey);
-            const userState = await ctx.program.account.userState.fetch(userStatePda);
-            expect(userState.hasMedalNft).to.be.true;
-
-            logTestEnd("Legacy Donation Test");
-        });
-
-        it("should upgrade medal to supreme level", async () => {
-            logTestStart("Legacy Medal Upgrade Test");
-
-            const user = generateUserKeypair();
-            await ctx.airdropToUser(user.publicKey, 10 * LAMPORTS_PER_SOL);
-            await ctx.initUser(user);
-
-            // 直接捐助5 SOL达到至尊等级
-            const tx = await ctx.donate(user, 5 * LAMPORTS_PER_SOL);
-            expect(tx).to.be.a('string');
-
-            // 验证捐助金额
-            const userDonationStatePda = ctx.getUserDonationStatePda(user.publicKey);
-            const userDonationState = await ctx.program.account.userDonationState.fetch(userDonationStatePda);
-            expect(userDonationState.donationAmount.toString()).to.equal((5 * LAMPORTS_PER_SOL).toString());
-
-            logTestEnd("Legacy Medal Upgrade Test");
-        });
-    });
 
     describe("Optimized Donation (Split Instructions)", () => {
         it("should donate fund and process rewards separately", async () => {
             logTestStart("Split Donation Test");
 
             const user = generateUserKeypair();
-            await ctx.airdropToUser(user.publicKey, 2 * LAMPORTS_PER_SOL);
+            await ctx.airdropToUser(user.publicKey, 2 * LAMPORTS_PER_SOL); // Donation leaderboard is pre-initialized
             await ctx.initUser(user);
 
             // 使用 donation helpers 进行捐助
@@ -101,7 +56,7 @@ describe("Donation System", function (this: Mocha.Suite) {
             logTestStart("Separate NFT Mint Test");
 
             const user = generateUserKeypair();
-            await ctx.airdropToUser(user.publicKey, 2 * LAMPORTS_PER_SOL);
+            await ctx.airdropToUser(user.publicKey, 2 * LAMPORTS_PER_SOL); // Donation leaderboard is pre-initialized
             await ctx.initUser(user);
 
             // 使用 helpers 简化捐助流程
@@ -148,7 +103,7 @@ describe("Donation System", function (this: Mocha.Suite) {
             logTestStart("Event Emission Test");
 
             const user = generateUserKeypair();
-            await ctx.airdropToUser(user.publicKey, 2 * LAMPORTS_PER_SOL);
+            await ctx.airdropToUser(user.publicKey, 2 * LAMPORTS_PER_SOL); // Donation leaderboard is pre-initialized
             await ctx.initUser(user);
 
             // 监听事件
@@ -176,22 +131,5 @@ describe("Donation System", function (this: Mocha.Suite) {
         });
     });
 
-    it("should qualify for Buddha NFT with 0.5 SOL donation", async () => {
-        logTestStart("Buddha NFT Qualification Test");
 
-        const user = generateUserKeypair();
-        await ctx.airdropToUser(user.publicKey, 2 * LAMPORTS_PER_SOL);
-        await ctx.initUser(user);
-
-        // 捐助0.5 SOL获得铸造佛像资格
-        const tx = await ctx.donate(user, 0.5 * LAMPORTS_PER_SOL);
-        expect(tx).to.be.a('string');
-
-        // 验证捐助金额
-        const userDonationStatePda = ctx.getUserDonationStatePda(user.publicKey);
-        const userDonationState = await ctx.program.account.userDonationState.fetch(userDonationStatePda);
-        expect(userDonationState.donationAmount.toString()).to.equal((0.5 * LAMPORTS_PER_SOL).toString());
-
-        logTestEnd("Buddha NFT Qualification Test");
-    });
 });

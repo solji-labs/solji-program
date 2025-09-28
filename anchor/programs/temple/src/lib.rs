@@ -56,18 +56,18 @@ pub mod temple {
         instructions::create_nft_mint(ctx, incense_id)
     }
 
-    /// 初始化捐助排行榜
-    pub fn init_donation_leaderboard(
-        ctx: Context<InitDonationLeaderboard>,
-        donation_deadline: u64,
-    ) -> Result<()> {
-        instructions::init_donation_leaderboard(ctx, donation_deadline)
-    }
+    // /// 初始化捐助排行榜 暂时不用
+    // pub fn init_donation_leaderboard(
+    //     ctx: Context<InitDonationLeaderboard>,
+    //     donation_deadline: u64,
+    // ) -> Result<()> {
+    //     instructions::init_donation_leaderboard(ctx, donation_deadline)
+    // }
 
     /// 分配Buddha NFT给前10,000名捐助者
-    pub fn distribute_buddha_nfts(ctx: Context<DistributeBuddhaNfts>) -> Result<()> {
-        instructions::distribute_buddha_nfts(ctx)
-    }
+    // pub fn distribute_buddha_nfts(ctx: Context<DistributeBuddhaNfts>) -> Result<()> {
+    //     instructions::distribute_buddha_nfts(ctx)
+    // }
 
     /// 烧香
     pub fn burn_incense(ctx: Context<BurnIncense>, incense_id: u8, amount: u64) -> Result<()> {
@@ -125,9 +125,9 @@ pub mod temple {
     }
 
     /// 领取免费佛像NFT (仅限前10000名)
-    pub fn claim_buddha_nft(ctx: Context<ClaimBuddhaNft>) -> Result<()> {
-        instructions::claim_buddha_nft(ctx)
-    }
+    // pub fn claim_buddha_nft(ctx: Context<ClaimBuddhaNft>) -> Result<()> {
+    //     instructions::claim_buddha_nft(ctx)
+    // }
 
     // /// 捐助（完整流程，已废弃，存个档）
     // pub fn donate(ctx: Context<Donate>, amount: u64) -> Result<()> {

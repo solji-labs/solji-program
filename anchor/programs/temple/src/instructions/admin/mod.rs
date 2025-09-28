@@ -4,10 +4,12 @@ pub mod create_shop_config;
 pub use create_shop_config::*;
 pub mod create_nft_mint;
 pub use create_nft_mint::*;
-pub mod distribute_buddha_nfts;
-pub use distribute_buddha_nfts::*;
-pub mod init_donation_leaderboard;
-pub use init_donation_leaderboard::*;
+
+// TODO The donation account is too big
+// pub mod distribute_buddha_nfts;
+// pub use distribute_buddha_nfts::*;
+// pub mod init_donation_leaderboard;
+// pub use init_donation_leaderboard::*;
 pub mod update_dynamic_config;
 pub use update_dynamic_config::*;
 pub mod update_temple_status;

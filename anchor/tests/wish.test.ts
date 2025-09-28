@@ -134,4 +134,38 @@ describe("Wish Tests", () => {
             }
         });
     });
+
+    describe("Wish Amulet Minting", () => {
+        it("should mint amulet NFT after creating wish", async () => {
+            logTestStart("Mint Amulet NFT from Wish");
+
+            // 获取许愿前的pending_amulets
+            const initialUserState = await ctx.program.account.userState.fetch(userStatePda);
+            const initialPendingAmulets = initialUserState.pendingAmulets;
+
+            // 创建愿望（应该获得1个pending_amulets）
+            const wishId = Date.now();
+            const contentHash = Array(32).fill(0).map((_, i) => i);
+            await ctx.createWish(user, wishId, contentHash, false);
+
+            // 验证获得了pending_amulets
+            const userStateAfterWish = await ctx.program.account.userState.fetch(userStatePda);
+            expect(userStateAfterWish.pendingAmulets).to.equal(initialPendingAmulets + 1);
+
+            // 铸造御守NFT
+            await ctx.mintAmuletNft(user, 1); // source=1 表示许愿获得
+
+            // 验证pending_amulets被消耗
+            const userStateAfterMint = await ctx.program.account.userState.fetch(userStatePda);
+            expect(userStateAfterMint.pendingAmulets).to.equal(userStateAfterWish.pendingAmulets - 1);
+
+            // 验证寺庙配置中的total_amulets增加
+            const templeConfig = await ctx.program.account.templeConfig.fetch(ctx.templeConfigPda);
+            expect(templeConfig.totalAmulets).to.equal(1);
+
+            logTestEnd("Mint Amulet NFT from Wish");
+        });
+
+
+    });
 });
