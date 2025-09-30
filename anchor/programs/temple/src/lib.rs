@@ -1,14 +1,13 @@
 #![allow(clippy::result_large_err)]
 
 use anchor_lang::prelude::*;
-pub mod error;
 pub mod instructions;
 pub mod state;
 
 use instructions::*;
-use state::*;
+use state::*; 
 
-declare_id!("D9immZaczS2ASFqqSux2iCCAaFat7vcusB1PQ2SW6d95");
+declare_id!("81BWs7RGtN2EEvaGWZe8EQ8nhswHTHVzYUn5iPFoRr9o");
 
 pub mod admin {
     use super::{pubkey, Pubkey};
@@ -25,5 +24,7 @@ pub mod temple {
 
     use super::*;
 
-    
+    pub fn init_temple(ctx: Context<InitTemple>) -> Result<()> {
+        instructions::temple::init_temple(ctx)
+    }
 }

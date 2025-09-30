@@ -19,7 +19,7 @@ localnet = []
 devnet = []
 
 [dependencies]
-anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
-anchor-spl = { version = "0.31.1", features = ["metadata"] }
+anchor-lang = { version = "0.31.0", features = ["init-if-needed"] }
+anchor-spl = { version = "0.31.0", features = ["metadata"] }
 pyth-solana-receiver-sdk = "1.0.1"
 switchboard-on-demand = "0.9.0"
