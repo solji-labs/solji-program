@@ -15,32 +15,32 @@ pub struct GetIncenseLeaderboard<'info> {
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct IncenseLeaderBoard {
-    pub daily_rank: Option<u32>,   // 每日排名
-    pub weekly_rank: Option<u32>,  // 每周排名
-    pub monthly_rank: Option<u32>, // 每月排名
-    pub has_visual_effect: bool,   // 是否有视觉特效奖励
+    pub daily_rank: Option<u32>,   // Daily rank
+    pub weekly_rank: Option<u32>,  // Weekly rank
+    pub monthly_rank: Option<u32>, // Monthly rank
+    pub has_visual_effect: bool,   // Whether has visual effect reward
 }
 
 pub fn get_incense_leaderboard(ctx: Context<GetIncenseLeaderboard>) -> Result<IncenseLeaderBoard> {
     let leaderboard = &ctx.accounts.leaderboard;
     let user = &ctx.accounts.user.key();
 
-    // 获取每日排名
+    // Get daily rank
     let daily_rank = leaderboard.get_incense_leaderboard(user, LeaderboardPeriod::Daily);
 
-    // 获取每周排名
+    // Get weekly rank
     let weekly_rank = leaderboard.get_incense_leaderboard(user, LeaderboardPeriod::Weekly);
 
-    // 获取每月排名
+    // Get monthly rank
     let monthly_rank = leaderboard.get_incense_leaderboard(user, LeaderboardPeriod::Monthly);
 
-    // 检查是否有视觉特效奖励（任意周期前3名）
+    // Check if has visual effect reward (top 3 in any period)
     let has_visual_effect = leaderboard.has_visual_effect(user, LeaderboardPeriod::Daily)
         || leaderboard.has_visual_effect(user, LeaderboardPeriod::Weekly)
         || leaderboard.has_visual_effect(user, LeaderboardPeriod::Monthly);
 
     msg!(
-        "用户排名查询完成 - 每日排名: {:?}, 每周排名: {:?}, 每月排名: {:?}, 视觉特效: {}",
+        "User rank query completed - Daily rank: {:?}, Weekly rank: {:?}, Monthly rank: {:?}, Visual effect: {}",
         daily_rank,
         weekly_rank,
         monthly_rank,

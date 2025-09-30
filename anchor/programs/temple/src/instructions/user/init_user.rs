@@ -53,14 +53,14 @@ pub fn init_user(ctx: Context<InitUser>) -> Result<()> {
     let user = &ctx.accounts.user;
     let clock = Clock::get()?;
 
-    // 初始化主用户状态
+    // Initialize main user state
     user_state.user = user.key();
     user_state.has_buddha_nft = false;
     user_state.has_medal_nft = false;
-    user_state.pending_amulets = 0; // 初始化御守余额为0
+    user_state.pending_amulets = 0; // Initialize amulet balance to 0
     user_state.bump = ctx.bumps.user_state;
 
-    // 初始化香火状态
+    // Initialize incense state
     user_incense_state.user = user.key();
     user_incense_state.title = crate::state::user_state::UserTitle::Pilgrim;
     user_incense_state.incense_points = 0;
@@ -69,7 +69,7 @@ pub fn init_user(ctx: Context<InitUser>) -> Result<()> {
     user_incense_state.update_time = clock.unix_timestamp;
     user_incense_state.bump = ctx.bumps.user_incense_state;
 
-    // 初始化香火余额和每日计数数组
+    // Initialize incense balance and daily count arrays
     user_incense_state.incense_balance = [
         IncenseBalance {
             incense_id: 0,
@@ -123,7 +123,7 @@ pub fn init_user(ctx: Context<InitUser>) -> Result<()> {
         },
     ];
 
-    // 初始化抽签和许愿相关
+    // Initialize draw fortune and wish related
     user_incense_state.daily_draw_count = 0;
     user_incense_state.last_draw_time = 0;
     user_incense_state.total_draws = 0;
@@ -131,7 +131,7 @@ pub fn init_user(ctx: Context<InitUser>) -> Result<()> {
     user_incense_state.last_wish_time = 0;
     user_incense_state.total_wishes = 0;
 
-    // 初始化捐助状态
+    // Initialize donation state
     user_donation_state.user = user.key();
     user_donation_state.donation_amount = 0;
     user_donation_state.donation_level = 0;
@@ -139,7 +139,7 @@ pub fn init_user(ctx: Context<InitUser>) -> Result<()> {
     user_donation_state.last_donation_time = 0;
     user_donation_state.bump = ctx.bumps.user_donation_state;
 
-    // 更新全局统计的用户数量
+    // Update global stats user count
     ctx.accounts.global_stats.increment_users();
 
     msg!("User state initialized for: {}", user.key());

@@ -4,37 +4,37 @@ use crate::state::temple_config::TempleConfig;
 use crate::state::user_state::{UserDonationState, UserIncenseState, UserState, UserTitle};
 use anchor_lang::prelude::*;
 
-// 用户概览信息
+// User profile information
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct UserProfile {
-    // 基本信息
+    // Basic information
     pub user: Pubkey,
     pub title: UserTitle,
     pub has_buddha_nft: bool,
     pub has_medal_nft: bool,
 
-    // 香火相关
-    pub incense_points: u64, // 香火值
-    pub merit: u64,          // 功德值
-    pub incense_number: u8,  // 每日烧香量
+    // Incense related
+    pub incense_points: u64, // Incense points
+    pub merit: u64,          // Merit points
+    pub incense_number: u8,  // Daily incense burn amount
 
-    // 捐助相关
-    pub donation_amount: u64, // 捐助金额 (lamports)
-    pub donation_level: u8,   // 捐助等级
+    // Donation related
+    pub donation_amount: u64, // Donation amount (lamports)
+    pub donation_level: u8,   // Donation level
 
-    // NFT持有情况
-    pub total_buddha_nfts: u32, // 佛像NFT数量
-    pub total_medal_nfts: u32,  // 勋章NFT数量
-    pub total_amulets: u32,     // 御守数量
+    // NFT holdings
+    pub total_buddha_nfts: u32, // Buddha NFT count
+    pub total_medal_nfts: u32,  // Medal NFT count
+    pub total_amulets: u32,     // Amulet count
 
-    // 活动统计
-    pub total_draws: u32,     // 总抽签次数
-    pub total_wishes: u32,    // 总许愿次数
-    pub total_donations: u32, // 总捐助次数
+    // Activity statistics
+    pub total_draws: u32,     // Total draw fortune count
+    pub total_wishes: u32,    // Total wish count
+    pub total_donations: u32, // Total donation count
 
-    // 时间信息
-    pub join_time: i64,     // 加入时间
-    pub last_activity: i64, // 最后活动时间
+    // Time information
+    pub join_time: i64,     // Join time
+    pub last_activity: i64, // Last activity time
 }
 
 #[derive(Accounts)]
@@ -77,10 +77,10 @@ pub fn get_user_profile(ctx: Context<GetUserProfile>) -> Result<UserProfile> {
     let user_incense_state = &ctx.accounts.user_incense_state;
     let user_donation_state = &ctx.accounts.user_donation_state;
 
-    // 计算加入时间 (使用用户状态创建时间，这里简化为当前时间)
+    // Calculate join time (using user state creation time, simplified to current time here)
     let join_time = Clock::get()?.unix_timestamp;
 
-    // 计算最后活动时间 (取各个状态的最新更新时间)
+    // Calculate last activity time (take the latest update time from all states)
     let last_activity = user_incense_state
         .update_time
         .max(user_donation_state.last_donation_time);
@@ -98,7 +98,7 @@ pub fn get_user_profile(ctx: Context<GetUserProfile>) -> Result<UserProfile> {
         donation_amount: user_donation_state.donation_amount,
         donation_level: user_donation_state.donation_level,
 
-        // 用户个人统计信息
+        // User personal statistics
         total_buddha_nfts: if user_state.has_buddha_nft { 1 } else { 0 },
         total_medal_nfts: if user_state.has_medal_nft { 1 } else { 0 },
         total_amulets: user_state.pending_amulets,

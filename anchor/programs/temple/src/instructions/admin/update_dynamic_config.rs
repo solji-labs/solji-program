@@ -34,30 +34,30 @@ pub struct UpdateShopItems<'info> {
     pub authority: Signer<'info>,
 }
 
-// ===== 核心动态配置更新函数 =====
+// ===== Core dynamic configuration update functions =====
 
-// 1. 更新烧香香型配置
+// 1. Update incense types configuration
 pub fn update_incense_types(
     ctx: Context<UpdateDynamicConfig>,
     incense_types: Vec<IncenseType>,
 ) -> Result<()> {
     let temple_config = &mut ctx.accounts.temple_config;
 
-    // 验证香型数据
+    // Validate incense type data
     for incense in &incense_types {
         require!(incense.id > 0, ErrorCode::InvalidIncenseType);
         require!(!incense.name.is_empty(), ErrorCode::InvalidIncenseType);
         require!(incense.price_lamports > 0, ErrorCode::InvalidIncenseType);
     }
 
-    // 更新香型配置
+    // Update incense types configuration
     temple_config.dynamic_config.incense_types = incense_types;
 
     msg!("Updated incense types configuration");
     Ok(())
 }
 
-// 2. 更新抽签签文配置
+// 2. Update fortune configuration
 pub fn update_fortune_config(
     ctx: Context<UpdateDynamicConfig>,
     regular_fortune: FortuneConfig,
@@ -65,7 +65,7 @@ pub fn update_fortune_config(
 ) -> Result<()> {
     let temple_config = &mut ctx.accounts.temple_config;
 
-    // 验证概率总和为100
+    // Validate probability total is 100
     let regular_total = regular_fortune.great_luck_prob as u16
         + regular_fortune.good_luck_prob as u16
         + regular_fortune.neutral_prob as u16
@@ -81,7 +81,7 @@ pub fn update_fortune_config(
     require!(regular_total == 100, ErrorCode::InvalidFortuneConfig);
     require!(buddha_total == 100, ErrorCode::InvalidFortuneConfig);
 
-    // 更新概率配置
+    // Update probability configuration
     temple_config.dynamic_config.regular_fortune = regular_fortune;
     temple_config.dynamic_config.buddha_fortune = buddha_fortune;
 
@@ -89,14 +89,14 @@ pub fn update_fortune_config(
     Ok(())
 }
 
-// 3. 更新捐助等级配置
+// 3. Update donation levels configuration
 pub fn update_donation_levels(
     ctx: Context<UpdateDynamicConfig>,
     donation_levels: Vec<DonationLevelConfig>,
 ) -> Result<()> {
     let temple_config = &mut ctx.accounts.temple_config;
 
-    // 验证捐助等级数据
+    // Validate donation level data
     for level_config in &donation_levels {
         require!(
             level_config.level > 0 && level_config.level <= 4,
@@ -108,21 +108,21 @@ pub fn update_donation_levels(
         );
     }
 
-    // 更新捐助等级配置
+    // Update donation levels configuration
     temple_config.dynamic_config.donation_levels = donation_levels;
 
     msg!("Updated donation levels configuration");
     Ok(())
 }
 
-// 3.5. 更新捐助奖励配置
+// 3.5. Update donation rewards configuration
 pub fn update_donation_rewards(
     ctx: Context<UpdateDynamicConfig>,
     donation_rewards: Vec<DonationRewardConfig>,
 ) -> Result<()> {
     let temple_config = &mut ctx.accounts.temple_config;
 
-    // 验证捐助奖励数据
+    // Validate donation reward data
     for reward_config in &donation_rewards {
         require!(
             reward_config.min_donation_sol >= 0.0,
@@ -131,21 +131,21 @@ pub fn update_donation_rewards(
         require!(reward_config.incense_id >= 0, ErrorCode::InvalidIncenseType);
     }
 
-    // 更新捐助奖励配置
+    // Update donation rewards configuration
     temple_config.dynamic_config.donation_rewards = donation_rewards;
 
     msg!("Updated donation rewards configuration");
     Ok(())
 }
 
-// 4. 更新寺庙等级配置
+// 4. Update temple levels configuration
 pub fn update_temple_levels(
     ctx: Context<UpdateDynamicConfig>,
     temple_levels: Vec<TempleLevelConfig>,
 ) -> Result<()> {
     let temple_config = &mut ctx.accounts.temple_config;
 
-    // 验证寺庙等级数据
+    // Validate temple level data
     for level_config in &temple_levels {
         require!(
             level_config.level > 0 && level_config.level <= 4,
@@ -159,12 +159,12 @@ pub fn update_temple_levels(
     Ok(())
 }
 
-// 5. 更新商城物品配置
+// 5. Update shop items configuration
 pub fn update_shop_items(ctx: Context<UpdateShopItems>, shop_items: Vec<ShopItem>) -> Result<()> {
     let shop_config = &mut ctx.accounts.shop_config;
     let clock = Clock::get()?;
 
-    // 验证商城物品数据
+    // Validate shop item data
     for item in &shop_items {
         require!(item.id > 0, ErrorCode::InvalidShopItemId);
         require!(!item.name.is_empty(), ErrorCode::InvalidShopItemId);
@@ -172,7 +172,7 @@ pub fn update_shop_items(ctx: Context<UpdateShopItems>, shop_items: Vec<ShopItem
         require!(item.stock >= 0, ErrorCode::InvalidShopItemId);
     }
 
-    // 更新商城物品配置
+    // Update shop items configuration
     shop_config.shop_items = shop_items;
     shop_config.update_timestamp(clock.unix_timestamp);
 

@@ -4,11 +4,11 @@ use anchor_lang::prelude::*;
 #[derive(InitSpace)]
 pub struct Wish {
     pub id: u64,                // id
-    pub creator: Pubkey,        // 创建人
-    pub content_hash: [u8; 32], // IPFS内容hash
-    pub is_anonymous: bool,     // 匿名或者公开
-    pub created_at: i64,        // 创建时间
-    pub likes: u64,             // 点赞数
+    pub creator: Pubkey,        // Creator
+    pub content_hash: [u8; 32], // IPFS content hash
+    pub is_anonymous: bool,     // Anonymous or public
+    pub created_at: i64,        // Created time
+    pub likes: u64,             // Like count
     pub bump: u8,
 }
 

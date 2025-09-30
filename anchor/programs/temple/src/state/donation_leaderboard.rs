@@ -1,23 +1,23 @@
 use anchor_lang::prelude::*;
 
-// 捐助排行榜用户条目
+// Donation leaderboard user entry
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
 pub struct DonationUser {
     pub user: Pubkey,
-    pub total_donation: u64, // 总捐助金额（lamports）
+    pub total_donation: u64, // Total donation amount (lamports)
 }
 
-// 捐助排行榜账户
+// Donation leaderboard account
 #[account]
 #[derive(InitSpace)]
 pub struct DonationLeaderboard {
     pub bump: u8,
-    pub total_donors: u32,            // 总捐助人数
-    pub donation_deadline: u64,       // 捐助截止时间戳
-    pub distribution_completed: bool, // 是否已完成分配
-    pub distributed_count: u32,       // 已分配NFT数量
-    pub last_updated: i64,            // 最后更新时间
-    // 存储前10,000名捐助者（按捐助金额降序排列）
+    pub total_donors: u32,            // Total number of donors
+    pub donation_deadline: u64,       // Donation deadline timestamp
+    pub distribution_completed: bool, // Whether distribution is completed
+    pub distributed_count: u32,       // Number of NFTs distributed
+    pub last_updated: i64,            // Last updated time
+    // Store top 10,000 donors (sorted by donation amount descending)
     #[max_len(10000)]
     pub top_donors: Vec<DonationUser>,
 }
@@ -25,7 +25,7 @@ pub struct DonationLeaderboard {
 impl DonationLeaderboard {
     pub const SEED_PREFIX: &'static str = "donation_leaderboard";
 
-    // 初始化排行榜
+    // Initialize leaderboard
     pub fn initialize(&mut self, bump: u8, donation_deadline: u64) {
         self.bump = bump;
         self.total_donors = 0;
@@ -35,23 +35,23 @@ impl DonationLeaderboard {
         self.last_updated = Clock::get().unwrap().unix_timestamp;
     }
 
-    // 更新用户捐助记录
+    // Update user donation record
     pub fn update_donation(&mut self, user: Pubkey, donation_amount: u64) {
         let now = Clock::get().unwrap().unix_timestamp;
 
-        // 检查是否在截止时间前
+        // Check if before deadline
         if (now as u64) >= self.donation_deadline {
-            return; // 截止后不更新排行榜
+            return; // Do not update leaderboard after deadline
         }
 
-        // 查找现有条目
+        // Find existing entry
         if let Some(existing_entry) = self.top_donors.iter_mut().find(|u| u.user == user) {
-            // 更新现有用户的捐助金额
+            // Update existing user's donation amount
             existing_entry.total_donation = existing_entry
                 .total_donation
                 .saturating_add(donation_amount);
         } else {
-            // 添加新用户
+            // Add new user
             self.top_donors.push(DonationUser {
                 user,
                 total_donation: donation_amount,
@@ -59,11 +59,11 @@ impl DonationLeaderboard {
             self.total_donors = self.total_donors.saturating_add(1);
         }
 
-        // 重新排序（降序）
+        // Re-sort (descending)
         self.top_donors
             .sort_by(|a, b| b.total_donation.cmp(&a.total_donation));
 
-        // 保持前10,000名
+        // Keep top 10,000
         if self.top_donors.len() > 10000 {
             self.top_donors.truncate(10000);
         }
@@ -71,7 +71,7 @@ impl DonationLeaderboard {
         self.last_updated = now;
     }
 
-    // 获取用户排名（返回排名位置，0-based）
+    // Get user rank (return rank position, 0-based)
     pub fn get_user_rank(&self, user: &Pubkey) -> Option<u32> {
         self.top_donors
             .iter()
@@ -79,30 +79,30 @@ impl DonationLeaderboard {
             .map(|pos| pos as u32)
     }
 
-    // 检查用户是否在前10,000名
+    // Check if user is in top 10,000
     pub fn is_top_donor(&self, user: &Pubkey) -> bool {
         self.get_user_rank(user).is_some()
     }
 
-    // 获取前N名捐助者
+    // Get top N donors
     pub fn get_top_donors(&self, limit: usize) -> &[DonationUser] {
         let len = self.top_donors.len().min(limit);
         &self.top_donors[..len]
     }
 
-    // 标记分配完成
+    // Mark distribution completed
     pub fn mark_distribution_completed(&mut self, distributed_count: u32) {
         self.distribution_completed = true;
         self.distributed_count = distributed_count;
         self.last_updated = Clock::get().unwrap().unix_timestamp;
     }
 
-    // 检查是否可以开始分配
+    // Check if can start distribution
     pub fn can_start_distribution(&self, current_time: u64) -> bool {
         current_time >= self.donation_deadline && !self.distribution_completed
     }
 
-    // 获取待分配的用户列表（前10,000名中没有Buddha NFT的用户）
+    // Get list of users to distribute to (top 10,000 without Buddha NFT)
     pub fn get_eligible_donors(&self, users_with_buddha: &[Pubkey]) -> Vec<DonationUser> {
         self.top_donors
             .iter()

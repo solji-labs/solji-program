@@ -43,7 +43,7 @@ pub struct StakeMedalNFT<'info> {
     )]
     pub nft_mint_account: Box<Account<'info, Mint>>,
 
-    /// 用户的勋章NFT关联账户
+    /// User's medal NFT associated token account
     #[account(
         mut,
         associated_token::mint = nft_mint_account,
@@ -51,7 +51,7 @@ pub struct StakeMedalNFT<'info> {
     )]
     pub nft_associated_token_account: Box<Account<'info, TokenAccount>>,
 
-    /// 合约的勋章NFT代币账户（用于质押）
+    /// Contract's medal NFT token account (for staking)
     #[account(
         init_if_needed,
         payer = owner,
@@ -76,13 +76,13 @@ pub fn stake_medal_nft(ctx: Context<StakeMedalNFT>) -> Result<()> {
     let medal_nft = &mut ctx.accounts.medal_nft_account;
     let now = Clock::get()?.unix_timestamp;
 
-    // 检查用户是否拥有勋章NFT
+    // Check if user owns medal NFT
     require!(user_state.has_medal_nft, ErrorCode::UserDoesNotHaveMedalNFT);
 
-    // 检查勋章是否已经被质押
+    // Check if medal is already staked
     require!(medal_nft.staked_at.is_none(), ErrorCode::MedalAlreadyStaked);
 
-    // 将NFT转移到合约账户进行质押
+    // Transfer NFT to contract account for staking
     token::transfer(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
@@ -95,7 +95,7 @@ pub fn stake_medal_nft(ctx: Context<StakeMedalNFT>) -> Result<()> {
         1,
     )?;
 
-    // 更新勋章状态
+    // Update medal status
     medal_nft.staked_at = Some(now);
 
     msg!("mint success");
@@ -140,7 +140,7 @@ pub struct UnstakeMedalNFT<'info> {
     )]
     pub nft_mint_account: Box<Account<'info, Mint>>,
 
-    /// 用户的勋章NFT关联账户
+    /// User's medal NFT associated token account
     #[account(
         init_if_needed,
         payer = owner,
@@ -149,7 +149,7 @@ pub struct UnstakeMedalNFT<'info> {
     )]
     pub nft_associated_token_account: Box<Account<'info, TokenAccount>>,
 
-    /// 合约的勋章NFT代币账户
+    /// Contract's medal NFT token account
     #[account(
         mut,
         associated_token::mint = nft_mint_account,
@@ -172,25 +172,25 @@ pub fn unstake_medal_nft(ctx: Context<UnstakeMedalNFT>) -> Result<()> {
     let medal_nft = &mut ctx.accounts.medal_nft_account;
     let now = Clock::get()?.unix_timestamp;
 
-    // 检查勋章是否已质押
+    // Check if medal is staked
     let staked_at = medal_nft.staked_at.ok_or(ErrorCode::MedalNotStaked)?;
 
-    // 计算质押时间（秒）
+    // Calculate staking duration (seconds)
     let staking_duration = now - staked_at;
-    let min_staking_days = 7 * 24 * 60 * 60; // 7天
+    let min_staking_days = 7 * 24 * 60 * 60; // 7 days
 
-    // 是否达到一周质押时间 是则奖励
+    // Check if staking duration meets one week requirement for rewards
     if staking_duration >= min_staking_days {
         let reward = calculate_staking_reward(staking_duration);
         ctx.accounts
             .user_incense_state
             .add_incense_value_and_merit(0, reward);
-        msg!("质押成功，获得奖励: {} 功德值", reward);
+        msg!("Staking successful, reward earned: {} merit points", reward);
     } else {
-        msg!("质押时间不足7天，无法获得奖励");
+        msg!("Staking duration less than 7 days, no reward available");
     }
 
-    // 将NFT转回用户账户
+    // Transfer NFT back to user account
     let temple_signer_seeds: &[&[&[u8]]] = &[&[
         TempleConfig::SEED_PREFIX.as_bytes(),
         &[ctx.bumps.temple_config],
@@ -209,15 +209,15 @@ pub fn unstake_medal_nft(ctx: Context<UnstakeMedalNFT>) -> Result<()> {
         1,
     )?;
 
-    // 更新勋章状态
+    // Update medal status
     medal_nft.staked_at = None;
 
-    msg!("勋章NFT解质押完成");
+    msg!("Medal NFT unstaking completed");
 
     Ok(())
 }
 
-//TODO 质押奖励暂时按照每7天+30
+//TODO Staking reward temporarily set to +30 per 7 days
 fn calculate_staking_reward(duration_seconds: i64) -> u64 {
     let weeks = duration_seconds / (7 * 24 * 60 * 60);
     if weeks >= 1 {

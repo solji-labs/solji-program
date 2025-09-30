@@ -1,0 +1,9 @@
+[workspace]
+members = [
+    "anchor",        # 包含您的链上程序
+    "solji-backend", # 包含您的链下服务
+]
+
+# 这一段允许 solji-backend 引用 anchor 包中的状态定义
+[patch.crates-io]
+# anchor-lang = { path = "anchor/deps/anchor-lang" } # 如果需要，但通常不必要

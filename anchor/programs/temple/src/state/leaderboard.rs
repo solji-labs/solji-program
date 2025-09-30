@@ -1,23 +1,23 @@
 use anchor_lang::prelude::*;
 
-// 排行榜用户条目
+// Leaderboard user entry
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
 pub struct LeaderboardUser {
     pub user: Pubkey,
     pub value: u64,
 }
 
-// 排行榜条目账户（存储详细分数）
+// Leaderboard entry account (store detailed scores)
 #[account]
 #[derive(InitSpace)]
 pub struct LeaderboardEntry {
     pub bump: u8,
-    pub user: Pubkey,              // 用户地址
-    pub period: LeaderboardPeriod, // 排行榜周期
-    pub incense_count: u64,        // 烧香次数
-    pub incense_value: u64,        // 香火值
-    pub merit: u64,                // 功德值
-    pub last_updated: i64,         // 最后更新时间
+    pub user: Pubkey,              // User address
+    pub period: LeaderboardPeriod, // Leaderboard period
+    pub incense_count: u64,        // Incense burn count
+    pub incense_value: u64,        // Incense points
+    pub merit: u64,                // Merit
+    pub last_updated: i64,         // Last updated time
 }
 
 impl LeaderboardEntry {
@@ -51,28 +51,28 @@ impl LeaderboardEntry {
     }
 }
 
-// 主排行榜账户（存储排序后的用户地址和值列表）
+// Main leaderboard account (store sorted user addresses and values)
 #[account]
 #[derive(InitSpace)]
 pub struct Leaderboard {
     pub bump: u8,
-    pub total_users: u32,        // 总用户数
-    pub last_daily_reset: i64,   // 每日重置时间
-    pub last_weekly_reset: i64,  // 每周重置时间
-    pub last_monthly_reset: i64, // 每月重置时间
-    // 存储前10名用户地址和值（已排序）
+    pub total_users: u32,        // Total users
+    pub last_daily_reset: i64,   // Daily reset time
+    pub last_weekly_reset: i64,  // Weekly reset time
+    pub last_monthly_reset: i64, // Monthly reset time
+    // Store top 10 user addresses and values (sorted)
     #[max_len(10)]
-    pub daily_users: Vec<LeaderboardUser>, // 每日活跃用户列表
+    pub daily_users: Vec<LeaderboardUser>, // Daily active users list
     #[max_len(10)]
-    pub weekly_users: Vec<LeaderboardUser>, // 每周活跃用户列表
+    pub weekly_users: Vec<LeaderboardUser>, // Weekly active users list
     #[max_len(10)]
-    pub monthly_users: Vec<LeaderboardUser>, // 每月活跃用户列表
+    pub monthly_users: Vec<LeaderboardUser>, // Monthly active users list
 }
 
 impl Leaderboard {
     pub const SEED_PREFIX: &'static str = "leaderboard";
 
-    // 初始化排行榜
+    // Initialize leaderboard
     pub fn initialize(&mut self, bump: u8) {
         self.bump = bump;
         self.total_users = 0;
@@ -81,30 +81,30 @@ impl Leaderboard {
         self.last_monthly_reset = self.last_daily_reset;
     }
 
-    // 检查是否需要重置排行榜周期
+    // Check if need to reset leaderboard periods
     pub fn check_and_reset_periods(&mut self) {
         let now = Clock::get().unwrap().unix_timestamp;
 
-        // 每日重置 (24小时)
+        // Daily reset (24 hours)
         if now - self.last_daily_reset >= 24 * 60 * 60 {
             self.last_daily_reset = now;
             self.daily_users.clear();
         }
 
-        // 每周重置 (7天)
+        // Weekly reset (7 days)
         if now - self.last_weekly_reset >= 7 * 24 * 60 * 60 {
             self.last_weekly_reset = now;
             self.weekly_users.clear();
         }
 
-        // 每月重置 (30天)
+        // Monthly reset (30 days)
         if now - self.last_monthly_reset >= 30 * 24 * 60 * 60 {
             self.last_monthly_reset = now;
             self.monthly_users.clear();
         }
     }
 
-    // 更新用户在排行榜中的位置
+    // Update user's position in leaderboard
     pub fn update_user_ranking(&mut self, user: Pubkey, value: u64, period: LeaderboardPeriod) {
         let user_list = match period {
             LeaderboardPeriod::Daily => &mut self.daily_users,
@@ -112,22 +112,22 @@ impl Leaderboard {
             LeaderboardPeriod::Monthly => &mut self.monthly_users,
         };
 
-        // 移除现有条目
+        // Remove existing entry
         user_list.retain(|u| u.user != user);
 
-        // 插入新条目
+        // Insert new entry
         user_list.push(LeaderboardUser { user, value });
 
-        // 排序（降序）
+        // Sort (descending)
         user_list.sort_by(|a, b| b.value.cmp(&a.value));
 
-        // 保持前10
+        // Keep top 10
         if user_list.len() > 10 {
             user_list.truncate(10);
         }
     }
 
-    // 获取用户排名（返回排名位置，0-based）
+    // Get user rank (return rank position, 0-based)
     pub fn get_incense_leaderboard(&self, user: &Pubkey, period: LeaderboardPeriod) -> Option<u32> {
         let user_list = match period {
             LeaderboardPeriod::Daily => &self.daily_users,
@@ -141,7 +141,7 @@ impl Leaderboard {
             .map(|pos| pos as u32)
     }
 
-    // 检查用户是否有视觉特效奖励（前3名）
+    // Check if user has visual effect reward (top 3)
     pub fn has_visual_effect(&self, user: &Pubkey, period: LeaderboardPeriod) -> bool {
         if let Some(rank) = self.get_incense_leaderboard(user, period) {
             rank <= 3
@@ -151,7 +151,7 @@ impl Leaderboard {
     }
 }
 
-// 排行榜周期枚举
+// Leaderboard period enum
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace, Debug)]
 pub enum LeaderboardPeriod {
     Daily,

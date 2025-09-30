@@ -10,29 +10,29 @@ pub fn buy_incense(ctx: Context<BuyIncense>, incense_id: u8, amount: u64) -> Res
     let clock = Clock::get()?;
     let current_time = clock.unix_timestamp as u64;
 
-    // 1. 检查寺庙状态
+    // 1. Check temple status
     ctx.accounts.temple_config.can_perform_operation(
         crate::state::temple_config::TempleStatusBitIndex::BuyIncense,
         current_time,
     )?;
 
-    // 2. 校验amount>0
+    // 2. Validate amount > 0
     if amount == 0 {
         return err!(ErrorCode::InvalidAmount);
     }
 
-    // 2. 获取该香型的单价（从temple_config中读取)
+    // 2. Get the unit price of this incense type (read from temple_config)
     let fee_per_incense = ctx.accounts.temple_config.get_fee_per_incense(incense_id);
     let total_fee = fee_per_incense
         .checked_mul(amount)
         .ok_or(ErrorCode::MathOverflow)?;
 
-    // 3. 校验用户SOL余额
+    // 3. Validate user SOL balance
     if ctx.accounts.authority.lamports() < total_fee {
         return err!(ErrorCode::InsufficientSolBalance);
     }
 
-    // 4. 转账SOL到寺庙
+    // 4. Transfer SOL to temple
     transfer(
         CpiContext::new(
             ctx.accounts.system_program.to_account_info(),
@@ -44,7 +44,7 @@ pub fn buy_incense(ctx: Context<BuyIncense>, incense_id: u8, amount: u64) -> Res
         total_fee,
     )?;
 
-    // 5. 给用户增加香余额
+    // 5. Add incense balance to user
     ctx.accounts
         .user_incense_state
         .add_incense_balance(incense_id, amount);
@@ -66,7 +66,7 @@ pub struct BuyIncense<'info> {
 
     /// CHECK: This account is validated through the constraint that ensures it matches the treasury in temple_config
     #[account(mut, constraint = temple_treasury.key() == temple_config.treasury @ ErrorCode::InvalidTempleTreasury)]
-    pub temple_treasury: AccountInfo<'info>, // 寺庙国库
+    pub temple_treasury: AccountInfo<'info>, // Temple treasury
 
     #[account(
         mut,

@@ -2,7 +2,7 @@ use crate::state::leaderboard::{Leaderboard, LeaderboardPeriod};
 use crate::state::user_state::{UserIncenseState, UserState};
 use anchor_lang::prelude::*;
 
-// TODO 只要是监听到香火相关的事件就更新香火排行榜
+// TODO Update incense leaderboard whenever incense-related events are detected
 #[derive(Accounts)]
 #[instruction(period: LeaderboardPeriod)]
 pub struct UpdateLeaderboard<'info> {
@@ -41,17 +41,17 @@ pub fn update_leaderboard(
     let user_incense_state = &ctx.accounts.user_incense_state;
     let user = ctx.accounts.user.key();
 
-    // 检查并重置过期周期
+    // Check and reset expired periods
     leaderboard.check_and_reset_periods();
 
-    // 根据周期选择值
+    // Select value based on period
     let value = match period {
         LeaderboardPeriod::Daily => user_incense_state.incense_number as u64,
         LeaderboardPeriod::Weekly => user_incense_state.incense_points,
         LeaderboardPeriod::Monthly => user_incense_state.merit,
     };
 
-    // 更新排行榜排名
+    // Update leaderboard ranking
     leaderboard.update_user_ranking(user, value, period.clone());
 
     msg!(

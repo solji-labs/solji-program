@@ -5,39 +5,39 @@ use crate::state::temple_config::TempleConfig;
 use crate::state::user_state::{UserIncenseState, UserState};
 use anchor_lang::prelude::*;
 
-// 定义签文枚举
+// Define fortune result enum
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
 pub enum FortuneResult {
-    GreatLuck,    // 大吉
-    GoodLuck,     // 中吉
-    Neutral,      // 平
-    BadLuck,      // 凶
-    GreatBadLuck, // 大凶
+    GreatLuck,    // Great luck
+    GoodLuck,     // Good luck
+    Neutral,      // Neutral
+    BadLuck,      // Bad luck
+    GreatBadLuck, // Great bad luck
 }
 
 impl FortuneResult {
     pub fn as_str(&self) -> &str {
         match self {
-            FortuneResult::GreatLuck => "大吉",
-            FortuneResult::GoodLuck => "中吉",
-            FortuneResult::Neutral => "平",
-            FortuneResult::BadLuck => "凶",
-            FortuneResult::GreatBadLuck => "大凶",
+            FortuneResult::GreatLuck => "Great Luck",
+            FortuneResult::GoodLuck => "Good Luck",
+            FortuneResult::Neutral => "Neutral",
+            FortuneResult::BadLuck => "Bad Luck",
+            FortuneResult::GreatBadLuck => "Great Bad Luck",
         }
     }
 
     pub fn get_description(&self) -> &str {
         match self {
-            FortuneResult::GreatLuck => "万事顺利，心想事成",
-            FortuneResult::GoodLuck => "诸事顺利，渐入佳境",
-            FortuneResult::Neutral => "平平淡淡，稳中求进",
-            FortuneResult::BadLuck => "小心谨慎，逢凶化吉",
-            FortuneResult::GreatBadLuck => "多加小心，静观其变",
+            FortuneResult::GreatLuck => "Everything goes smoothly, wishes come true",
+            FortuneResult::GoodLuck => "All things go well, gradually improving",
+            FortuneResult::Neutral => "Plain and simple, steady progress",
+            FortuneResult::BadLuck => "Be careful, turn misfortune into fortune",
+            FortuneResult::GreatBadLuck => "Be extra careful, observe quietly",
         }
     }
 }
 
-// 定义抽签结果结构
+// Define draw result structure
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
 pub struct DrawResult {
     pub fortune: FortuneResult,
@@ -78,7 +78,7 @@ pub struct DrawFortune<'info> {
     )]
     pub global_stats: Account<'info, GlobalStats>,
 
-    /// CHECK: 随机数账户（仅在非本地环境需要）
+    /// CHECK: Randomness account (only needed in non-local environment)
     #[cfg(not(feature = "localnet"))]
     pub randomness_account: AccountInfo<'info>,
 
@@ -90,7 +90,7 @@ pub fn draw_fortune(ctx: Context<DrawFortune>, use_merit: bool) -> Result<DrawRe
     let current_time = clock.unix_timestamp as u64;
     let now = clock.unix_timestamp;
 
-    // 检查寺庙状态
+    // Check temple status
     ctx.accounts.temple_config.can_perform_operation(
         crate::state::temple_config::TempleStatusBitIndex::DrawFortune,
         current_time,
@@ -98,20 +98,20 @@ pub fn draw_fortune(ctx: Context<DrawFortune>, use_merit: bool) -> Result<DrawRe
 
     let user_state: &mut Account<'_, UserState> = &mut ctx.accounts.user_state;
 
-    // 检查是否可以使用功德值抽签
+    // Check if merit can be used for drawing fortune
     if use_merit {
         ctx.accounts.user_incense_state.consume_merit_for_draw(5)?;
     } else {
-        // 检查是否可以免费抽签
+        // Check if free draw is available
         if !ctx.accounts.user_incense_state.can_draw_free() {
             return err!(ErrorCode::DailyIncenseLimitExceeded);
         }
     }
 
-    // 生成随机数：根据编译特征决定使用哪种方式
+    // Generate random number: decide method based on compilation features
     #[cfg(feature = "localnet")]
     let random_value = {
-        // 本地测试环境：使用系统时钟作为伪随机数种子
+        // Local test environment: use system clock as pseudo-random seed
         let clock = Clock::get()?;
         let seed = clock.unix_timestamp as u64 + clock.slot;
         (seed % 100) as u8
@@ -119,38 +119,38 @@ pub fn draw_fortune(ctx: Context<DrawFortune>, use_merit: bool) -> Result<DrawRe
 
     #[cfg(not(feature = "localnet"))]
     let random_value = {
-        // 生产环境：使用Switchboard预言机随机数
+        // Production environment: use Switchboard oracle randomness
         let clock = Clock::get()?;
 
-        // 解析随机数账户数据
+        // Parse randomness account data
         let randomness_data = switchboard_on_demand::RandomnessAccountData::parse(
             ctx.accounts.randomness_account.data.borrow(),
         )
         .map_err(|_| ErrorCode::InvalidRandomness)?;
 
-        // 获取随机数
+        // Get random value
         let revealed_random_value = randomness_data
             .get_value(clock.slot)
             .map_err(|_| ErrorCode::RandomnessNotResolved)?;
 
-        // 从随机数数组中提取一个u64值
+        // Extract a u64 value from random number array
         let mut random_bytes = [0u8; 8];
         random_bytes.copy_from_slice(&revealed_random_value[..8]);
         let random_u64 = u64::from_le_bytes(random_bytes);
 
-        // 转换为0-99的随机数
+        // Convert to 0-99 random number
         (random_u64 % 100) as u8
     };
 
-    // 从动态配置中获取概率设置
+    // Get probability settings from dynamic config
     let fortune_config = ctx
         .accounts
         .temple_config
         .get_fortune_config(user_state.has_buddha_nft);
 
-    // 根据动态配置的概率分配签文
+    // Allocate fortune based on dynamic config probabilities
     if user_state.has_buddha_nft {
-        msg!("佛像持有者获得概率加成");
+        msg!("Buddha NFT holder gets probability bonus");
     }
 
     let fortune = {
@@ -178,18 +178,18 @@ pub fn draw_fortune(ctx: Context<DrawFortune>, use_merit: bool) -> Result<DrawRe
         }
     };
 
-    // 更新用户抽签计数
+    // Update user draw count
     ctx.accounts.user_incense_state.update_draw_count();
 
-    // 更新全局统计
+    // Update global stats
     ctx.accounts.global_stats.increment_draw_fortune();
 
-    // 更新寺庙等级
+    // Update temple level
     ctx.accounts
         .temple_config
         .update_level(&ctx.accounts.global_stats);
 
-    // 给予功德奖励
+    // Give merit reward
     if !use_merit {
         ctx.accounts
             .user_incense_state
@@ -199,22 +199,22 @@ pub fn draw_fortune(ctx: Context<DrawFortune>, use_merit: bool) -> Result<DrawRe
     let fortune_str = fortune.as_str();
     let fortune_desc = fortune.get_description();
 
-    msg!("抽签结果: {}", fortune_str);
-    msg!("签文解释: {}", fortune_desc);
+    msg!("Draw result: {}", fortune_str);
+    msg!("Fortune explanation: {}", fortune_desc);
 
-    // TODO 御守概率掉落逻辑：10%概率（是否需要优化为预言机随机数）
+    // TODO Amulet drop probability logic: 10% chance (should it be optimized to oracle randomness?)
     let amulet_drop_random = (random_value.wrapping_add(42) % 100) as u8;
     let amulet_dropped = amulet_drop_random < 10;
     if amulet_dropped {
-        // 增加用户可铸造御守余额
+        // Increase user's mintable amulet balance
         ctx.accounts.user_state.pending_amulets += 1;
         msg!(
-            "恭喜！抽签时获得了1个御守铸造机会！当前余额: {}",
+            "Congratulations! Got 1 amulet minting opportunity from drawing fortune! Current balance: {}",
             ctx.accounts.user_state.pending_amulets
         );
     }
 
-    // 发出抽签事件
+    // Emit draw fortune event
     emit!(FortuneDrawn {
         user: ctx.accounts.user.key(),
         fortune_result: fortune.as_str().to_string(),

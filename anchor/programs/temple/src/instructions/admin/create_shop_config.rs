@@ -39,7 +39,7 @@ pub fn create_shop_config(
     let temple_config = &ctx.accounts.temple_config;
     let clock = Clock::get()?;
 
-    // 初始化商城配置
+    // Initialize system configuration
     shop_config.temple_config = temple_config.key();
     shop_config.owner = ctx.accounts.owner.key();
     shop_config.created_at = clock.unix_timestamp;

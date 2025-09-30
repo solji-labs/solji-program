@@ -46,22 +46,22 @@ pub fn create_temple_config(
     let temple_config: &mut Account<'_, TempleConfig> = &mut ctx.accounts.temple_config;
     let clock = Clock::get()?;
 
-    // 初始化基础配置
+    // Initialize basic configuration
     temple_config.owner = ctx.accounts.owner.key();
     temple_config.treasury = treasury;
 
     temple_config.level = 1;
     temple_config.created_at = clock.unix_timestamp;
     temple_config.total_buddha_nft = 0;
-    temple_config.status = 0; // 初始状态：全部启用
-    temple_config.open_time = clock.unix_timestamp as u64; // 立即上线
+    temple_config.status = 0;
+    temple_config.open_time = clock.unix_timestamp as u64; // onlin time
 
-    // 初始化动态配置
+    // Initialize dynamic configuration
     temple_config.dynamic_config = DynamicConfig {
         incense_types: vec![
             IncenseType {
                 id: 1,
-                name: "清香".to_string(),
+                name: "Fresh".to_string(),
                 price_lamports: 10000000, // 0.01 SOL
                 merit: 10,
                 incense_points: 100,
@@ -69,7 +69,7 @@ pub fn create_temple_config(
             },
             IncenseType {
                 id: 2,
-                name: "檀香".to_string(),
+                name: "Sandalwood".to_string(),
                 price_lamports: 50000000, // 0.05 SOL
                 merit: 65,
                 incense_points: 600,
@@ -77,7 +77,7 @@ pub fn create_temple_config(
             },
             IncenseType {
                 id: 3,
-                name: "龙涎香".to_string(),
+                name: "Ambergris".to_string(),
                 price_lamports: 100000000, // 0.1 SOL
                 merit: 1200,
                 incense_points: 3100,
@@ -85,7 +85,7 @@ pub fn create_temple_config(
             },
             IncenseType {
                 id: 4,
-                name: "太上灵香".to_string(),
+                name: "Supreme Spirit".to_string(),
                 price_lamports: 300000000, // 0.3 SOL
                 merit: 3400,
                 incense_points: 9000,
@@ -93,7 +93,7 @@ pub fn create_temple_config(
             },
             IncenseType {
                 id: 5,
-                name: "秘制香".to_string(),
+                name: "Secret".to_string(),
                 price_lamports: 10000000000, // 10 SOL
                 merit: 5000,
                 incense_points: 15000,
@@ -101,7 +101,7 @@ pub fn create_temple_config(
             },
             IncenseType {
                 id: 6,
-                name: "天界香".to_string(),
+                name: "Heavenly".to_string(),
                 price_lamports: 50000000000, // 50 SOL
                 merit: 10000,
                 incense_points: 30000,
@@ -115,21 +115,19 @@ pub fn create_temple_config(
         temple_levels: temple_levels.clone(),
     };
 
-    // 初始化全局统计
+    // Global State
     let global_stats = &mut ctx.accounts.global_stats;
     global_stats.temple_config = temple_config.key();
-    // 核心统计数据
     global_stats.total_incense_points = 0;
     global_stats.total_merit = 0;
     global_stats.total_draw_fortune = 0;
     global_stats.total_wishes = 0;
     global_stats.total_donations_lamports = 0;
     global_stats.total_users = 0;
-    // NFT统计
+    // NFT
     global_stats.total_fortune_nfts = 0;
     global_stats.total_amulets = 0;
     global_stats.total_buddha_lights = 0;
-    // 元数据
     global_stats.updated_at = clock.unix_timestamp;
 
     msg!("Temple config created successfully ");

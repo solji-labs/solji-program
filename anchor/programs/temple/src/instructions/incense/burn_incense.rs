@@ -1,5 +1,6 @@
 use crate::error::ErrorCode;
 use crate::incense_nft::IncenseNFT;
+use crate::state::event::IncenseBurned;
 use crate::state::global_stats::GlobalStats;
 use crate::state::temple_config::*;
 use crate::state::user_state::{UserIncenseState, UserState};
@@ -17,7 +18,7 @@ pub fn burn_incense(ctx: Context<BurnIncense>, incense_id: u8, amount: u64) -> R
     let clock = Clock::get()?;
     let current_time = clock.unix_timestamp as u64;
 
-    // 检查寺庙状态
+    // Check temple status
     ctx.accounts.temple_config.can_perform_operation(
         crate::state::temple_config::TempleStatusBitIndex::BurnIncense,
         current_time,
@@ -32,12 +33,12 @@ pub fn burn_incense(ctx: Context<BurnIncense>, incense_id: u8, amount: u64) -> R
     let incense_points = incense_type.incense_points as u64;
     let merit = incense_type.merit as u64;
 
-    // 检查用户烧香次数是否超过每日限制
+    // Check if user incense burn count exceeds daily limit
     ctx.accounts
         .user_incense_state
         .check_daily_incense_limit(incense_id, amount as u8)?;
 
-    // 检查并扣减香余额（替代SOL支付）
+    // Check and deduct incense balance (alternative to SOL payment)
     let current_balance = ctx
         .accounts
         .user_incense_state
@@ -54,7 +55,7 @@ pub fn burn_incense(ctx: Context<BurnIncense>, incense_id: u8, amount: u64) -> R
         incense_id
     );
 
-    // 构建签名种子用于铸造NFT
+    // Build signer seeds for minting NFT
     let temple_config_key: Pubkey = ctx.accounts.temple_config.key();
     let signer_seeds: &[&[&[u8]]] = &[&[
         IncenseNFT::SEED_PREFIX.as_bytes(),
@@ -63,7 +64,7 @@ pub fn burn_incense(ctx: Context<BurnIncense>, incense_id: u8, amount: u64) -> R
         &[ctx.bumps.nft_mint_account],
     ]];
 
-    // Mint NFT给用户
+    // Mint NFT to user
     mint_to(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
@@ -78,7 +79,7 @@ pub fn burn_incense(ctx: Context<BurnIncense>, incense_id: u8, amount: u64) -> R
     )?;
     msg!("NFT minted successfully");
 
-    // 立即销毁NFT（消耗品模式）
+    // Immediately burn NFT (consumable mode)
     burn(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
@@ -92,23 +93,29 @@ pub fn burn_incense(ctx: Context<BurnIncense>, incense_id: u8, amount: u64) -> R
     )?;
     msg!("NFT burned successfully - consumable incense used");
 
-    // 更新每日烧香次数
+    // Update daily incense burn count
     ctx.accounts
         .user_incense_state
         .update_daily_count(incense_id, amount as u8);
     ctx.accounts.user_incense_state.incense_number += amount as u8;
 
-    // 更新用户的香火值和功德值（内部会自动更新称号）
+    // Update user's incense points and merit (title will be updated automatically internally)
     ctx.accounts
         .user_incense_state
         .add_incense_value_and_merit(incense_points * amount, merit * amount);
 
-    // 修改全局统计的功德和香火值
+    // Update global stats with merit and incense points
     ctx.accounts
         .global_stats
         .add_incense_value_and_merit(incense_points * amount, merit * amount);
 
-    msg!("用户烧香完成 - 排行榜可通过单独指令更新");
+    // event
+    emit!(IncenseBurned {
+        user: ctx.accounts.authority.key(),
+        incense_id: incense_id,
+        amount: amount,
+        timestamp: clock.unix_timestamp,
+    });
 
     Ok(())
 }
@@ -116,16 +123,16 @@ pub fn burn_incense(ctx: Context<BurnIncense>, incense_id: u8, amount: u64) -> R
 #[derive(Accounts)]
 #[instruction(incense_id: u8)]
 pub struct BurnIncense<'info> {
-    /// 用户账号（付款方，签名者）
+    /// User account (payer, signer)
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    /// CHECK: 寺庙管理员账号
+    /// CHECK: Temple admin account
     #[account(mut,
         constraint = temple_authority.key() == temple_config.owner @ ErrorCode::InvalidOwner)]
     pub temple_authority: AccountInfo<'info>,
 
-    /// CHECK: 寺庙存储sol的帐号
+    /// CHECK: Temple SOL storage account
     #[account(
         mut,
         constraint = temple_treasury.key() == temple_config.treasury @ ErrorCode::InvalidTempleTreasury
@@ -146,7 +153,7 @@ pub struct BurnIncense<'info> {
     )]
     pub global_stats: Account<'info, GlobalStats>,
 
-    /// 用户账号
+    /// User account
     #[account(
         mut,
         seeds = [UserState::SEED_PREFIX.as_bytes(), authority.key().as_ref()],
@@ -154,7 +161,7 @@ pub struct BurnIncense<'info> {
     )]
     pub user_state: Box<Account<'info, UserState>>,
 
-    /// 用户香火状态
+    /// User incense state
     #[account(
         mut,
         seeds = [UserIncenseState::SEED_PREFIX.as_bytes(), authority.key().as_ref()],
@@ -162,18 +169,18 @@ pub struct BurnIncense<'info> {
     )]
     pub user_incense_state: Box<Account<'info, UserIncenseState>>,
 
-    /// nft mint
+    /// NFT mint
     #[account(
         mut,
         seeds = [IncenseNFT::SEED_PREFIX.as_bytes(), temple_config.key().as_ref(), &[incense_id]],
         bump,
         mint::decimals = IncenseNFT::TOKEN_DECIMALS,
         mint::authority = nft_mint_account.key(),
-        mint::freeze_authority = temple_authority.key(), // 寺庙拥有冻结权限
+        mint::freeze_authority = temple_authority.key(), // Temple has freeze authority
     )]
     pub nft_mint_account: Box<Account<'info, Mint>>,
 
-    /// 用户的NFT关联账户
+    /// User's NFT associated account
     #[account(
         init_if_needed,
         payer = authority,
@@ -195,7 +202,7 @@ pub struct BurnIncense<'info> {
     )]
     pub meta_account: UncheckedAccount<'info>,
 
-    // 程序账号
+    // Program accounts
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub token_metadata_program: Program<'info, Metadata>,

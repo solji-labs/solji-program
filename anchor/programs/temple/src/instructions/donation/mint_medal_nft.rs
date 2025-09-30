@@ -17,13 +17,13 @@ use anchor_spl::token::Mint;
 use anchor_spl::token::MintTo;
 use anchor_spl::token::Token;
 use anchor_spl::token::TokenAccount;
-/// 勋章
-/// 捐助后调用 会进行更新或者新mint 勋章nft
+/// Medal
+/// Called after donation, will update or mint new medal NFT
 pub fn mint_medal_nft(ctx: Context<MintMedalNFT>) -> Result<()> {
     let clock = Clock::get()?;
     let current_time = clock.unix_timestamp as u64;
 
-    // 检查寺庙状态
+    // Check temple status
     ctx.accounts.temple_config.can_perform_operation(
         crate::state::temple_config::TempleStatusBitIndex::MintNFT,
         current_time,
@@ -32,24 +32,24 @@ pub fn mint_medal_nft(ctx: Context<MintMedalNFT>) -> Result<()> {
     let user_state = &mut ctx.accounts.user_state;
     let donation_sol = ctx.accounts.user_donation_state.donation_amount as f64 / 1_000_000_000.0;
 
-    // 检查用户是否已有勋章NFT
+    // Check if user already has medal NFT
     if user_state.has_medal_nft {
-        // 用户已有勋章，检查是否可以升级
+        // User already has medal, check if can upgrade
         let next_upgrade_level = ctx
             .accounts
             .medal_nft_account
             .get_next_upgrade_level(donation_sol);
         if let Some(new_level) = next_upgrade_level {
-            // 构建更新后的元数据
+            // Build updated metadata
             let serial_number = ctx.accounts.medal_nft_account.serial_number;
             let new_name = if new_level == 4 {
-                format!("至尊龙章 #{}", serial_number)
+                format!("Supreme Dragon Medal #{}", serial_number)
             } else if new_level == 3 {
-                format!("护法金章 #{}", serial_number)
+                format!("Protector Gold Medal #{}", serial_number)
             } else if new_level == 2 {
-                format!("精进银章 #{}", serial_number)
+                format!("Diligent Silver Medal #{}", serial_number)
             } else {
-                format!("入门功德铜章 #{}", serial_number)
+                format!("Entry Merit Bronze Medal #{}", serial_number)
             };
 
             let new_uri = format!(
@@ -57,7 +57,7 @@ pub fn mint_medal_nft(ctx: Context<MintMedalNFT>) -> Result<()> {
                 new_level
             );
 
-            // 使用update_metadata_accounts_v2更新元数据
+            // Use update_metadata_accounts_v2 to update metadata
             update_metadata_accounts_v2(
                 CpiContext::new(
                     ctx.accounts.token_metadata_program.to_account_info(),
@@ -66,7 +66,7 @@ pub fn mint_medal_nft(ctx: Context<MintMedalNFT>) -> Result<()> {
                         update_authority: ctx.accounts.authority.to_account_info(),
                     },
                 ),
-                None, // 保持现有的 update_authority
+                None, // Keep existing update_authority
                 Some(DataV2 {
                     name: new_name.clone(),
                     symbol: "TMM".to_string(),
@@ -77,21 +77,21 @@ pub fn mint_medal_nft(ctx: Context<MintMedalNFT>) -> Result<()> {
                     uses: None,
                 }),
                 None,
-                if new_level == 4 { Some(true) } else { None }, // 只有最高等级才设置为不可变
+                if new_level == 4 { Some(true) } else { None }, // Only set to immutable for highest level
             )?;
 
-            // 更新MedalNFT账户数据
+            // Update MedalNFT account data
             let now = Clock::get()?.unix_timestamp;
             ctx.accounts.medal_nft_account.level = new_level;
             ctx.accounts.medal_nft_account.total_donation =
                 ctx.accounts.user_donation_state.donation_amount;
             ctx.accounts.medal_nft_account.last_upgrade = now;
 
-            msg!("寺庙勋章NFT升级成功: {}", new_name);
-            msg!("新等级: {}", new_level);
-            msg!("总捐款金额: {:.6} SOL", donation_sol);
+            msg!("Temple medal NFT upgrade successful: {}", new_name);
+            msg!("New level: {}", new_level);
+            msg!("Total donation amount: {:.6} SOL", donation_sol);
 
-            // 发出NFT铸造事件
+            // Emit NFT mint event
             emit!(DonationNFTMinted {
                 user: ctx.accounts.authority.key(),
                 nft_mint: ctx.accounts.nft_mint_account.key(),
@@ -100,17 +100,17 @@ pub fn mint_medal_nft(ctx: Context<MintMedalNFT>) -> Result<()> {
                 timestamp: clock.unix_timestamp,
             });
         } else {
-            msg!("当前捐助金额不足以升级勋章NFT");
+            msg!("Current donation amount insufficient for medal NFT upgrade");
             return err!(ErrorCode::InsufficientDonationForUpgrade);
         }
     } else {
-        // 铸造新NFT
-        // 检查用户是否达到捐款等级要求
+        // Mint new NFT
+        // Check if user meets donation level requirements
         if donation_sol < MedalNFT::get_level_min_donation_sol(1) {
             return err!(ErrorCode::InsufficientDonationForMedal);
         }
 
-        // 确定用户当前的等级
+        // Determine user's current level
         let mut current_level = 1;
         for level in (1..=4).rev() {
             if donation_sol >= MedalNFT::get_level_min_donation_sol(level) {
@@ -119,20 +119,20 @@ pub fn mint_medal_nft(ctx: Context<MintMedalNFT>) -> Result<()> {
             }
         }
 
-        // 生成序列号
+        // Generate serial number
         let serial_number = ctx.accounts.user_donation_state.total_donation_count;
 
         let medal_name = if current_level == 4 {
-            format!("至尊龙章 #{}", serial_number)
+            format!("Supreme Dragon Medal #{}", serial_number)
         } else if current_level == 3 {
-            format!("护法金章 #{}", serial_number)
+            format!("Protector Gold Medal #{}", serial_number)
         } else if current_level == 2 {
-            format!("精进银章 #{}", serial_number)
+            format!("Diligent Silver Medal #{}", serial_number)
         } else {
-            format!("入门功德铜章 #{}", serial_number)
+            format!("Entry Merit Bronze Medal #{}", serial_number)
         };
 
-        // 创建元数据账户
+        // Create metadata account
         let temple_signer_seeds: &[&[&[u8]]] = &[&[
             TempleConfig::SEED_PREFIX.as_bytes(),
             &[ctx.bumps.temple_config],
@@ -164,12 +164,12 @@ pub fn mint_medal_nft(ctx: Context<MintMedalNFT>) -> Result<()> {
                 collection: None,
                 uses: None,
             },
-            true, // 允许元数据可变，以便后续升级
+            true, // Allow metadata to be mutable for future upgrades
             true,
             None,
         )?;
 
-        // 铸造勋章NFT
+        // Mint medal NFT
         mint_to(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
@@ -183,7 +183,7 @@ pub fn mint_medal_nft(ctx: Context<MintMedalNFT>) -> Result<()> {
             1,
         )?;
 
-        // 初始化MedalNFT账户数据
+        // Initialize MedalNFT account data
         let now = Clock::get()?.unix_timestamp;
         ctx.accounts.medal_nft_account.owner = ctx.accounts.authority.key();
         ctx.accounts.medal_nft_account.mint = ctx.accounts.nft_mint_account.key();
@@ -195,17 +195,17 @@ pub fn mint_medal_nft(ctx: Context<MintMedalNFT>) -> Result<()> {
         ctx.accounts.medal_nft_account.merit = ctx.accounts.user_incense_state.merit;
         ctx.accounts.medal_nft_account.serial_number = serial_number;
 
-        // 更新用户状态
+        // Update user state
         ctx.accounts.user_state.has_medal_nft = true;
 
-        // 更新全局统计
+        // Update global stats
         ctx.accounts.global_stats.increment_fortune_nfts();
 
-        msg!("寺庙勋章NFT铸造成功: {}", medal_name);
-        msg!("勋章等级: {}", current_level);
-        msg!("总捐款金额: {:.6} SOL", donation_sol);
+        msg!("Temple medal NFT mint successful: {}", medal_name);
+        msg!("Medal level: {}", current_level);
+        msg!("Total donation amount: {:.6} SOL", donation_sol);
 
-        // 发出NFT铸造事件
+        // Emit NFT mint event
         emit!(DonationNFTMinted {
             user: ctx.accounts.authority.key(),
             nft_mint: ctx.accounts.nft_mint_account.key(),
@@ -220,7 +220,7 @@ pub fn mint_medal_nft(ctx: Context<MintMedalNFT>) -> Result<()> {
 
 #[derive(Accounts)]
 pub struct MintMedalNFT<'info> {
-    /// 用户账号
+    /// User account
     #[account(mut)]
     pub authority: Signer<'info>,
 
@@ -238,7 +238,7 @@ pub struct MintMedalNFT<'info> {
     )]
     pub global_stats: Account<'info, GlobalStats>,
 
-    /// 用户状态账户
+    /// User state account
     #[account(
         mut,
         seeds = [UserState::SEED_PREFIX.as_bytes(), authority.key().as_ref()],
@@ -246,7 +246,7 @@ pub struct MintMedalNFT<'info> {
     )]
     pub user_state: Box<Account<'info, UserState>>,
 
-    /// 用户捐赠状态账户
+    /// User donation state account
     #[account(
         mut,
         seeds = [UserDonationState::SEED_PREFIX.as_bytes(), authority.key().as_ref()],
@@ -254,7 +254,7 @@ pub struct MintMedalNFT<'info> {
     )]
     pub user_donation_state: Box<Account<'info, UserDonationState>>,
 
-    /// 用户香火状态账户
+    /// User incense state account
     #[account(
         mut,
         seeds = [UserIncenseState::SEED_PREFIX.as_bytes(), authority.key().as_ref()],
@@ -286,7 +286,7 @@ pub struct MintMedalNFT<'info> {
     )]
     pub nft_mint_account: Box<Account<'info, Mint>>,
 
-    /// 用户的勋章NFT关联账户
+    /// User's medal NFT associated account
     #[account(
         init_if_needed,
         payer = authority,
@@ -308,7 +308,7 @@ pub struct MintMedalNFT<'info> {
     )]
     pub meta_account: UncheckedAccount<'info>,
 
-    // 程序账号
+    // Program accounts
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub token_metadata_program: Program<'info, Metadata>,

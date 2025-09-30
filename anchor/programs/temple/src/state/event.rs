@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-// ===== 捐助相关事件 =====
+// Donation Events
 
 #[event]
 pub struct DonationCompleted {
@@ -28,7 +28,7 @@ pub struct DonationNFTMinted {
     pub timestamp: i64,
 }
 
-// ===== 其他业务事件 =====
+// FortuneDrawn Events
 
 #[event]
 pub struct FortuneDrawn {
@@ -39,6 +39,7 @@ pub struct FortuneDrawn {
     pub timestamp: i64,
 }
 
+// WishCreated Events
 #[event]
 pub struct WishCreated {
     pub user: Pubkey,
@@ -48,5 +49,11 @@ pub struct WishCreated {
     pub timestamp: i64,
 }
 
-// 这里可以继续添加其他模块的事件定义
-// 例如：烧香事件等
+// BurnIncense Events
+#[event]
+pub struct IncenseBurned {
+    pub user: Pubkey,
+    pub incense_id: u8,
+    pub amount: u64,
+    pub timestamp: i64,
+}

@@ -15,37 +15,37 @@ use anchor_spl::token::MintTo;
 use anchor_spl::token::Token;
 use anchor_spl::token::TokenAccount;
 
-// TODO 抽签/许愿  可概率获得 ？前端去处理概率吗
+// TODO Draw fortune/make wish - can be obtained probabilistically? Handle probability on frontend?
 pub fn mint_amulet_nft(ctx: Context<MintAmuletNFT>, source: u8) -> Result<()> {
     let clock = Clock::get()?;
     let current_time = clock.unix_timestamp as u64;
 
-    // 检查寺庙状态
+    // Check temple status
     ctx.accounts.temple_config.can_perform_operation(
         crate::state::temple_config::TempleStatusBitIndex::MintNFT,
         current_time,
     )?;
 
-    // 检查用户是否有足够的pending_amulets余额
+    // Check if user has sufficient pending_amulets balance
     require!(
         ctx.accounts.user_state.pending_amulets > 0,
         crate::error::ErrorCode::InsufficientPendingAmulets
     );
 
-    // 消耗一个pending_amulets
+    // Consume one pending_amulet
     ctx.accounts.user_state.pending_amulets -= 1;
 
-    // 获取序列号
+    // Get serial number
     let serial_number = ctx.accounts.temple_config.total_amulets;
 
-    let nft_name_str = format!("御守 #{}", serial_number);
+    let nft_name_str = format!("Amulet #{}", serial_number);
     let nft_description = match source {
-        0 => "通过抽签获得的幸运御守",
-        1 => "通过许愿获得的祝福御守",
-        _ => "获得的御守",
+        0 => "Lucky amulet obtained through drawing fortune",
+        1 => "Blessed amulet obtained through making wishes",
+        _ => "Obtained amulet",
     };
 
-    // 创建元数据账户
+    // Create metadata account
     let temple_signer_seeds: &[&[&[u8]]] = &[&[
         TempleConfig::SEED_PREFIX.as_bytes(),
         &[ctx.bumps.temple_config],
@@ -72,17 +72,17 @@ pub fn mint_amulet_nft(ctx: Context<MintAmuletNFT>, source: u8) -> Result<()> {
                 "https://api.foxverse.co/temple/amulet/{}/metadata.json",
                 serial_number
             ),
-            seller_fee_basis_points: 500, // 5% 版税
+            seller_fee_basis_points: 500, // 5% royalty
             creators: None,
             collection: None,
             uses: None,
         },
-        false, // 不可变
+        false, // immutable
         true,
         None,
     )?;
 
-    // Mint 御守NFT
+    // Mint amulet NFT
     let temple_signer_seeds: &[&[&[u8]]] = &[&[
         TempleConfig::SEED_PREFIX.as_bytes(),
         &[ctx.bumps.temple_config],
@@ -102,7 +102,7 @@ pub fn mint_amulet_nft(ctx: Context<MintAmuletNFT>, source: u8) -> Result<()> {
     )?;
     msg!("Amulet NFT minted successfully");
 
-    // 初始化AmuletNFT账户数据
+    // Initialize AmuletNFT account data
     ctx.accounts.amulet_nft_account.owner = ctx.accounts.authority.key();
     ctx.accounts.amulet_nft_account.mint = ctx.accounts.nft_mint_account.key();
     ctx.accounts.amulet_nft_account.name = nft_name_str.clone();
@@ -111,10 +111,10 @@ pub fn mint_amulet_nft(ctx: Context<MintAmuletNFT>, source: u8) -> Result<()> {
     ctx.accounts.amulet_nft_account.source = source;
     ctx.accounts.amulet_nft_account.serial_number = serial_number as u32;
 
-    // 更新寺庙配置
+    // Update temple config
     ctx.accounts.temple_config.total_amulets += 1;
 
-    // 更新全局统计
+    // Update global stats
     ctx.accounts.global_stats.increment_amulets();
 
     Ok(())
@@ -122,7 +122,7 @@ pub fn mint_amulet_nft(ctx: Context<MintAmuletNFT>, source: u8) -> Result<()> {
 
 #[derive(Accounts)]
 pub struct MintAmuletNFT<'info> {
-    /// 用户账号
+    /// User account
     #[account(mut)]
     pub authority: Signer<'info>,
 
@@ -140,7 +140,7 @@ pub struct MintAmuletNFT<'info> {
     )]
     pub global_stats: Account<'info, GlobalStats>,
 
-    /// 用户账号
+    /// User account
     #[account(
         mut,
         seeds = [UserState::SEED_PREFIX.as_bytes(), authority.key().as_ref()],
@@ -155,7 +155,7 @@ pub struct MintAmuletNFT<'info> {
             AmuletNFT::SEED_PREFIX.as_bytes(),
             temple_config.key().as_ref(),
             authority.key().as_ref(),
-            &[temple_config.total_amulets as u8], // 使用当前总数作为序列号种子
+            &[temple_config.total_amulets as u8], // Use current total as serial number seed
         ],
         bump,
         mint::decimals = AmuletNFT::TOKEN_DECIMALS,
@@ -163,7 +163,7 @@ pub struct MintAmuletNFT<'info> {
     )]
     pub nft_mint_account: Box<Account<'info, Mint>>,
 
-    /// 用户的NFT关联账户
+    /// User's NFT associated token account
     #[account(
         init_if_needed,
         payer = authority,
@@ -194,7 +194,7 @@ pub struct MintAmuletNFT<'info> {
     )]
     pub meta_account: UncheckedAccount<'info>,
 
-    // 程序账号
+    // Program accounts
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub token_metadata_program: Program<'info, Metadata>,

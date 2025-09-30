@@ -14,7 +14,7 @@ pub struct UpdateTempleStatus<'info> {
     pub authority: Signer<'info>,
 }
 
-// 更新寺庙状态（设置完整状态字节）
+// Update temple status
 pub fn update_temple_status(ctx: Context<UpdateTempleStatus>, status: u8) -> Result<()> {
     let temple_config = &mut ctx.accounts.temple_config;
     temple_config.set_status(status);
@@ -23,7 +23,6 @@ pub fn update_temple_status(ctx: Context<UpdateTempleStatus>, status: u8) -> Res
     Ok(())
 }
 
-// 按位更新寺庙状态
 pub fn update_temple_status_by_bit(
     ctx: Context<UpdateTempleStatus>,
     bit: u8,

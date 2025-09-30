@@ -30,7 +30,7 @@ pub struct ShareFortune<'info> {
 }
 
 pub fn share_fortune(ctx: Context<ShareFortune>, share_hash: [u8; 32]) -> Result<()> {
-    // 验证用户在最近一天有抽过签
+    // Verify user has drawn fortune in the last day
     let now = Clock::get()?.unix_timestamp;
     let time_since_last_draw: i64 = now - ctx.accounts.user_incense_state.last_draw_time;
 
@@ -39,11 +39,11 @@ pub fn share_fortune(ctx: Context<ShareFortune>, share_hash: [u8; 32]) -> Result
         ErrorCode::ShareTooLate
     );
 
-    //奖励
+    // Reward
     ctx.accounts
         .user_incense_state
         .add_incense_value_and_merit(0, 1);
-    msg!("签文分享成功，获得0.1功德值奖励");
+    msg!("Fortune sharing successful, earned 0.1 merit points reward");
 
     Ok(())
 }

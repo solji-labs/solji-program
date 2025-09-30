@@ -5,8 +5,8 @@ use crate::state::temple_config::TempleConfig;
 use crate::state::user_state::{UserDonationState, UserIncenseState};
 use anchor_lang::prelude::*;
 
-/// 处理捐助奖励指令
-/// 监听捐助完成事件，处理等级奖励和动态配置奖励
+/// Process donation rewards instruction
+/// Listen to donation completed events, handle level rewards and dynamic configuration rewards
 #[derive(Accounts)]
 pub struct ProcessDonationRewards<'info> {
     #[account(mut)]
@@ -44,66 +44,69 @@ pub struct ProcessDonationRewards<'info> {
 pub fn process_donation_rewards(ctx: Context<ProcessDonationRewards>) -> Result<()> {
     let clock = Clock::get()?;
 
-    // 获取捐助等级奖励
+    // Get donation level rewards
     let (merit_reward, incense_points_reward) =
         ctx.accounts.user_donation_state.get_donation_rewards();
 
-    // 更新用户香火状态
+    // Update user incense state
     if merit_reward > 0 || incense_points_reward > 0 {
         ctx.accounts
             .user_incense_state
             .add_incense_value_and_merit(incense_points_reward, merit_reward);
 
         msg!(
-            "捐助获得奖励 - 功德值: {}, 香火值: {}",
+            "Donation reward earned - Merit: {}, Incense points: {}",
             merit_reward,
             incense_points_reward
         );
     }
 
-    // 更新全局统计
+    // Update global stats
     ctx.accounts
         .global_stats
         .add_incense_value_and_merit(incense_points_reward, merit_reward);
 
-    // 处理捐助解锁香逻辑 - 从动态配置读取
+    // Process donation unlock incense logic - read from dynamic config
     let total_donation_sol =
         ctx.accounts.user_donation_state.donation_amount as f64 / 1_000_000_000.0;
 
-    // 遍历所有捐助奖励配置
+    // Iterate through all donation reward configurations
     for reward_config in &ctx.accounts.temple_config.dynamic_config.donation_rewards {
-        // 检查是否达到最低捐助金额门槛
+        // Check if minimum donation amount threshold is reached
         if total_donation_sol >= reward_config.min_donation_sol {
-            // 计算当前应该获得的奖励总量
+            // Calculate the total reward that should be obtained currently
             let current_reward = if reward_config.burn_bonus_per_001_sol > 0 {
-                // 烧香次数奖励：每0.01SOL增加的烧香次数
+                // Burn incense bonus: increase burn count per 0.01 SOL
                 ((total_donation_sol * 100.0) as u64)
                     .saturating_mul(reward_config.burn_bonus_per_001_sol)
             } else {
-                // 香奖励：基于门槛的累积奖励
+                // Incense reward: cumulative reward based on threshold
                 let current_tier = (total_donation_sol / reward_config.min_donation_sol) as u64;
                 current_tier.saturating_mul(reward_config.incense_amount)
             };
 
-            // 这里可以记录已处理的奖励，避免重复发放
-            // 实际实现中需要额外的状态跟踪
+            // Here we can record processed rewards to avoid duplicate distribution
+            // Actual implementation requires additional state tracking
 
             if current_reward > 0 {
                 if reward_config.burn_bonus_per_001_sol > 0 {
-                    // 烧香次数奖励
+                    // Burn incense bonus
                     ctx.accounts.user_incense_state.incense_number = ctx
                         .accounts
                         .user_incense_state
                         .incense_number
                         .saturating_add(current_reward as u8);
-                    msg!("捐助获得额外烧香次数: {}", current_reward);
+                    msg!(
+                        "Donation earned extra burn incense count: {}",
+                        current_reward
+                    );
                 } else {
-                    // 香奖励
+                    // Incense reward
                     ctx.accounts
                         .user_incense_state
                         .add_incense_balance(reward_config.incense_id, current_reward);
                     msg!(
-                        "捐助解锁香类型{}: {} 根",
+                        "Donation unlocked incense type {}: {} sticks",
                         reward_config.incense_id,
                         current_reward
                     );
@@ -112,7 +115,7 @@ pub fn process_donation_rewards(ctx: Context<ProcessDonationRewards>) -> Result<
         }
     }
 
-    // 发出奖励处理完成事件
+    // Emit rewards processed event
     emit!(RewardsProcessed {
         user: ctx.accounts.user.key(),
         merit_reward,

@@ -10,9 +10,9 @@ name = "temple"
 
 [features]
 default = []
-cpi = ["no-entrypoint"]
+# cpi = ["no-entrypoint"]
 no-entrypoint = []
-no-idl = []
+# no-idl = []
 no-log-ix-name = []
 idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
 localnet = []

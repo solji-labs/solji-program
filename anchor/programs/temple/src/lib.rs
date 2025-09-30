@@ -30,7 +30,7 @@ pub mod temple {
 
     use super::*;
 
-    /// 创建寺庙配置 初始化
+    /// Create temple config initialization
     pub fn create_temple_config(
         ctx: Context<CreateTempleConfig>,
         treasury: Pubkey,
@@ -51,12 +51,12 @@ pub mod temple {
         )
     }
 
-    /// 创建NFT mint
+    /// Create NFT mint
     pub fn create_nft_mint(ctx: Context<CreateNftMint>, incense_id: u8) -> Result<()> {
         instructions::create_nft_mint(ctx, incense_id)
     }
 
-    // /// 初始化捐助排行榜 暂时不用
+    // /// Initialize donation leaderboard temporarily unused
     // pub fn init_donation_leaderboard(
     //     ctx: Context<InitDonationLeaderboard>,
     //     donation_deadline: u64,
@@ -64,35 +64,35 @@ pub mod temple {
     //     instructions::init_donation_leaderboard(ctx, donation_deadline)
     // }
 
-    /// 分配Buddha NFT给前10,000名捐助者
+    /// Distribute Buddha NFT to top 10,000 donors
     // pub fn distribute_buddha_nfts(ctx: Context<DistributeBuddhaNfts>) -> Result<()> {
     //     instructions::distribute_buddha_nfts(ctx)
     // }
 
-    /// 买香
+    /// Buy incense
     pub fn buy_incense(ctx: Context<BuyIncense>, incense_id: u8, amount: u64) -> Result<()> {
         instructions::buy_incense::buy_incense(ctx, incense_id, amount)
     }
-    /// 烧香
+    /// Burn incense
     pub fn burn_incense(ctx: Context<BurnIncense>, incense_id: u8, amount: u64) -> Result<()> {
         instructions::burn_incense::burn_incense(ctx, incense_id, amount)
     }
 
-    /// 初始化用户状态
+    /// Initialize user state
     pub fn init_user(ctx: Context<InitUser>) -> Result<()> {
         instructions::init_user(ctx)
     }
 
-    /// 抽签
+    /// Draw fortune
     pub fn draw_fortune(ctx: Context<DrawFortune>, use_merit: bool) -> Result<DrawResult> {
         instructions::draw_fortune(ctx, use_merit)
     }
 
-    /// 分享签文获得奖励
+    /// Share fortune to get rewards
     pub fn share_fortune(ctx: Context<ShareFortune>, share_hash: [u8; 32]) -> Result<()> {
         instructions::share_fortune(ctx, share_hash)
     }
-    /// 许愿
+    /// Make wish
     pub fn create_wish(
         ctx: Context<CreateWish>,
         wish_id: u64,
@@ -102,55 +102,55 @@ pub mod temple {
         instructions::create_wish(ctx, wish_id, content_hash, is_anonymous)
     }
 
-    /// 许愿点赞
+    /// Like wish
     pub fn like_wish(ctx: Context<LikeWish>, wish_id: u64) -> Result<()> {
         instructions::like_wish(ctx)
     }
 
-    /// Mint佛像NFT
+    /// Mint Buddha NFT
     pub fn mint_buddha_nft(ctx: Context<MintBuddhaNFT>) -> Result<()> {
         instructions::mint_buddha_nft(ctx)
     }
 
-    /// ===== 捐赠指令 =====
-    /// 捐助资金（核心捐助逻辑）
+    /// ===== Donation instructions =====
+    /// Donate fund (core donation logic)
     pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
         instructions::donate_fund(ctx, amount)
     }
 
-    /// 处理捐助奖励
+    /// Process donation rewards
     pub fn process_donation_rewards(ctx: Context<ProcessDonationRewards>) -> Result<()> {
         instructions::process_donation_rewards(ctx)
     }
 
-    /// Mint寺庙勋章NFT
+    /// Mint temple medal NFT
     pub fn mint_medal_nft(ctx: Context<MintMedalNFT>) -> Result<()> {
         instructions::mint_medal_nft(ctx)
     }
 
-    /// 领取免费佛像NFT (仅限前10000名)
+    /// Claim free Buddha NFT (limited to top 10000)
     // pub fn claim_buddha_nft(ctx: Context<ClaimBuddhaNft>) -> Result<()> {
     //     instructions::claim_buddha_nft(ctx)
     // }
 
-    // /// 捐助（完整流程，已废弃，存个档）
+    // /// Donate (complete flow, deprecated, keep for reference)
     // pub fn donate(ctx: Context<Donate>, amount: u64) -> Result<()> {
     //     instructions::donation::donate(ctx, amount)
     // }
 
-    /// 质押勋章NFT
+    /// Stake medal NFT
     pub fn stake_medal_nft(ctx: Context<StakeMedalNFT>) -> Result<()> {
         instructions::stake_medal_nft(ctx)
     }
 
-    /// 解质押勋章NFT
+    /// Unstake medal NFT
     pub fn unstake_medal_nft(ctx: Context<UnstakeMedalNFT>) -> Result<()> {
         instructions::unstake_medal_nft(ctx)
     }
 
-    // ===== 核心动态配置管理指令 =====
+    // ===== Core dynamic configuration management instructions =====
 
-    /// 更新烧香香型配置
+    /// Update incense type configuration
     pub fn update_incense_types(
         ctx: Context<UpdateDynamicConfig>,
         incense_types: Vec<IncenseType>,
@@ -158,7 +158,7 @@ pub mod temple {
         instructions::update_incense_types(ctx, incense_types)
     }
 
-    /// 更新抽签签文配置
+    /// Update fortune drawing configuration
     pub fn update_fortune_config(
         ctx: Context<UpdateDynamicConfig>,
         regular_fortune: FortuneConfig,
@@ -167,7 +167,7 @@ pub mod temple {
         instructions::update_fortune_config(ctx, regular_fortune, buddha_fortune)
     }
 
-    /// 更新捐助等级配置
+    /// Update donation level configuration
     pub fn update_donation_levels(
         ctx: Context<UpdateDynamicConfig>,
         donation_levels: Vec<DonationLevelConfig>,
@@ -175,7 +175,7 @@ pub mod temple {
         instructions::update_donation_levels(ctx, donation_levels)
     }
 
-    /// 更新捐助奖励配置
+    /// Update donation reward configuration
     pub fn update_donation_rewards(
         ctx: Context<UpdateDynamicConfig>,
         donation_rewards: Vec<DonationRewardConfig>,
@@ -183,7 +183,7 @@ pub mod temple {
         instructions::update_donation_rewards(ctx, donation_rewards)
     }
 
-    /// 更新寺庙等级配置
+    /// Update temple level configuration
     pub fn update_temple_levels(
         ctx: Context<UpdateDynamicConfig>,
         temple_levels: Vec<TempleLevelConfig>,
@@ -191,12 +191,12 @@ pub mod temple {
         instructions::update_temple_levels(ctx, temple_levels)
     }
 
-    /// 更新寺庙状态
+    /// Update temple status
     pub fn update_temple_status(ctx: Context<UpdateTempleStatus>, status: u8) -> Result<()> {
         instructions::update_temple_status(ctx, status)
     }
 
-    /// 按位更新寺庙状态
+    /// Update temple status by bit
     pub fn update_temple_status_by_bit(
         ctx: Context<UpdateTempleStatus>,
         bit: u8,
@@ -205,13 +205,13 @@ pub mod temple {
         instructions::update_temple_status_by_bit(ctx, bit, disabled)
     }
 
-    /// ====== 排行榜 =========
-    /// 初始化排行榜
+    /// ====== Leaderboard =========
+    /// Initialize leaderboard
     pub fn init_incense_leaderboard(ctx: Context<InitIncenseLeaderboard>) -> Result<()> {
         instructions::init_incense_leaderboard(ctx)
     }
 
-    /// 更新排行榜
+    /// Update leaderboard
     pub fn update_leaderboard(
         ctx: Context<UpdateLeaderboard>,
         period: LeaderboardPeriod,
@@ -219,37 +219,37 @@ pub mod temple {
         instructions::update_leaderboard(ctx, period)
     }
 
-    /// 获取用户排名
+    /// Get user ranking
     pub fn get_incense_leaderboard(
         ctx: Context<GetIncenseLeaderboard>,
     ) -> Result<IncenseLeaderBoard> {
         instructions::get_incense_leaderboard(ctx)
     }
 
-    /// ===== 寺庙统计相关 ======
+    /// ===== Temple statistics related ======
 
-    /// 获取寺庙统计数据
+    /// Get temple statistics data
     pub fn get_temple_stats(ctx: Context<GetTempleStats>) -> Result<TempleStats> {
         instructions::get_temple_stats(ctx)
     }
 
-    /// 获取寺庙等级信息
+    /// Get temple level information
     pub fn get_temple_level(ctx: Context<GetTempleLevel>) -> Result<TempleLevelInfo> {
         instructions::get_temple_level(ctx)
     }
 
-    /// === 商城相关 ====
-    /// 获取商城物品列表
+    /// === Shop related ====
+    /// Get shop items list
     pub fn get_shop_items(ctx: Context<GetShopItems>) -> Result<ShopItemsResult> {
         instructions::get_shop_items(ctx)
     }
 
-    /// 购买商城物品
+    /// Purchase shop items
     pub fn purchase_item(ctx: Context<PurchaseItem>, item_id: u8, quantity: u64) -> Result<()> {
         instructions::purchase_item(ctx, item_id, quantity)
     }
 
-    /// 创建商城配置
+    /// Create shop configuration
     pub fn create_shop_config(
         ctx: Context<CreateShopConfig>,
         shop_items: Vec<ShopItem>,
@@ -257,7 +257,7 @@ pub mod temple {
         instructions::create_shop_config(ctx, shop_items)
     }
 
-    /// 更新商城物品配置
+    /// Update shop items configuration
     pub fn update_shop_items(
         ctx: Context<UpdateShopItems>,
         shop_items: Vec<ShopItem>,
@@ -265,20 +265,20 @@ pub mod temple {
         instructions::update_shop_items(ctx, shop_items)
     }
 
-    /// ==== 用户面板相关 ====
+    /// ==== User panel related ====
 
-    /// 获取用户概览信息
+    /// Get user overview information
     pub fn get_user_profile(ctx: Context<GetUserProfile>) -> Result<UserProfile> {
         instructions::get_user_profile(ctx)
     }
 
-    /// ==== 用户御守相关 ====
-    /// 获取用户御守收藏信息
+    /// ==== User amulet related ====
+    /// Get user amulet collection information
     pub fn get_user_amulets(ctx: Context<GetUserAmulets>) -> Result<UserAmuletsInfo> {
         instructions::get_user_amulets(ctx)
     }
 
-    /// Mint御守NFT
+    /// Mint amulet NFT
     pub fn mint_amulet_nft(ctx: Context<MintAmuletNFT>, source: u8) -> Result<()> {
         instructions::mint_amulet_nft(ctx, source)
     }

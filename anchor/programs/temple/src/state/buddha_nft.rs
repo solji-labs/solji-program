@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-/// 佛像NFT
+/// Buddha NFT
 #[account]
 #[derive(Default, Debug, InitSpace)]
 pub struct BuddhaNFT {

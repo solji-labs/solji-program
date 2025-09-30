@@ -36,11 +36,11 @@ pub fn init_donation_leaderboard(
 ) -> Result<()> {
     let donation_leaderboard = &mut ctx.accounts.donation_leaderboard;
 
-    // 验证截止时间不能早于当前时间
+    // The verification deadline cannot be earlier than the current time
     let current_time = Clock::get()?.unix_timestamp as u64;
     require!(donation_deadline > current_time, ErrorCode::InvalidAmount);
 
-    // 初始化排行榜
+    // Initialize the leaderboard
     donation_leaderboard.initialize(ctx.bumps.donation_leaderboard, donation_deadline);
 
     msg!(

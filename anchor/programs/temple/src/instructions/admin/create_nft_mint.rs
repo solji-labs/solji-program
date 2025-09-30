@@ -8,17 +8,15 @@ use anchor_spl::metadata::Metadata;
 use anchor_spl::token::{Mint, Token};
 
 pub fn create_nft_mint(ctx: Context<CreateNftMint>, incense_id: u8) -> Result<()> {
-    // 获取香型信息
+    // Incense Conformation
     let incense_type = ctx
         .accounts
         .temple_config
         .find_incense_type(incense_id)
         .ok_or(crate::error::ErrorCode::InvalidIncenseId)?;
 
-    // 生成NFT名称
     let nft_name = format!("{} NFT", incense_type.name);
 
-    // 构建签名种子
     let temple_config_key = ctx.accounts.temple_config.key();
     let signer_seeds: &[&[&[u8]]] = &[&[
         IncenseNFT::SEED_PREFIX.as_bytes(),
@@ -27,7 +25,6 @@ pub fn create_nft_mint(ctx: Context<CreateNftMint>, incense_id: u8) -> Result<()
         &[ctx.bumps.nft_mint_account],
     ]];
 
-    // 创建元数据账户
     create_metadata_accounts_v3(
         CpiContext::new_with_signer(
             ctx.accounts.token_metadata_program.to_account_info(),
@@ -69,7 +66,7 @@ pub struct CreateNftMint<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    /// CHECK: 寺庙管理员账号
+    /// CHECK: This is a temple authority account
     #[account(mut,
         constraint = temple_authority.key() == temple_config.owner @ crate::error::ErrorCode::InvalidOwner)]
     pub temple_authority: AccountInfo<'info>,
@@ -124,7 +121,6 @@ pub struct CreateNftMint<'info> {
     )]
     pub master_edition_account: UncheckedAccount<'info>,
 
-    // 程序账号
     pub token_program: Program<'info, Token>,
     pub token_metadata_program: Program<'info, Metadata>,
     pub system_program: Program<'info, System>,

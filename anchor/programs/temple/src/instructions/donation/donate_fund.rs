@@ -6,8 +6,8 @@ use crate::state::temple_config::TempleConfig;
 use crate::state::user_state::UserDonationState;
 use anchor_lang::prelude::*;
 
-/// 核心捐助资金指令
-/// 只处理资金转账和基础记录，发出事件供后续处理
+/// Core donation fund instruction
+/// Only handles fund transfer and basic recording, emits events for subsequent processing
 
 #[derive(Accounts)]
 pub struct DonateFund<'info> {
@@ -43,7 +43,7 @@ pub struct DonateFund<'info> {
     //     space = 8 + DonationLeaderboard::INIT_SPACE,
     // )]
     // pub donation_leaderboard: Box<Account<'info, DonationLeaderboard>>,
-    /// CHECK: 寺庙国库账户
+    /// CHECK: Temple treasury account
     #[account(
         mut,
         constraint = temple_treasury.key() == temple_config.treasury @ ErrorCode::InvalidTempleTreasury
@@ -57,7 +57,7 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
     let clock = Clock::get()?;
     let current_time = clock.unix_timestamp as u64;
 
-    // 检查寺庙状态
+    // Check temple status
     ctx.accounts.temple_config.can_perform_operation(
         crate::state::temple_config::TempleStatusBitIndex::Donate,
         current_time,
@@ -66,10 +66,10 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
     let donor = &ctx.accounts.donor;
     let temple_treasury = &ctx.accounts.temple_treasury;
 
-    // 验证捐助金额
+    // Validate donation amount
     require!(amount > 0, ErrorCode::InvalidAmount);
 
-    // 转账SOL到寺庙国库
+    // Transfer SOL to temple treasury
     let transfer_ix = anchor_lang::solana_program::system_instruction::transfer(
         &donor.key(),
         &temple_treasury.key(),
@@ -85,18 +85,18 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
         ],
     )?;
 
-    // 处理捐助记录
+    // Process donation record
     ctx.accounts.user_donation_state.process_donation(amount);
 
-    // // 更新排行榜
+    // // Update leaderboard
     // ctx.accounts
     //     .donation_leaderboard
     //     .update_donation(donor.key(), amount);
 
-    // 更新全局统计
+    // Update global stats
     ctx.accounts.global_stats.add_donation(amount);
 
-    // 发出捐助完成事件
+    // Emit donation completed event
     emit!(DonationCompleted {
         user: donor.key(),
         amount,
@@ -106,9 +106,9 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
     });
 
     let donation_sol = amount as f64 / 1_000_000_000.0;
-    msg!("用户 {} 捐助了 {:.6} SOL", donor.key(), donation_sol);
+    msg!("User {} donated {:.6} SOL", donor.key(), donation_sol);
     msg!(
-        "当前捐助等级: {}",
+        "Current donation level: {}",
         ctx.accounts.user_donation_state.donation_level
     );
 

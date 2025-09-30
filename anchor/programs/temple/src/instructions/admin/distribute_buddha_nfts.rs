@@ -2,7 +2,8 @@ use crate::error::ErrorCode;
 use crate::state::donation_leaderboard::DonationLeaderboard;
 use crate::state::temple_config::*;
 use anchor_lang::prelude::*;
-/// 分配Buddha NFT给前10,000名捐助者
+/// Distribute Buddha NFTs to the first 10,000 donors
+
 #[derive(Accounts)]
 pub struct DistributeBuddhaNfts<'info> {
     #[account(
@@ -30,7 +31,6 @@ pub fn distribute_buddha_nfts(ctx: Context<DistributeBuddhaNfts>) -> Result<()> 
     let clock = Clock::get()?;
     let current_time = clock.unix_timestamp as u64;
 
-    // 检查是否可以开始分配
     require!(
         ctx.accounts
             .donation_leaderboard
@@ -38,7 +38,6 @@ pub fn distribute_buddha_nfts(ctx: Context<DistributeBuddhaNfts>) -> Result<()> 
         ErrorCode::NotApproved
     );
 
-    // 获取前10,000名捐助者数量
     let top_donors_count = ctx
         .accounts
         .donation_leaderboard
@@ -46,17 +45,16 @@ pub fn distribute_buddha_nfts(ctx: Context<DistributeBuddhaNfts>) -> Result<()> 
         .len();
 
     if top_donors_count == 0 {
-        msg!("没有符合条件的捐助者");
+        msg!("No eligible donors");
         return Ok(());
     }
 
-    // 标记分配完成
     ctx.accounts
         .donation_leaderboard
         .mark_distribution_completed(top_donors_count as u32);
 
     msg!(
-        "Buddha NFT分配完成，为前 {} 名捐助者设置了资格",
+        "Buddha NFT distribution completed, qualification set for the first {} donors",
         top_donors_count
     );
 

@@ -2,97 +2,97 @@ use crate::error::ErrorCode;
 use crate::state::temple_config::TempleConfig;
 use anchor_lang::prelude::*;
 
-// 用户称号枚举
+// User title enum
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
 pub enum UserTitle {
-    Pilgrim,   // 香客
-    Disciple,  // 居士
-    Protector, // 护法
-    Patron,    // 供奉
-    Abbot,     // 寺主
+    Pilgrim,   // Pilgrim
+    Disciple,  // Disciple
+    Protector, // Protector
+    Patron,    // Patron
+    Abbot,     // Abbot
 }
 
-/// 根据功德值计算用户称号
+/// Calculate user title based on merit
 fn calculate_title_from_merit(merit: u64) -> UserTitle {
     if merit >= 100000 {
-        UserTitle::Abbot // 寺主
+        UserTitle::Abbot // Abbot
     } else if merit >= 10000 {
-        UserTitle::Patron // 供奉
+        UserTitle::Patron // Patron
     } else if merit >= 1000 {
-        UserTitle::Protector // 护法
+        UserTitle::Protector // Protector
     } else if merit >= 100 {
-        UserTitle::Disciple // 居士
+        UserTitle::Disciple // Disciple
     } else {
-        UserTitle::Pilgrim // 香客
+        UserTitle::Pilgrim // Pilgrim
     }
 }
 
-// 定义香型余额结构
+// Define incense balance structure
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
 pub struct IncenseBalance {
     pub incense_id: u8,
     pub balance: u64,
 }
 
-// 定义每日烧香次数结构
+// Define daily incense burn count structure
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
 pub struct DailyIncenseCount {
     pub incense_id: u8,
     pub count: u8,
 }
 
-// ==== 账户结构定义结束 ============
+// ==== Account structure definition ends ============
 
-// 主用户状态账户
+// Main user state account
 #[account]
 #[derive(InitSpace)]
 pub struct UserState {
-    pub user: Pubkey,         // 用户地址
-    pub has_buddha_nft: bool, // 是否拥有佛像NFT
-    pub has_medal_nft: bool,  // 是否拥有勋章NFT
+    pub user: Pubkey,         // User address
+    pub has_buddha_nft: bool, // Whether owns Buddha NFT
+    pub has_medal_nft: bool,  // Whether owns medal NFT
     pub bump: u8,
 
-    // 随机数请求相关
-    pub pending_random_request_id: Option<[u8; 32]>, // 待处理的随机数请求ID
+    // Random request related
+    pub pending_random_request_id: Option<[u8; 32]>, // Pending random request ID
 
-    // 御守相关
-    pub pending_amulets: u32, // 御守余额：铸造使用
+    // Amulet related
+    pub pending_amulets: u32, // Amulet balance: for minting
 }
 
 impl UserState {
     pub const SEED_PREFIX: &str = "user_state";
 }
 
-// ===== 拆分后的子账户 =====
+// ===== Split sub-accounts =====
 
-// 香火
+// Incense
 #[account]
 #[derive(InitSpace)]
 pub struct UserIncenseState {
     pub user: Pubkey,
-    pub title: UserTitle,    // 用户称号（基于功德值）
-    pub incense_points: u64, // 香火值
-    pub merit: u64,          // 功德值
-    pub incense_number: u8,  // 每日烧香量
-    pub update_time: i64,    // 更新时间
+    pub title: UserTitle,    // User title (based on merit)
+    pub incense_points: u64, // Incense points
+    pub merit: u64,          // Merit
+    pub incense_number: u8,  // Daily incense burn amount
+    pub update_time: i64,    // Update time
     pub bump: u8,
 
-    // 香火余额和每日计数
+    // Incense balance and daily count
     pub incense_balance: [IncenseBalance; 6],
     pub daily_incense_count: [DailyIncenseCount; 6],
 
-    // 抽签相关
+    // Draw fortune related
     pub daily_draw_count: u8,
     pub last_draw_time: i64,
-    pub total_draws: u32, // 总抽签次数
+    pub total_draws: u32, // Total draw fortune count
 
-    // 许愿相关
+    // Wish related
     pub daily_wish_count: u8,
     pub last_wish_time: i64,
-    pub total_wishes: u32, // 总许愿次数
+    pub total_wishes: u32, // Total wishes
 }
 
-// 捐助
+// Donation
 #[account]
 #[derive(InitSpace)]
 pub struct UserDonationState {
@@ -107,7 +107,7 @@ pub struct UserDonationState {
 impl UserIncenseState {
     pub const SEED_PREFIX: &str = "user_incense";
 
-    /// 获取指定香型的余额
+    /// Get balance of specified incense type
     pub fn get_incense_balance(&self, incense_id: u8) -> u64 {
         self.incense_balance
             .iter()
@@ -116,7 +116,7 @@ impl UserIncenseState {
             .unwrap_or(0)
     }
 
-    /// 设置指定香型的余额
+    /// Set balance of specified incense type
     pub fn set_incense_balance(&mut self, incense_id: u8, balance: u64) {
         if let Some(item) = self
             .incense_balance
@@ -125,7 +125,7 @@ impl UserIncenseState {
         {
             item.balance = balance;
         } else {
-            // 查找空位置或替换第一个空记录
+            // Find empty position or replace first empty record
             for item in self.incense_balance.iter_mut() {
                 if item.incense_id == 0 || item.incense_id == incense_id {
                     item.incense_id = incense_id;
@@ -136,13 +136,13 @@ impl UserIncenseState {
         }
     }
 
-    /// 增加指定香型的余额
+    /// Add balance of specified incense type
     pub fn add_incense_balance(&mut self, incense_id: u8, amount: u64) {
         let current_balance = self.get_incense_balance(incense_id);
         self.set_incense_balance(incense_id, current_balance.saturating_add(amount));
     }
 
-    /// 减少指定香型的余额
+    /// Subtract balance of specified incense type
     pub fn subtract_incense_balance(&mut self, incense_id: u8, amount: u64) -> Result<()> {
         let current_balance: u64 = self.get_incense_balance(incense_id);
         if current_balance < amount {
@@ -152,7 +152,7 @@ impl UserIncenseState {
         Ok(())
     }
 
-    /// 获取指定香型的当日烧香次数
+    /// Get daily incense burn count of specified incense type
     pub fn get_daily_incense_count(&self, incense_id: u8) -> u8 {
         self.daily_incense_count
             .iter()
@@ -161,7 +161,7 @@ impl UserIncenseState {
             .unwrap_or(0)
     }
 
-    /// 设置指定香型的当日烧香次数
+    /// Set daily incense burn count of specified incense type
     pub fn set_daily_incense_count(&mut self, incense_id: u8, count: u8) {
         if let Some(item) = self
             .daily_incense_count
@@ -170,7 +170,7 @@ impl UserIncenseState {
         {
             item.count = count;
         } else {
-            // 查找空位置或替换第一个空记录
+            // Find empty position or replace first empty record
             for item in self.daily_incense_count.iter_mut() {
                 if item.incense_id == 0 || item.incense_id == incense_id {
                     item.incense_id = incense_id;
@@ -181,9 +181,9 @@ impl UserIncenseState {
         }
     }
 
-    /// 检查香火量是否超出限制
+    /// Check if incense amount exceeds limit
     pub fn check_daily_incense_limit(&self, incense_id: u8, amount: u8) -> Result<()> {
-        // 1. 先判断是否跨天，跨天则重置该香型次数
+        // 1. First check if day has changed, reset count if day changed
         let now = Clock::get()?.unix_timestamp;
         let is_new_day = now - self.update_time >= 86400;
         let current_count = if is_new_day {
@@ -192,20 +192,20 @@ impl UserIncenseState {
             self.get_daily_incense_count(incense_id)
         };
 
-        // 2. 校验次数（单个香型每日≤10）
+        // 2. Validate count (single incense type daily ≤10)
         if current_count + amount > 10 {
             return err!(ErrorCode::ExceedDailyIncenseLimit);
         }
         Ok(())
     }
 
-    /// 更新当日烧香次数
+    /// Update daily incense burn count
     pub fn update_daily_count(&mut self, incense_id: u8, amount: u8) {
         let now = Clock::get().unwrap().unix_timestamp;
-        // 跨天则重置所有次数+更新重置时间
+        // Reset all counts if day changed + update reset time
         let is_new_day = now - self.update_time >= 86400;
         if is_new_day {
-            // 手动重置固定大小数组
+            // Manually reset fixed size array
             for item in self.daily_incense_count.iter_mut() {
                 item.incense_id = 0;
                 item.count = 0;
@@ -213,13 +213,13 @@ impl UserIncenseState {
             self.incense_number = 0;
             self.update_time = now;
         }
-        // 累加当前香型次数
+        // Accumulate current incense type count
         self.incense_number += amount;
         let current_count = self.get_daily_incense_count(incense_id);
         self.set_daily_incense_count(incense_id, current_count + amount);
     }
 
-    // 增加用户的香火值和功德值，并自动更新称号
+    // Add user's incense points and merit, and automatically update title
     pub fn add_incense_value_and_merit(&mut self, incense_value: u64, merit: u64) {
         self.incense_points = self
             .incense_points
@@ -227,34 +227,34 @@ impl UserIncenseState {
             .unwrap_or(self.incense_points);
         self.merit = self.merit.checked_add(merit).unwrap_or(self.merit);
 
-        // 自动更新称号
+        // Automatically update title
         self.title = calculate_title_from_merit(self.merit);
     }
 
-    /// 检查是否可以免费抽签
+    /// Check if can draw fortune for free
     pub fn can_draw_free(&self) -> bool {
         let now = Clock::get().unwrap().unix_timestamp;
-        let is_new_day = now - self.last_draw_time >= 86400; // 24小时
+        let is_new_day = now - self.last_draw_time >= 86400; // 24 hours
 
         if is_new_day {
-            // 新的一天，重置计数
+            // New day, reset count
             true
         } else {
-            // 同一天，检查免费次数
+            // Same day, check free count
             self.daily_draw_count < 1
         }
     }
 
-    /// 更新抽签计数
+    /// Update draw fortune count
     pub fn update_draw_count(&mut self) {
         let now = Clock::get().unwrap().unix_timestamp;
         let is_new_day = now - self.last_draw_time >= 86400;
 
         if is_new_day {
-            // 新的一天，重置计数
+            // New day, reset count
             self.daily_draw_count = 1;
         } else {
-            // 同一天，增加计数
+            // Same day, increase count
             self.daily_draw_count += 1;
         }
 
@@ -262,7 +262,7 @@ impl UserIncenseState {
         self.total_draws = self.total_draws.saturating_add(1);
     }
 
-    /// 消耗功德值进行额外抽签（使用动态配置的消耗值）
+    /// Consume merit for extra draw fortune (using dynamic config cost)
     pub fn consume_merit_for_draw(&mut self, merit_cost: u64) -> Result<()> {
         if self.merit < merit_cost {
             return err!(ErrorCode::InsufficientMerit);
@@ -271,16 +271,16 @@ impl UserIncenseState {
         Ok(())
     }
 
-    /// 更新每日许愿次数
+    /// Update daily wish count
     pub fn update_wish_count(&mut self) {
         let now = Clock::get().unwrap().unix_timestamp;
         let is_new_day = now - self.last_wish_time >= 86400;
 
         if is_new_day {
-            // 新的一天，重置计数
+            // New day, reset count
             self.daily_wish_count = 1;
         } else {
-            // 同一天，增加计数
+            // Same day, increase count
             self.daily_wish_count += 1;
         }
 
@@ -288,7 +288,7 @@ impl UserIncenseState {
         self.total_wishes = self.total_wishes.saturating_add(1);
     }
 
-    /// 许愿每日超过三次需要消耗功德
+    /// Wishing more than 3 times daily requires consuming merit
     pub fn consume_merit_for_wish(&mut self, merit_cost: u64) -> Result<()> {
         if self.merit < merit_cost {
             return err!(ErrorCode::InsufficientMerit);
@@ -297,15 +297,15 @@ impl UserIncenseState {
         Ok(())
     }
 
-    /// 检查是否可以免费许愿
+    /// Check if can wish for free
     pub fn can_wish_free(&self) -> bool {
         let now = Clock::get().unwrap().unix_timestamp;
         let is_new_day = now - self.last_wish_time >= 86400;
 
         if is_new_day {
-            true // 新的一天可以免费许愿
+            true // New day can wish for free
         } else {
-            self.daily_wish_count < 3 // 同一天检查次数
+            self.daily_wish_count < 3 // Same day check count
         }
     }
 }
@@ -313,58 +313,58 @@ impl UserIncenseState {
 impl UserDonationState {
     pub const SEED_PREFIX: &str = "user_donation";
 
-    /// 根据捐助金额计算等级
+    /// Calculate level based on donation amount
     pub fn calculate_donation_level(&self) -> u8 {
-        let donation_sol = self.donation_amount as f64 / 1_000_000_000.0; // 转换为SOL
+        let donation_sol = self.donation_amount as f64 / 1_000_000_000.0; // Convert to SOL
 
         if donation_sol >= 5.0 {
-            4 // 至尊供奉
+            4 // Supreme Patron
         } else if donation_sol >= 1.0 {
-            3 // 金牌护法
+            3 // Gold Protector
         } else if donation_sol >= 0.2 {
-            2 // 银牌居士
+            2 // Silver Disciple
         } else if donation_sol >= 0.05 {
-            1 // 铜牌信士
+            1 // Bronze Believer
         } else {
-            0 // 无等级
+            0 // No level
         }
     }
 
-    /// 更新捐助等级
+    /// Update donation level
     pub fn update_donation_level(&mut self) {
         self.donation_level = self.calculate_donation_level();
     }
 
-    /// 检查是否可以免费mint佛像 (>0.5 SOL)
+    /// Check if can mint Buddha NFT for free (>0.5 SOL)
     pub fn can_mint_buddha_free(&self) -> bool {
         let donation_sol = self.donation_amount as f64 / 1_000_000_000.0;
         donation_sol >= 0.5
     }
 
-    /// 捐助等级获取奖励—— （功德奖励， 寺庙香火值）
+    /// Get rewards by donation level (merit reward, temple incense points)
     pub fn get_donation_rewards(&self) -> (u64, u64) {
         // (merit, incense_points)
         match self.donation_level {
-            1 => (65, 1200),       // 铜牌信士
-            2 => (1300, 6300),     // 银牌居士
-            3 => (14000, 30000),   // 金牌护法
-            4 => (120000, 100000), // 至尊供奉
-            _ => (0, 0),           // 无等级
+            1 => (65, 1200),       // Bronze Believer
+            2 => (1300, 6300),     // Silver Disciple
+            3 => (14000, 30000),   // Gold Protector
+            4 => (120000, 100000), // Supreme Patron
+            _ => (0, 0),           // No level
         }
     }
 
-    /// 处理捐助逻辑
+    /// Process donation logic
     pub fn process_donation(&mut self, amount_lamports: u64) {
         let now = Clock::get().unwrap().unix_timestamp;
 
-        // 更新捐助金额
+        // Update donation amount
         self.donation_amount = self.donation_amount.saturating_add(amount_lamports);
 
-        // 更新捐助统计
+        // Update donation statistics
         self.total_donation_count = self.total_donation_count.saturating_add(1);
         self.last_donation_time = now;
 
-        // 更新等级
+        // Update level
         self.update_donation_level();
     }
 }

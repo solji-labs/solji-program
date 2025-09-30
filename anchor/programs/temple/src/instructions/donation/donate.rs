@@ -16,7 +16,7 @@ use anchor_spl::token::Mint;
 use anchor_spl::token::MintTo;
 use anchor_spl::token::Token;
 use anchor_spl::token::TokenAccount;
-/// ⚠️废弃 已拆分成多个指令 这个指令太大了
+/// ⚠️Deprecated Split into multiple instructions This instruction is too large
 #[derive(Accounts)]
 pub struct Donate<'info> {
     #[account(mut)]
@@ -57,14 +57,14 @@ pub struct Donate<'info> {
     )]
     pub user_incense_state: Box<Account<'info, UserIncenseState>>,
 
-    /// CHECK: 寺庙国库账户
+    /// CHECK: Temple treasury account
     #[account(
         mut,
         constraint = temple_treasury.key() == temple_config.treasury @ ErrorCode::InvalidTempleTreasury
     )]
     pub temple_treasury: AccountInfo<'info>,
 
-    // medal NFT 相关账户
+    // Medal NFT related accounts
     #[account(
         init_if_needed,
         payer = donor,
@@ -89,7 +89,7 @@ pub struct Donate<'info> {
     )]
     pub nft_mint_account: Box<Account<'info, Mint>>,
 
-    /// 用户的勋章NFT关联账户
+    /// User's medal NFT associated account
     #[account(
         init_if_needed,
         payer = donor,
@@ -111,7 +111,7 @@ pub struct Donate<'info> {
     )]
     pub meta_account: UncheckedAccount<'info>,
 
-    // 程序账号
+    // Program accounts
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub token_metadata_program: Program<'info, Metadata>,

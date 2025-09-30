@@ -24,7 +24,7 @@ pub fn init_incense_leaderboard(ctx: Context<InitIncenseLeaderboard>) -> Result<
 
     leaderboard.initialize(bump);
 
-    msg!("排行榜初始化完成");
+    msg!("Initialize the leaderboard");
 
     Ok(())
 }

@@ -3,35 +3,35 @@ use anchor_lang::prelude::*;
 #[account]
 #[derive(InitSpace)]
 pub struct AmuletNFT {
-    // 所有者地址
+    // Owner address
     pub owner: Pubkey,
-    // NFT铸造地址
+    // NFT mint address
     pub mint: Pubkey,
-    // 御守名称
+    // Amulet name
     #[max_len(50)]
     pub name: String,
-    // 御守描述
+    // Amulet description
     #[max_len(200)]
     pub description: String,
-    // 铸造时间
+    // Minted time
     pub minted_at: i64,
-    // 来源（0=抽签获得，1=许愿获得）
+    // Source (0=obtained from drawing fortune, 1=obtained from making wish)
     pub source: u8,
-    // 序列号
+    // Serial number
     pub serial_number: u32,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
 pub enum AmuletSource {
-    DrawFortune, // 抽签获得
-    MakeWish,    // 许愿获得
+    DrawFortune, // Obtained from drawing fortune
+    MakeWish,    // Obtained from making wish
 }
 
 impl AmuletNFT {
     pub const SEED_PREFIX: &'static str = "amulet_nft";
     pub const TOKEN_DECIMALS: u8 = 0;
 
-    // 获取御守URI
+    // Get amulet URI
     pub fn get_amulet_uri(&self) -> String {
         format!(
             "https://api.foxverse.co/temple/amulet/{}/metadata.json",
@@ -39,29 +39,29 @@ impl AmuletNFT {
         )
     }
 
-    // 获取来源描述
+    // Get source description
     pub fn get_source_description(&self) -> &'static str {
         match self.source {
-            0 => "抽签获得",
-            1 => "许愿获得",
-            _ => "未知来源",
+            0 => "Obtained from drawing fortune",
+            1 => "Obtained from making wish",
+            _ => "Unknown source",
         }
     }
 }
 
-// 用户御守收藏状态
+// User amulet collection status
 #[account]
 #[derive(InitSpace)]
 pub struct UserAmuletCollection {
     pub user: Pubkey,
-    // 拥有的御守数量统计
+    // Total amulets owned statistics
     pub total_amulets: u32,
-    // 各来源御守数量
-    pub draw_fortune_count: u32, // 抽签获得的数量
-    pub make_wish_count: u32,    // 许愿获得的数量
-    // 可铸造御守余额（概率掉落获得的）
-    pub pending_amulets: u32, // 可铸造的御守数量
-    // 最后更新时间
+    // Amulet count by source
+    pub draw_fortune_count: u32, // Count obtained from drawing fortune
+    pub make_wish_count: u32,    // Count obtained from making wish
+    // Pending amulets balance for minting (obtained from probability drops)
+    pub pending_amulets: u32, // Number of amulets that can be minted
+    // Last updated time
     pub last_updated: i64,
     pub bump: u8,
 }
@@ -69,14 +69,14 @@ pub struct UserAmuletCollection {
 impl UserAmuletCollection {
     pub const SEED_PREFIX: &'static str = "user_amulets";
 
-    // 更新御守统计
+    // Update amulet statistics
     pub fn update_stats(&mut self, source: u8, increment: bool) {
         let delta = if increment { 1i32 } else { -1i32 };
 
-        // 更新总数
+        // Update total count
         self.total_amulets = (self.total_amulets as i32 + delta) as u32;
 
-        // 更新来源统计
+        // Update source statistics
         match source {
             0 => {
                 // DrawFortune
@@ -86,7 +86,7 @@ impl UserAmuletCollection {
                 // MakeWish
                 self.make_wish_count = (self.make_wish_count as i32 + delta) as u32;
             }
-            _ => {} // 其他来源不统计
+            _ => {} // Other sources not counted
         }
 
         self.last_updated = Clock::get().unwrap().unix_timestamp;

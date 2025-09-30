@@ -61,35 +61,35 @@ pub fn create_wish(
     let clock = Clock::get()?;
     let current_time = clock.unix_timestamp as u64;
 
-    // 检查寺庙状态
+    // Check temple status
     ctx.accounts.temple_config.can_perform_operation(
         crate::state::temple_config::TempleStatusBitIndex::CreateWish,
         current_time,
     )?;
 
-    // 用户状态修改
+    // User state modification
     let user_incense_state = &mut ctx.accounts.user_incense_state;
 
-    // 检查每日限制
+    // Check daily limit
     if !user_incense_state.can_wish_free() {
         user_incense_state.consume_merit_for_wish(5)?;
     }
-    // 更新
+    // Update
     user_incense_state.update_wish_count();
 
-    // 更新全局统计
+    // Update global stats
     ctx.accounts.global_stats.increment_wishes();
 
-    // 给予功德奖励
+    // Give merit reward
     if user_incense_state.can_wish_free() {
         user_incense_state.add_incense_value_and_merit(0, 1);
     }
 
-    // 创建wish
+    // Create wish
     let wish = &mut ctx.accounts.wish_account;
     let user = &ctx.accounts.user;
     let clock = Clock::get()?;
-    // 设置到账户中
+    // Set to account
     wish.id = wish_id;
     wish.creator = user.key();
     wish.content_hash = content_hash;
@@ -98,20 +98,20 @@ pub fn create_wish(
     wish.likes = 0;
     wish.bump = ctx.bumps.wish_account;
 
-    // 御守概率掉落逻辑：10%概率
+    // Amulet drop probability logic: 10% chance
     let random_seed = (clock.unix_timestamp as u64).wrapping_add(wish_id);
     let amulet_drop_random = (random_seed % 100) as u8;
     let amulet_dropped = amulet_drop_random < 10;
     if amulet_dropped {
-        // 增加用户可铸造御守余额
+        // Increase user's mintable amulet balance
         ctx.accounts.user_state.pending_amulets += 1;
         msg!(
-            "恭喜！许愿时获得了1个御守铸造机会！当前余额: {}",
+            "Congratulations! Got 1 amulet minting opportunity from making a wish! Current balance: {}",
             ctx.accounts.user_state.pending_amulets
         );
     }
 
-    // 发出许愿事件
+    // Emit wish created event
     emit!(WishCreated {
         user: ctx.accounts.user.key(),
         wish_id,

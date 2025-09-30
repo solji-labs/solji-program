@@ -129,10 +129,10 @@ pub fn mint_buddha_nft(ctx: Context<MintBuddhaNFT>) -> Result<()> {
     // Update user state
     ctx.accounts.user_state.has_buddha_nft = true;
 
-    // 更新寺庙配置
+    // Update temple config
     ctx.accounts.temple_config.total_buddha_nft += 1;
 
-    // 更新全局统计
+    // Update global stats
     ctx.accounts.global_stats.increment_buddha_lights();
 
     Ok(())
@@ -140,7 +140,7 @@ pub fn mint_buddha_nft(ctx: Context<MintBuddhaNFT>) -> Result<()> {
 
 #[derive(Accounts)]
 pub struct MintBuddhaNFT<'info> {
-    /// 用户账号
+    /// User account
     #[account(mut)]
     pub authority: Signer<'info>,
 
@@ -158,14 +158,14 @@ pub struct MintBuddhaNFT<'info> {
     )]
     pub global_stats: Account<'info, GlobalStats>,
 
-    /// CHECK: 寺庙国库账户
+    /// CHECK: Temple treasury account
     #[account(
         mut,
         constraint = temple_treasury.key() == temple_config.treasury @ ErrorCode::InvalidTempleTreasury
     )]
     pub temple_treasury: AccountInfo<'info>,
 
-    /// 用户账号
+    /// User account
     #[account(
         mut,
         seeds = [UserState::SEED_PREFIX.as_bytes(), authority.key().as_ref()],
@@ -173,7 +173,7 @@ pub struct MintBuddhaNFT<'info> {
     )]
     pub user_state: Box<Account<'info, UserState>>,
 
-    /// 捐助账号
+    /// Donation account
     #[account(
         mut,
         seeds = [UserDonationState::SEED_PREFIX.as_bytes(), authority.key().as_ref()],
@@ -196,7 +196,7 @@ pub struct MintBuddhaNFT<'info> {
     )]
     pub nft_mint_account: Box<Account<'info, Mint>>,
 
-    /// 用户的NFT关联账户
+    /// User's NFT associated token account
     #[account(
         init_if_needed,
         payer = authority,
@@ -227,7 +227,7 @@ pub struct MintBuddhaNFT<'info> {
     )]
     pub meta_account: UncheckedAccount<'info>,
 
-    // 程序账号
+    // Program accounts
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub token_metadata_program: Program<'info, Metadata>,

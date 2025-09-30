@@ -33,28 +33,31 @@ pub struct ClaimBuddhaNft<'info> {
 pub fn claim_buddha_nft(ctx: Context<ClaimBuddhaNft>) -> Result<()> {
     let user = &ctx.accounts.user;
 
-    // 检查分配是否已完成
+    // Check if distribution is completed
     require!(
         ctx.accounts.donation_leaderboard.distribution_completed,
         ErrorCode::NotApproved
     );
 
-    // 检查用户是否已经有Buddha NFT
+    // Check if user already has Buddha NFT
     require!(
         !ctx.accounts.user_state.has_buddha_nft,
         ErrorCode::UserHasBuddhaNFT
     );
 
-    // 检查用户是否在前10,000名捐助者中
+    // Check if user is among the top 10,000 donors
     require!(
         ctx.accounts.donation_leaderboard.is_top_donor(&user.key()),
         ErrorCode::InsufficientDonation
     );
 
-    // 设置用户拥有Buddha NFT资格
+    // Set user to have Buddha NFT eligibility
     ctx.accounts.user_state.has_buddha_nft = true;
 
-    msg!("用户 {} 成功领取了 Buddha NFT 资格", user.key());
+    msg!(
+        "User {} successfully claimed Buddha NFT eligibility",
+        user.key()
+    );
 
     Ok(())
 }
