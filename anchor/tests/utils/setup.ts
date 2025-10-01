@@ -11,7 +11,7 @@ export const TEST_CONFIG = {
         skipPreflight: true,
     },
     airdropAmount: 2 * LAMPORTS_PER_SOL, // 2 SOL
- 
+
 
     defaultDonationLevels: [
         {
@@ -200,16 +200,45 @@ export class TestContext {
         );
 
         const tx = await this.program.methods
-        .initIncenseType(params)
-        .accounts({
-            incenseTypeConfig: incenseTypeConfigPda,
-            authority: this.authority.publicKey,
-        })
-        .signers([this.authority])
-        .rpc();
+            .initIncenseType(params)
+            .accounts({
+                incenseTypeConfig: incenseTypeConfigPda,
+                authority: this.authority.publicKey,
+            })
+            .signers([this.authority])
+            .rpc();
 
         console.log(`Incense type created: ${tx}`);
         console.log(`Incense type config PDA: ${incenseTypeConfigPda.toString()}`);
+
+        return tx;
+    }
+
+
+
+
+
+    public async initUser(user: Keypair): Promise<string> {
+        console.log("init user...");
+
+
+        const [userStatePda] = PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("user_state_v1"),
+                user.publicKey.toBuffer(),
+            ],
+            this.program.programId
+        );
+
+        const tx = await this.program.methods.initUser()
+            .accounts({
+                user: user.publicKey,
+            })
+            .signers([user])
+            .rpc();
+
+        console.log(`User created: ${tx}`);
+        console.log(`User state PDA: ${userStatePda.toString()}`);
 
         return tx;
     }

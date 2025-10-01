@@ -32,4 +32,8 @@ pub mod temple {
     pub fn init_incense_type(ctx: Context<InitIncenseType>, params: InitializeIncenseTypeParams) -> Result<()> {
         instructions::incense::init_incense_type(ctx, params)
     }
+
+    pub fn init_user(ctx: Context<InitUser>) -> Result<()> {
+        instructions::user::init_user(ctx)
+    }
 }
