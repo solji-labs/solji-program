@@ -3,6 +3,7 @@ import { Program } from "@coral-xyz/anchor";
 import { Temple } from "../../target/types/temple";
 import { PublicKey, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { BN } from "bn.js";
+import { web3 } from "@coral-xyz/anchor";
 
 // Test configuration
 export const TEST_CONFIG = {
@@ -10,56 +11,7 @@ export const TEST_CONFIG = {
         skipPreflight: true,
     },
     airdropAmount: 2 * LAMPORTS_PER_SOL, // 2 SOL
-    defaultIncenseTypes: [
-        {
-            id: 1,
-            name: "清香",
-            priceLamports: new BN(0.01 * LAMPORTS_PER_SOL), // 0.01 SOL
-            merit: new BN(10),
-            incensePoints: new BN(100),
-            isDonation: false,
-        },
-        {
-            id: 2,
-            name: "檀香",
-            priceLamports: new BN(0.05 * LAMPORTS_PER_SOL), // 0.05 SOL
-            merit: new BN(65),
-            incensePoints: new BN(600),
-            isDonation: false,
-        },
-        {
-            id: 3,
-            name: "龙涎香",
-            priceLamports: new BN(0.1 * LAMPORTS_PER_SOL), // 0.1 SOL
-            merit: new BN(1200),
-            incensePoints: new BN(3100),
-            isDonation: false,
-        },
-        {
-            id: 4,
-            name: "太上灵香",
-            priceLamports: new BN(0.3 * LAMPORTS_PER_SOL), // 0.3 SOL
-            merit: new BN(3400),
-            incensePoints: new BN(9000),
-            isDonation: false,
-        },
-        {
-            id: 5,
-            name: "秘制香",
-            priceLamports: new BN(10 * LAMPORTS_PER_SOL), // 10 SOL (捐助获得)
-            merit: new BN(5000),
-            incensePoints: new BN(15000),
-            isDonation: true,
-        },
-        {
-            id: 6,
-            name: "天界香",
-            priceLamports: new BN(50 * LAMPORTS_PER_SOL), // 50 SOL (捐助获得)
-            merit: new BN(10000),
-            incensePoints: new BN(30000),
-            isDonation: true,
-        }
-    ],
+ 
 
     defaultDonationLevels: [
         {
@@ -126,6 +78,59 @@ export const TEST_CONFIG = {
     ]
 };
 
+
+
+
+// 预定义的香型配置
+export const INCENSE_TYPE_CONFIGS = {
+    QING_XIANG: {
+        incenseTypeId: 1,
+        name: "清香",
+        description: "清淡香味，适合日常冥想，带来内心平静",
+        pricePerUnit: new anchor.BN(10_000_000), // 0.01 SOL
+        karmaReward: 10,
+        incenseValue: 100,
+        purchasableWithSol: true,
+        maxPurchasePerTransaction: 10,
+        isActive: true,
+        rarity: { common: {} },
+        nftCollection: web3.PublicKey.default, // 需要替换为实际Collection地址
+        metadataUriTemplate: "https://api.solji.com/metadata/qing_xiang/{sequence}",
+    },
+    TAN_XIANG: {
+        incenseTypeId: 2,
+        name: "檀香",
+        description: "珍贵檀木制香，香味浓郁持久，提升修行效果",
+        pricePerUnit: new anchor.BN(50_000_000), // 0.05 SOL
+        karmaReward: 50,
+        incenseValue: 500,
+        purchasableWithSol: true,
+        maxPurchasePerTransaction: 10,
+        isActive: true,
+        rarity: { rare: {} },
+        nftCollection: web3.PublicKey.default,
+        metadataUriTemplate: "https://api.solji.com/metadata/tan_xiang/{sequence}",
+    },
+    LONG_XIAN_XIANG: {
+        incenseTypeId: 3,
+        name: "龙涎香",
+        description: "传说中的龙涎香，极其稀有，具有强大的灵性力量",
+        pricePerUnit: new anchor.BN(200_000_000), // 0.2 SOL
+        karmaReward: 200,
+        incenseValue: 2000,
+        purchasableWithSol: true,
+        maxPurchasePerTransaction: 5,
+        isActive: true,
+        rarity: { epic: {} },
+        nftCollection: web3.PublicKey.default,
+        metadataUriTemplate: "https://api.solji.com/metadata/long_xian_xiang/{sequence}",
+    },
+};
+
+
+
+
+
 export class TestContext {
     public provider: anchor.AnchorProvider;
     public program: Program<Temple>;
@@ -181,6 +186,35 @@ export class TestContext {
     }
 
 
+
+    public async initIncenseType(params: InitializeIncenseTypeParams): Promise<string> {
+        console.log("init incense type...");
+
+        // 生成香型配置的PDA地址
+        const [incenseTypeConfigPda] = PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("incense_type_v1"),
+                Buffer.from([params.incenseTypeId])
+            ],
+            this.program.programId
+        );
+
+        const tx = await this.program.methods
+        .initIncenseType(params)
+        .accounts({
+            incenseTypeConfig: incenseTypeConfigPda,
+            authority: this.authority.publicKey,
+        })
+        .signers([this.authority])
+        .rpc();
+
+        console.log(`Incense type created: ${tx}`);
+        console.log(`Incense type config PDA: ${incenseTypeConfigPda.toString()}`);
+
+        return tx;
+    }
+
+
     // Token Metadata Program ID
     public get TOKEN_METADATA_PROGRAM_ID(): PublicKey {
         return new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
@@ -223,4 +257,21 @@ export function logTransaction(description: string, signature: string): void {
 
 export function logAccountInfo(description: string, address: PublicKey): void {
     console.log(`${description}: ${address.toString()}`);
+}
+
+
+// 香型配置参数接口
+export interface InitializeIncenseTypeParams {
+    incenseTypeId: number;
+    name: string;
+    description: string;
+    pricePerUnit: anchor.BN;
+    karmaReward: number;
+    incenseValue: number;
+    purchasableWithSol: boolean;
+    maxPurchasePerTransaction: number;
+    isActive: boolean;
+    rarity: { common: {} } | { rare: {} } | { epic: {} } | { legendary: {} };
+    nftCollection: web3.PublicKey;
+    metadataUriTemplate: string;
 }

@@ -23,8 +23,13 @@ pub mod admin {
 pub mod temple {
 
     use super::*;
-
+ 
     pub fn init_temple(ctx: Context<InitTemple>) -> Result<()> {
         instructions::temple::init_temple(ctx)
+    }
+
+
+    pub fn init_incense_type(ctx: Context<InitIncenseType>, params: InitializeIncenseTypeParams) -> Result<()> {
+        instructions::incense::init_incense_type(ctx, params)
     }
 }
