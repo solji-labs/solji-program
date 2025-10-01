@@ -20,13 +20,7 @@ describe("user init", () => {
         await ctx.airdropToUser(user.publicKey);
         
         // 生成用户状态PDA
-        const [userStatePda] = PublicKey.findProgramAddressSync(
-            [
-                Buffer.from("user_state_v1"),
-                user.publicKey.toBuffer(),
-            ],
-            ctx.program.programId
-        );
+        const userStatePda = ctx.getUserStatePda(user.publicKey);
         
         console.log("User State PDA: ", userStatePda.toString());
 

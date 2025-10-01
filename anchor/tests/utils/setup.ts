@@ -147,7 +147,8 @@ export class TestContext {
         this.templeStatePda = this.getTempleStatePda();
     }
 
-    private getTempleStatePda(): PublicKey {
+    // 获取寺庙状态PDA
+    public getTempleStatePda(): PublicKey {
         const [pda] = PublicKey.findProgramAddressSync(
             [Buffer.from("temple_state_v1")],
             this.program.programId
@@ -155,6 +156,26 @@ export class TestContext {
         return pda;
     }
 
+    // 获取用户状态PDA
+    public getUserStatePda(user: PublicKey): PublicKey {
+        const [pda] = PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("user_state_v1"),
+                user.toBuffer(),
+            ],
+            this.program.programId
+        );
+        return pda;
+    }
+
+    // 获取香型配置PDA
+    public getIncenseTypeConfigPda(incenseTypeId: number): PublicKey {
+        const [pda] = PublicKey.findProgramAddressSync(
+            [Buffer.from("incense_type_v1"), Buffer.from([incenseTypeId])],
+            this.program.programId
+        );
+        return pda;
+    }
 
 
 
@@ -191,13 +212,7 @@ export class TestContext {
         console.log("init incense type...");
 
         // 生成香型配置的PDA地址
-        const [incenseTypeConfigPda] = PublicKey.findProgramAddressSync(
-            [
-                Buffer.from("incense_type_v1"),
-                Buffer.from([params.incenseTypeId])
-            ],
-            this.program.programId
-        );
+        const incenseTypeConfigPda = this.getIncenseTypeConfigPda(params.incenseTypeId);
 
         const tx = await this.program.methods
             .initIncenseType(params)
