@@ -85,10 +85,6 @@ pub fn incense_burn(ctx: Context<CreateIncense> ,args: IncenseBurnArgs) -> Resul
 
     let user_info = &mut ctx.accounts.user_info;
 
-    if user_info.incense_property_count[incense_type as usize] < 1 {
-        return err!(BurnCode::BurningIncenseFailed);
-    }
-
     check_daily_reset_and_limit(user_info, incense_type)?;
 
     let name = args.name.clone();
@@ -187,10 +183,10 @@ pub fn check_daily_reset_and_limit(
 
     if current_day > last_day {
         user_info.burn_count = [0; 6];
-        user_info.donate_count = 0;
+        user_info.incense_property_count = [0; 6];
         user_info.incense_time = now_ts;
     }
-    if user_info.get_burn_count(incense_type) >= 10 && user_info.donate_count == 0 {
+    if user_info.get_burn_count(incense_type) >= 10 && user_info.incense_property_count[incense_type as usize] < 1 {
         return err!(BurnCode::TooManyBurns);
     }
     Ok(())

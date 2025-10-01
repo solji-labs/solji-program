@@ -20,7 +20,6 @@ pub struct UserInfo {
     pub donate_merit_value: u64,
     pub donate_incense_value: u64,
     pub current_medal_level: Option<MedalLevel>,
-    pub donate_count: u64,
     pub lottery_count: u32,
     pub lottery_is_free: bool,
     pub lottery_time: i64,
@@ -43,7 +42,6 @@ impl UserInfo {
             donate_merit_value: 0,
             donate_incense_value: 0,
             current_medal_level: Some(MedalLevel::None),
-            donate_count: 0,
             lottery_count: 0,
             lottery_is_free: true,
             lottery_time: 0,
@@ -79,12 +77,7 @@ impl UserInfo {
         let now_ts = Clock::get().unwrap().unix_timestamp;
         self.user = user;
 
-        if self.burn_count[incense_type as usize] >= 10 && self.donate_count > 0 {
-            self.donate_count = self
-                .donate_count
-                .checked_sub(1)
-                .ok_or(GlobalError::MathOverflow)?;
-        } else {
+        if self.burn_count[incense_type as usize] >= 10 {
             self.incense_property_count[incense_type as usize] = self.incense_property_count
                 [incense_type as usize]
                 .checked_sub(1)
@@ -196,16 +189,6 @@ impl UserInfo {
             .donate_amount
             .checked_add(amount)
             .ok_or(GlobalError::MathOverflow)?;
-        Ok(())
-    }
-
-    pub fn update_user_donate_count(&mut self, amount: u64) -> Result<()> {
-        if amount >= 10_000_000 {
-            self.donate_count = self
-                .donate_count
-                .checked_add(amount / 10_000_000)
-                .ok_or(GlobalError::MathOverflow)?;
-        }
         Ok(())
     }
 }

@@ -127,7 +127,10 @@ impl Space for MedalLevel {
 }
 
 pub fn calc_incense_rewards(donation_sol: u64, user_info: &mut UserInfo) -> Result<()> {
-    if donation_sol <= 50 * LAMPORTS_PER_SOL {
+    if donation_sol < 5 * LAMPORTS_PER_SOL {
+        let number = donation_sol / 10_000_000;
+        user_info.update_incense_property_count(IncenseType::FaintScent, number)?;
+    } else if donation_sol <= 50 * LAMPORTS_PER_SOL {
         let units_of_5 = donation_sol / (5 * LAMPORTS_PER_SOL); // 每 5 SOL 一个单位（向下取整）
         let secret = units_of_5 * 10;
         msg!("secret: {}", secret);
