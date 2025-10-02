@@ -42,7 +42,7 @@ describe("incense init", () => {
             console.log("Karma Reward:", incenseTypeConfig.karmaReward);
             console.log("Incense Value:", incenseTypeConfig.incenseValue);
             console.log("Purchasable with SOL:", incenseTypeConfig.purchasableWithSol);
-            console.log("Max Purchase Per Transaction:", incenseTypeConfig.maxPurchasePerTransaction);
+            console.log("Max Buy Per Transaction:", incenseTypeConfig.maxBuyPerTransaction);
             console.log("Is Active:", incenseTypeConfig.isActive);
             console.log("Rarity:", incenseTypeConfig.rarity);
             console.log("Total Minted:", incenseTypeConfig.totalMinted.toString());

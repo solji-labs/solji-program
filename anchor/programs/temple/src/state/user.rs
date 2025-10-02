@@ -35,6 +35,9 @@ pub struct UserState {
     /// 上次操作日期，用于每日重置判断
     pub last_action_day: u16, // 存储自纪元开始的天数
 
+    /// 总购买次数统计
+    pub total_buy_count: u64,
+
     /// 总烧香操作次数统计
     pub total_burn_operations: u32,
 
@@ -81,6 +84,7 @@ impl UserState {
         self.daily_draw_count = 0;
         self.daily_wish_count = 0;
         self.last_action_day = current_day;
+        self.total_buy_count = 0;
         self.total_burn_operations = 0;
         self.total_incense_burned = 0;
         self.total_draw_count = 0;
@@ -125,6 +129,16 @@ impl UserState {
     /// 获取当日可用许愿次数
     pub fn get_available_wish_count(&self) -> u8 {
         Self::DAILY_WISH_LIMIT.saturating_sub(self.daily_wish_count)
+    }
+
+    /// 增加购买次数
+    pub fn add_buy_count(&mut self) -> Result<()> {
+        // saturating_add: 先加上1，如果结果大于u64::MAX，返回u64::MAX
+        self.total_buy_count = self
+            .total_buy_count
+            .checked_add(1)
+            .ok_or(UserError::BuyCountOverflow)?;
+        Ok(())
     }
 
     /// 增加功德值
@@ -209,9 +223,114 @@ impl UserState {
     }
 }
 
+#[account]
+#[derive(Debug, InitSpace)]
+pub struct UserIncenseState {
+    pub user: Pubkey,
+
+    // 拥有的香
+    pub incense_having_balances: [IncenseBalance; 6],
+
+    // 已烧香的香
+    pub incense_burned_balances: [IncenseBalance; 6],
+
+    // total = having + burned
+    pub incense_total_balances: [IncenseBalance; 6],
+
+    // 最后活跃时间戳
+    pub last_active_at: i64,
+}
+
+#[derive(Debug, AnchorDeserialize, AnchorSerialize, Clone, InitSpace)]
+pub struct IncenseBalance {
+    pub incense_type_id: u8,
+    pub balance: u64,
+}
+
+impl UserIncenseState {
+    /// PDA种子前缀
+    pub const SEED_PREFIX: &'static str = "user_incense_state_v1";
+
+    /// 获取拥有的香的余额
+    pub fn get_incense_having_balance(&self, incense_type_id: u8) -> u64 {
+        for balance in self.incense_having_balances.iter() {
+            if balance.incense_type_id == incense_type_id {
+                return balance.balance;
+            }
+        }
+        0
+    }
+
+    /// 获取已烧香的香的余额
+    pub fn get_incense_burned_balance(&self, incense_type_id: u8) -> u64 {
+        for balance in self.incense_burned_balances.iter() {
+            if balance.incense_type_id == incense_type_id {
+                return balance.balance;
+            }
+        }
+        0
+    }
+
+    /// 增加拥有的香的余额
+    pub fn add_incense_balance(&mut self, incense_type_id: u8, amount: u64) -> Result<()> {
+        for balance in self.incense_having_balances.iter_mut() {
+            if balance.incense_type_id == incense_type_id {
+                balance.balance = balance
+                    .balance
+                    .checked_add(amount)
+                    .ok_or(UserError::IncenseValueOverflow)?;
+ 
+            }
+        }
+        for balance in self.incense_total_balances.iter_mut() {
+            if balance.incense_type_id == incense_type_id {
+                balance.balance = balance
+                    .balance
+                    .checked_add(amount)
+                    .ok_or(UserError::IncenseValueOverflow)?;
+            }
+        }
+        self.last_active_at = Clock::get()?.unix_timestamp;
+        Ok(())
+    }
+
+    /// 减少拥有的香的余额
+    pub fn sub_incense_balance(&mut self, incense_type_id: u8, amount: u64) -> Result<()> {
+        // 检查拥有的香是否足够
+        let having_balance = self.get_incense_having_balance(incense_type_id);
+        require!(having_balance >= amount, UserError::InsufficientKarmaPoints);
+
+        // 减少拥有的香的余额
+        for balance in self.incense_having_balances.iter_mut() {
+            if balance.incense_type_id == incense_type_id {
+                balance.balance = balance
+                    .balance
+                    .checked_sub(amount)
+                    .ok_or(UserError::IncenseValueOverflow)?;
+            }
+        }
+
+        // 增加已烧香的香的余额
+        for balance in self.incense_burned_balances.iter_mut() {
+            if balance.incense_type_id == incense_type_id {
+                balance.balance = balance
+                    .balance
+                    .checked_add(amount)
+                    .ok_or(UserError::IncenseValueOverflow)?;
+            }
+        }
+
+        self.last_active_at = Clock::get()?.unix_timestamp;
+        Ok(())
+    }
+}
+
 /// 用户相关错误定义
 #[error_code]
 pub enum UserError {
+    #[msg("Buy count overflow")]
+    BuyCountOverflow,
+
     #[msg("Karma points overflow")]
     KarmaPointsOverflow,
 

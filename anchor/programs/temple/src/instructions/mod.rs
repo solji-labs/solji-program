@@ -6,3 +6,6 @@ pub use incense::*;
 
 pub mod user;
 pub use user::*;
+
+pub mod buy_incense;
+pub use buy_incense::*;

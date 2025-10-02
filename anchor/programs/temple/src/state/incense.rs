@@ -57,7 +57,7 @@ pub struct IncenseTypeConfig {
     pub purchasable_with_sol: bool,
 
     /// 每次最大购买数量
-    pub max_purchase_per_transaction: u8,
+    pub max_buy_per_transaction: u8,
 
     /// 是否激活此香型
     pub is_active: bool,
@@ -112,8 +112,8 @@ impl IncenseTypeConfig {
         require!(params.price_per_unit > 0, IncenseError::InvalidPrice);
         require!(params.karma_reward > 0, IncenseError::InvalidKarmaReward);
         require!(params.incense_value > 0, IncenseError::InvalidIncenseValue);
-        require!(params.max_purchase_per_transaction > 0 && params.max_purchase_per_transaction <= 10, 
-                IncenseError::InvalidMaxPurchase);
+        require!(params.max_buy_per_transaction > 0 && params.max_buy_per_transaction <= 10, 
+                IncenseError::InvalidMaxBuy);
 
         // 设置基本属性
         self.incense_type_id = params.incense_type_id;
@@ -123,7 +123,7 @@ impl IncenseTypeConfig {
         self.karma_reward = params.karma_reward;
         self.incense_value = params.incense_value;
         self.purchasable_with_sol = params.purchasable_with_sol;
-        self.max_purchase_per_transaction = params.max_purchase_per_transaction;
+        self.max_buy_per_transaction = params.max_buy_per_transaction;
         self.is_active = params.is_active;
         self.rarity = params.rarity;
         self.nft_collection = params.nft_collection;
@@ -187,7 +187,7 @@ pub struct InitializeIncenseTypeParams {
     /// 是否可以通过SOL购买
     pub purchasable_with_sol: bool,
     /// 每次最大购买数量
-    pub max_purchase_per_transaction: u8,
+    pub max_buy_per_transaction: u8,
     /// 是否激活此香型
     pub is_active: bool,
     /// 香的稀有度
@@ -227,8 +227,8 @@ pub enum IncenseError {
     #[msg("Incense value must be greater than 0")]
     InvalidIncenseValue,
     
-    #[msg("Max purchase per transaction must be between 1 and 10")]
-    InvalidMaxPurchase,
+    #[msg("Max buy per transaction must be between 1 and 10")]
+    InvalidMaxBuy,
     
     #[msg("Minted count overflow")]
     MintedCountOverflow,

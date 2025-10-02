@@ -24,8 +24,8 @@ pub mod temple {
 
     use super::*;
  
-    pub fn init_temple(ctx: Context<InitTemple>) -> Result<()> {
-        instructions::temple::init_temple(ctx)
+    pub fn init_temple(ctx: Context<InitTemple>,treasury: Pubkey) -> Result<()> {
+        instructions::temple::init_temple(ctx,treasury)
     }
 
 
@@ -35,5 +35,9 @@ pub mod temple {
 
     pub fn init_user(ctx: Context<InitUser>) -> Result<()> {
         instructions::user::init_user(ctx)
+    }
+
+    pub fn buy_incense<'info>(ctx: Context<'_, '_, 'info, 'info, BuyIncense<'info>>, buy_incense_params: Vec<BuyIncenseItem>) -> Result<()> {
+        instructions::buy_incense::buy_incense(ctx, buy_incense_params)
     }
 }

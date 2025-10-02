@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { Temple } from "../../target/types/temple";
-import { PublicKey, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { PublicKey, Keypair, LAMPORTS_PER_SOL, AccountMeta } from "@solana/web3.js";
 import { BN } from "bn.js";
 import { web3 } from "@coral-xyz/anchor";
 
@@ -10,7 +10,7 @@ export const TEST_CONFIG = {
     confirmOptions: {
         skipPreflight: true,
     },
-    airdropAmount: 2 * LAMPORTS_PER_SOL, // 2 SOL
+    airdropAmount: 20 * LAMPORTS_PER_SOL, // 2 SOL
 
 
     defaultDonationLevels: [
@@ -91,7 +91,7 @@ export const INCENSE_TYPE_CONFIGS = {
         karmaReward: 10,
         incenseValue: 100,
         purchasableWithSol: true,
-        maxPurchasePerTransaction: 10,
+        maxBuyPerTransaction: 10,
         isActive: true,
         rarity: { common: {} },
         nftCollection: web3.PublicKey.default, // 需要替换为实际Collection地址
@@ -105,7 +105,7 @@ export const INCENSE_TYPE_CONFIGS = {
         karmaReward: 50,
         incenseValue: 500,
         purchasableWithSol: true,
-        maxPurchasePerTransaction: 10,
+        maxBuyPerTransaction: 10,
         isActive: true,
         rarity: { rare: {} },
         nftCollection: web3.PublicKey.default,
@@ -119,7 +119,7 @@ export const INCENSE_TYPE_CONFIGS = {
         karmaReward: 200,
         incenseValue: 2000,
         purchasableWithSol: true,
-        maxPurchasePerTransaction: 5,
+        maxBuyPerTransaction: 5,
         isActive: true,
         rarity: { epic: {} },
         nftCollection: web3.PublicKey.default,
@@ -168,6 +168,18 @@ export class TestContext {
         return pda;
     }
 
+    // 获取用户香炉状态PDA
+    public getUserIncenseStatePda(user: PublicKey): PublicKey {
+        const [pda] = PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("user_incense_state_v1"),
+                user.toBuffer(),
+            ],
+            this.program.programId
+        );
+        return pda;
+    }
+
     // 获取香型配置PDA
     public getIncenseTypeConfigPda(incenseTypeId: number): PublicKey {
         const [pda] = PublicKey.findProgramAddressSync(
@@ -189,11 +201,46 @@ export class TestContext {
         return tx;
     }
 
+
+
+    public async buyIncense(
+        user: Keypair,
+        buyIncenseParams: BuyIncenseItem[],
+        remainingAccounts: AccountMeta[]
+    ): Promise<string> {
+        console.log("buy incense...");
+
+        const tx = await this.program.methods
+            .buyIncense(buyIncenseParams)
+            .accounts({
+                user: user.publicKey,
+                templeTreasury: this.treasury,
+            })
+            .remainingAccounts(remainingAccounts)
+            .signers([user])
+            .rpc();
+
+        console.log(`Incense bought: ${tx}`);
+
+        return tx;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
     public async initTemple(): Promise<string> {
         console.log("init temple...");
 
         const tx = await this.program.methods
-            .initTemple()
+            .initTemple(this.treasury)
             .accounts({
                 authority: this.authority.publicKey,
             })
@@ -259,6 +306,48 @@ export class TestContext {
     }
 
 
+
+    public async printUserState(userStatePda: PublicKey): Promise<void> {
+        const userStateAccount = await this.program.account.userState.fetch(userStatePda);
+        // 获取PDA账户的数据信息
+        console.log("\n📊 Reading User State PDA Data:");
+        console.log("================================");
+
+        console.log("userStateAccount", JSON.stringify(userStateAccount));
+
+        console.log("User:", userStateAccount.user.toString());
+        console.log("Karma Points:", userStateAccount.karmaPoints.toString());
+        console.log("Total Incense Value:", userStateAccount.totalIncenseValue.toString());
+        console.log("Total Sol Spent:", userStateAccount.totalSolSpent.toString());
+        console.log("Total Donated:", userStateAccount.totalDonated.toString());
+        console.log("Total Buy Count:", userStateAccount.totalBuyCount.toString());
+        console.log("Total Draw Count:", userStateAccount.totalDrawCount.toString());
+        console.log("Total Wish Count:", userStateAccount.totalWishCount.toString());
+        console.log("Donation Unlocked Burns:", userStateAccount.donationUnlockedBurns);
+        console.log("Daily Burn Operations:", userStateAccount.dailyBurnOperations);
+        console.log("Daily Draw Count:", userStateAccount.dailyDrawCount);
+        console.log("Daily Wish Count:", userStateAccount.dailyWishCount);
+        console.log("Created At:", new Date(userStateAccount.createdAt.toNumber() * 1000).toISOString());
+        console.log("Last Active At:", new Date(userStateAccount.lastActiveAt.toNumber() * 1000).toISOString());
+    }
+
+
+    public async printUserIncenseState(userIncenseStatePda: PublicKey): Promise<void> {
+        const userIncenseStateAccount = await this.program.account.userIncenseState.fetch(userIncenseStatePda);
+        // 获取PDA账户的数据信息
+        console.log("\n📊 Reading User Incense State PDA Data:");
+        console.log("================================");
+
+        console.log("userIncenseStateAccount", JSON.stringify(userIncenseStateAccount));
+
+        console.log("User:", userIncenseStateAccount.user.toString());
+        console.log("Incense Having Balances:", userIncenseStateAccount.incenseHavingBalances);
+        console.log("Incense Total Balances:", userIncenseStateAccount.incenseTotalBalances);
+        console.log("Incense Burned Balances:", userIncenseStateAccount.incenseBurnedBalances);
+        console.log("Last Active At:", new Date(userIncenseStateAccount.lastActiveAt.toNumber() * 1000).toISOString());
+    }
+
+
     // Token Metadata Program ID
     public get TOKEN_METADATA_PROGRAM_ID(): PublicKey {
         return new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
@@ -304,6 +393,10 @@ export function logAccountInfo(description: string, address: PublicKey): void {
 }
 
 
+
+
+
+
 // 香型配置参数接口
 export interface InitializeIncenseTypeParams {
     incenseTypeId: number;
@@ -313,9 +406,17 @@ export interface InitializeIncenseTypeParams {
     karmaReward: number;
     incenseValue: number;
     purchasableWithSol: boolean;
-    maxPurchasePerTransaction: number;
+    maxBuyPerTransaction: number;
     isActive: boolean;
     rarity: { common: {} } | { rare: {} } | { epic: {} } | { legendary: {} };
     nftCollection: web3.PublicKey;
     metadataUriTemplate: string;
+}
+
+
+export interface BuyIncenseItem {
+    incenseTypeId: number;
+    quantity: number;
+    unitPrice: anchor.BN;
+    subtotal: anchor.BN;
 }

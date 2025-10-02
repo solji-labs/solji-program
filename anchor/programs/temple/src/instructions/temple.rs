@@ -4,13 +4,13 @@ pub use anchor_lang::prelude::*;
 use crate::state::TempleState;
 
 
-pub fn init_temple(ctx: Context<InitTemple>) -> Result<()> {
+pub fn init_temple(ctx: Context<InitTemple>,treasury: Pubkey) -> Result<()> {
 
     let temple_state = &mut ctx.accounts.temple_state;
     let authority = &ctx.accounts.authority.key();
     let current_timestamp = Clock::get().unwrap().unix_timestamp;
     
-    temple_state.initialize(*authority, current_timestamp)?;
+    temple_state.initialize(*authority,treasury, current_timestamp)?;
     
     emit!(TempleInitEvent {
         temple_state: temple_state.key(),
@@ -33,6 +33,7 @@ pub fn init_temple(ctx: Context<InitTemple>) -> Result<()> {
 
 /// 初始化寺庙状态
 #[derive(Accounts)]
+#[instruction(treasury: Pubkey)]
 pub struct InitTemple<'info> {
 
 

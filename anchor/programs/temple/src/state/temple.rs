@@ -11,6 +11,9 @@ pub use anchor_lang::prelude::*;
 pub struct TempleState {
     /// 寺庙管理员地址 - 拥有管理权限的地址
     pub authority: Pubkey,
+
+    /// 寺庙资金池地址 - 存储寺庙收入的地址
+    pub treasury: Pubkey,
     
     /// 当前寺庙等级 (1-4: 草庙->赤庙->灵殿->赛博神殿)
     /// 影响UI展示和功能解锁
@@ -57,9 +60,10 @@ impl TempleState {
     pub const SEED_PREFIX: &'static str = "temple_state_v1";
 
     /// 初始化寺庙状态
-    pub fn initialize(&mut self, authority: Pubkey, current_timestamp: i64) -> Result<()> {
+    pub fn initialize(&mut self, authority: Pubkey,treasury: Pubkey, current_timestamp: i64) -> Result<()> {
 
         self.authority = authority;
+        self.treasury = treasury;
         self.temple_level = 1;
         self.total_incense_value = 0;
         self.total_draws = 0;
