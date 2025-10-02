@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 use crate::{
-    events::{LikeCreated, WishCreated},
+    events::{LikeCreatedEvent, WishCreatedEvent},
     states::{PublishWish, Temple, UserInfo, WishLike, WishUser},
 };
 pub fn create_wish(ctx: Context<CreateWish>, content: String, is_anonymous: bool) -> Result<()> {
@@ -26,11 +26,12 @@ pub fn create_wish(ctx: Context<CreateWish>, content: String, is_anonymous: bool
         ctx.accounts.temple.add_temple_wish()?;
     }
 
-    emit!(WishCreated {
+    emit!(WishCreatedEvent {
         user: ctx.accounts.authority.key(),
         content,
         value: WishUser::WISH_FEE,
-        is_anonymous
+        is_anonymous,
+        timestamp: Clock::get()?.unix_timestamp,
     });
 
     Ok(())
@@ -45,7 +46,7 @@ pub fn create_like(ctx: Context<CreateLike>) -> Result<()> {
         .wish_like
         .set_inner(WishLike::new(ctx.accounts.authority.key(), wish_key));
 
-    emit!(LikeCreated {
+    emit!(LikeCreatedEvent {
         liker: ctx.accounts.authority.key(),
         wish: wish_key,
         new_like_count: publish_wish.like_count,

@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{events::TempleWithdrawal, states::Temple};
+use crate::{events::TempleWithdrawalEvent, states::Temple};
 
 pub fn create_temple(ctx: Context<CreateTemple>) -> Result<()> {
     let temple = Temple::new(ctx.accounts.authority.key());
@@ -42,7 +42,7 @@ pub fn withdraw(ctx: Context<Withdraw>, lamports: u64) -> Result<()> {
         .try_borrow_mut_lamports()? += lamports;
 
     let remaining = ctx.accounts.temple.to_account_info().lamports();
-    emit!(TempleWithdrawal {
+    emit!(TempleWithdrawalEvent {
         admin: ctx.accounts.admin.key(),
         amount: lamports,
         remaining_balance: remaining,

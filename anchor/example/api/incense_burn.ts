@@ -53,7 +53,6 @@ export async function getInfo(wallet: anchor.Wallet) {
     donateMeritValue: info.donateMeritValue.toNumber(),
     donateIncenseValue: info.donateIncenseValue.toNumber(),
     currentMedalLevel: info.currentMedalLevel ?? null, // null or string/enum
-    donateCount: info.donateCount.toNumber(),
     lotteryCount: info.lotteryCount,
     lotteryIsFree: info.lotteryIsFree,
     lotteryTime: new Date(info.lotteryTime.toNumber() * 1000).toLocaleString(),

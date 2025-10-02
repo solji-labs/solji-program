@@ -5,7 +5,7 @@ import { getWallet } from "./api/wallet";
 (async () => {
   const wallet = getWallet();
   // 捐助
-  const r1 = await createDonateRecord(500_000_000, wallet);
+  const r1 = await createDonateRecord(5000_000_000, wallet);
   console.log("Create Donate Record Result:", r1);
 
 })()

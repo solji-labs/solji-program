@@ -3,23 +3,16 @@ use anchor_lang::{
     solana_program::{program::invoke, system_instruction::transfer},
 };
 use anchor_spl::{associated_token::AssociatedToken, metadata::{mpl_token_metadata::types::DataV2, update_metadata_accounts_v2, Metadata, UpdateMetadataAccountsV2}, token::{Mint, Token, TokenAccount}};
-use crate::{ events::{DonateEvent, MedalMintedEvent, MedalUpgradedEvent}, states::{create_nft, donate, CreateNftArgs, DonateCounter, DonateRecord, MedalLevel, NftAccounts, Temple, UserInfo}};
+use crate::{ events::{DonateCountCreatedEvent, DonateEvent, MedalMintedEvent, MedalUpgradedEvent}, states::{create_nft, donate, CreateNftArgs, DonateCounter, DonateRecord, MedalLevel, NftAccounts, Temple, UserInfo}};
 pub fn create_donate_count(ctx: Context<CreateDonateCount>) -> Result<()> {
     let donate_count =  DonateCounter::new(ctx.accounts.authority.key());
     ctx.accounts.donate_count.set_inner(donate_count);
 
-    emit!(DonateCountCreated {
+    emit!(DonateCountCreatedEvent {
         authority: ctx.accounts.authority.key(),
         timestamp: Clock::get()?.unix_timestamp,
     });
     Ok(())
-}
-
-#[event]
-pub struct DonateCountCreated {
-    pub authority: Pubkey,
-
-    pub timestamp: i64,
 }
 
 #[derive(Accounts)]

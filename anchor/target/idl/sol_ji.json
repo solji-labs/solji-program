@@ -2524,16 +2524,16 @@
       ]
     },
     {
-      "name": "DonateCountCreated",
+      "name": "DonateCountCreatedEvent",
       "discriminator": [
-        63,
-        17,
-        184,
-        54,
-        36,
-        130,
-        99,
-        84
+        214,
+        175,
+        204,
+        229,
+        86,
+        149,
+        161,
+        68
       ]
     },
     {
@@ -2576,29 +2576,29 @@
       ]
     },
     {
-      "name": "IncenseBurned",
+      "name": "IncenseBurnedEvent",
       "discriminator": [
-        211,
-        166,
-        224,
-        11,
-        104,
-        105,
-        175,
-        186
+        20,
+        57,
+        114,
+        158,
+        127,
+        0,
+        165,
+        206
       ]
     },
     {
-      "name": "LikeCreated",
+      "name": "LikeCreatedEvent",
       "discriminator": [
-        247,
-        62,
-        224,
-        113,
-        237,
-        159,
-        122,
-        123
+        65,
+        139,
+        92,
+        189,
+        63,
+        199,
+        96,
+        184
       ]
     },
     {
@@ -2628,29 +2628,42 @@
       ]
     },
     {
-      "name": "TempleWithdrawal",
+      "name": "SbtMintedEvent",
       "discriminator": [
-        226,
-        140,
-        254,
-        110,
-        21,
-        217,
-        82,
-        61
+        39,
+        55,
+        148,
+        101,
+        93,
+        236,
+        105,
+        5
       ]
     },
     {
-      "name": "WishCreated",
+      "name": "TempleWithdrawalEvent",
       "discriminator": [
-        225,
-        167,
-        37,
-        207,
-        75,
-        1,
-        226,
-        130
+        122,
+        201,
+        80,
+        81,
+        136,
+        15,
+        11,
+        251
+      ]
+    },
+    {
+      "name": "WishCreatedEvent",
+      "discriminator": [
+        102,
+        100,
+        78,
+        21,
+        10,
+        243,
+        99,
+        133
       ]
     }
   ],
@@ -2740,22 +2753,16 @@
       }
     },
     {
-      "name": "DonateCountCreated",
+      "name": "DonateCountCreatedEvent",
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "authority",
-            "docs": [
-              "创建人"
-            ],
             "type": "pubkey"
           },
           {
             "name": "timestamp",
-            "docs": [
-              "创建时间（链上时间戳）"
-            ],
             "type": "i64"
           }
         ]
@@ -2934,7 +2941,7 @@
       }
     },
     {
-      "name": "IncenseBurned",
+      "name": "IncenseBurnedEvent",
       "type": {
         "kind": "struct",
         "fields": [
@@ -3041,7 +3048,7 @@
       }
     },
     {
-      "name": "LikeCreated",
+      "name": "LikeCreatedEvent",
       "type": {
         "kind": "struct",
         "fields": [
@@ -3274,6 +3281,46 @@
       }
     },
     {
+      "name": "SbtMintedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "ata",
+            "type": "pubkey"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "url",
+            "type": "string"
+          },
+          {
+            "name": "donate_amount",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
       "name": "SbtNftCount",
       "type": {
         "kind": "struct",
@@ -3326,7 +3373,7 @@
       }
     },
     {
-      "name": "TempleWithdrawal",
+      "name": "TempleWithdrawalEvent",
       "type": {
         "kind": "struct",
         "fields": [
@@ -3411,10 +3458,6 @@
             }
           },
           {
-            "name": "donate_count",
-            "type": "u64"
-          },
-          {
             "name": "lottery_count",
             "type": "u32"
           },
@@ -3446,7 +3489,7 @@
       }
     },
     {
-      "name": "WishCreated",
+      "name": "WishCreatedEvent",
       "type": {
         "kind": "struct",
         "fields": [
@@ -3465,6 +3508,10 @@
           {
             "name": "is_anonymous",
             "type": "bool"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }

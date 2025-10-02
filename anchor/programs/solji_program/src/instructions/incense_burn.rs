@@ -6,7 +6,7 @@ use anchor_spl::{
     associated_token::AssociatedToken, metadata::Metadata, token::{burn, Burn, Mint, Token, TokenAccount}
 };
 
-use crate::{events::{DestroyEvent, IncenseBoughtEvent, IncenseBurned}, states::{create_master_edition, create_metadata, mint_nft, CreateNftArgs, IncenseBurnArgs, IncenseRulesConfig, IncenseType, NftAccounts, Temple, UserInfo}};
+use crate::{events::{DestroyEvent, IncenseBoughtEvent, IncenseBurnedEvent}, states::{create_master_edition, create_metadata, mint_nft, CreateNftArgs, IncenseBurnArgs, IncenseRulesConfig, IncenseType, NftAccounts, Temple, UserInfo}};
 
 pub fn incense_buy(ctx:Context<IncenseBuy>,incense_type: IncenseType,number:u64)->Result<()>{
     if incense_type == IncenseType::SecretIncense || incense_type == IncenseType::CelestialIncense {
@@ -134,7 +134,7 @@ pub fn incense_burn(ctx: Context<CreateIncense> ,args: IncenseBurnArgs) -> Resul
         temple.add_temple_incense_and_merit_attribute(incense_rule.incense_value, incense_rule.merit_value)?;
     }
 
-    emit!(IncenseBurned {
+    emit!(IncenseBurnedEvent {
         user: ctx.accounts.authority.key(),
         incense_type,
         nft_mint: ctx.accounts.nft_mint_account.key(),

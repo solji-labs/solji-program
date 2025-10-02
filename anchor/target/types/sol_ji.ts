@@ -2530,16 +2530,16 @@ export type SolJi = {
       ]
     },
     {
-      "name": "donateCountCreated",
+      "name": "donateCountCreatedEvent",
       "discriminator": [
-        63,
-        17,
-        184,
-        54,
-        36,
-        130,
-        99,
-        84
+        214,
+        175,
+        204,
+        229,
+        86,
+        149,
+        161,
+        68
       ]
     },
     {
@@ -2582,29 +2582,29 @@ export type SolJi = {
       ]
     },
     {
-      "name": "incenseBurned",
+      "name": "incenseBurnedEvent",
       "discriminator": [
-        211,
-        166,
-        224,
-        11,
-        104,
-        105,
-        175,
-        186
+        20,
+        57,
+        114,
+        158,
+        127,
+        0,
+        165,
+        206
       ]
     },
     {
-      "name": "likeCreated",
+      "name": "likeCreatedEvent",
       "discriminator": [
-        247,
-        62,
-        224,
-        113,
-        237,
-        159,
-        122,
-        123
+        65,
+        139,
+        92,
+        189,
+        63,
+        199,
+        96,
+        184
       ]
     },
     {
@@ -2634,29 +2634,42 @@ export type SolJi = {
       ]
     },
     {
-      "name": "templeWithdrawal",
+      "name": "sbtMintedEvent",
       "discriminator": [
-        226,
-        140,
-        254,
-        110,
-        21,
-        217,
-        82,
-        61
+        39,
+        55,
+        148,
+        101,
+        93,
+        236,
+        105,
+        5
       ]
     },
     {
-      "name": "wishCreated",
+      "name": "templeWithdrawalEvent",
       "discriminator": [
-        225,
-        167,
-        37,
-        207,
-        75,
-        1,
-        226,
-        130
+        122,
+        201,
+        80,
+        81,
+        136,
+        15,
+        11,
+        251
+      ]
+    },
+    {
+      "name": "wishCreatedEvent",
+      "discriminator": [
+        102,
+        100,
+        78,
+        21,
+        10,
+        243,
+        99,
+        133
       ]
     }
   ],
@@ -2746,22 +2759,16 @@ export type SolJi = {
       }
     },
     {
-      "name": "donateCountCreated",
+      "name": "donateCountCreatedEvent",
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "authority",
-            "docs": [
-              "创建人"
-            ],
             "type": "pubkey"
           },
           {
             "name": "timestamp",
-            "docs": [
-              "创建时间（链上时间戳）"
-            ],
             "type": "i64"
           }
         ]
@@ -2940,7 +2947,7 @@ export type SolJi = {
       }
     },
     {
-      "name": "incenseBurned",
+      "name": "incenseBurnedEvent",
       "type": {
         "kind": "struct",
         "fields": [
@@ -3047,7 +3054,7 @@ export type SolJi = {
       }
     },
     {
-      "name": "likeCreated",
+      "name": "likeCreatedEvent",
       "type": {
         "kind": "struct",
         "fields": [
@@ -3280,6 +3287,46 @@ export type SolJi = {
       }
     },
     {
+      "name": "sbtMintedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "ata",
+            "type": "pubkey"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "url",
+            "type": "string"
+          },
+          {
+            "name": "donateAmount",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
       "name": "sbtNftCount",
       "type": {
         "kind": "struct",
@@ -3332,7 +3379,7 @@ export type SolJi = {
       }
     },
     {
-      "name": "templeWithdrawal",
+      "name": "templeWithdrawalEvent",
       "type": {
         "kind": "struct",
         "fields": [
@@ -3417,10 +3464,6 @@ export type SolJi = {
             }
           },
           {
-            "name": "donateCount",
-            "type": "u64"
-          },
-          {
             "name": "lotteryCount",
             "type": "u32"
           },
@@ -3452,7 +3495,7 @@ export type SolJi = {
       }
     },
     {
-      "name": "wishCreated",
+      "name": "wishCreatedEvent",
       "type": {
         "kind": "struct",
         "fields": [
@@ -3471,6 +3514,10 @@ export type SolJi = {
           {
             "name": "isAnonymous",
             "type": "bool"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }

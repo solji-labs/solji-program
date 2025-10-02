@@ -61,7 +61,7 @@ pub struct IncenseBoughtEvent {
 }
 
 #[event]
-pub struct IncenseBurned {
+pub struct IncenseBurnedEvent {
     pub user: Pubkey,
     pub incense_type: IncenseType,
     pub nft_mint: Pubkey,
@@ -71,7 +71,7 @@ pub struct IncenseBurned {
 }
 
 #[event]
-pub struct TempleWithdrawal {
+pub struct TempleWithdrawalEvent {
     pub admin: Pubkey,
     pub amount: u64,
     pub remaining_balance: u64, // 提现后 Temple 账户剩余 lamports
@@ -79,7 +79,7 @@ pub struct TempleWithdrawal {
 }
 
 #[event]
-pub struct LikeCreated {
+pub struct LikeCreatedEvent {
     pub liker: Pubkey,       // 点赞人
     pub wish: Pubkey,        // 被点赞的愿望
     pub new_like_count: u64, // 点赞后的总数
@@ -87,9 +87,29 @@ pub struct LikeCreated {
 }
 
 #[event]
-pub struct WishCreated {
+pub struct WishCreatedEvent {
     pub user: Pubkey,       // 谁许的愿
     pub content: String,    // 愿望内容
     pub value: u8,          // 花费的功德值
     pub is_anonymous: bool, // 是否匿名
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct DonateCountCreatedEvent {
+    pub authority: Pubkey,
+
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct SbtMintedEvent {
+    pub authority: Pubkey,
+    pub mint: Pubkey,
+    pub ata: Pubkey,
+    pub name: String,
+    pub symbol: String,
+    pub url: String,
+    pub donate_amount: u64,
+    pub timestamp: i64,
 }

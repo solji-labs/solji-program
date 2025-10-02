@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{associated_token::AssociatedToken, metadata::{create_master_edition_v3, create_metadata_accounts_v3, mpl_token_metadata::types::DataV2, CreateMasterEditionV3, CreateMetadataAccountsV3, Metadata}, token::{ mint_to,  Mint, MintTo, Token, TokenAccount}};
 
-use crate::{ states::{create_master_edition, create_metadata, creatre_freeze_account, mint_nft, CreateNftArgs, NftAccounts, SbtNftCount, UserInfo}};
+use crate::{ events::SbtMintedEvent, states::{create_master_edition, create_metadata, creatre_freeze_account, mint_nft, CreateNftArgs, NftAccounts, SbtNftCount, UserInfo}};
 // deprecated
 pub fn nft_mint(ctx: Context<CreateBurnToken>, args: CreateNftArgs) -> Result<()> {
   let signer_seeds: &[&[&[u8]]] = &[&[
@@ -148,8 +148,8 @@ pub fn mint_sbt_nft(ctx: Context<MintSbtNft>, args: CreateNftArgs) -> Result<()>
 
   create_metadata(&accounts, CreateNftArgs{
     name:args.name.clone(),
-    symbol: args.symbol,
-    url: args.url,
+    symbol: args.symbol.clone(),
+    url: args.url.clone(),
     is_mutable: args.is_mutable,
     collection_details: args.collection_details,
   }, signer_seeds)?;
@@ -170,6 +170,18 @@ pub fn mint_sbt_nft(ctx: Context<MintSbtNft>, args: CreateNftArgs) -> Result<()>
     ctx.accounts.user_info.has_sbt_token = true;
   }
   
+  let now = Clock::get()?.unix_timestamp;
+  emit!(SbtMintedEvent {
+      authority,
+      mint: ctx.accounts.sbt_nft_mint_account.key(),
+      ata: ctx.accounts.sbt_nft_associated_token_account.key(),
+      name: args.name.clone(),
+      symbol: args.symbol.clone(),
+      url: args.url.clone(),
+      donate_amount: ctx.accounts.user_info.donate_amount,
+      timestamp: now,
+  });
+
   Ok(())
 }
 

@@ -4,7 +4,7 @@ import { getWallet } from "./api/wallet";
 
 (async () => {
   const wallet = getWallet();
-  const name = "Test NFT 04";
+  const name = "Test NFT 05";
 
   const r1 = await incenseBuy(1);
   console.log("Buy Incense Result:", r1);
