@@ -1,5 +1,4 @@
 use crate::error::ErrorCode;
-use crate::state::donation_leaderboard::DonationLeaderboard;
 use crate::state::event::DonationCompleted;
 use crate::state::global_stats::GlobalStats;
 use crate::state::temple_config::TempleConfig;
@@ -35,14 +34,6 @@ pub struct DonateFund<'info> {
     )]
     pub user_donation_state: Box<Account<'info, UserDonationState>>,
 
-    // #[account(
-    //     init_if_needed,
-    //     payer = donor,
-    //     seeds = [DonationLeaderboard::SEED_PREFIX.as_bytes()],
-    //     bump,
-    //     space = 8 + DonationLeaderboard::INIT_SPACE,
-    // )]
-    // pub donation_leaderboard: Box<Account<'info, DonationLeaderboard>>,
     /// CHECK: Temple treasury account
     #[account(
         mut,
@@ -87,11 +78,6 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
 
     // Process donation record
     ctx.accounts.user_donation_state.process_donation(amount);
-
-    // // Update leaderboard
-    // ctx.accounts
-    //     .donation_leaderboard
-    //     .update_donation(donor.key(), amount);
 
     // Update global stats
     ctx.accounts.global_stats.add_donation(amount);

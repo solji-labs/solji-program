@@ -24,9 +24,5 @@ pub use shop::*;
 
 pub mod user;
 pub use user::*;
-
-pub mod stats;
-pub use stats::*;
-
 pub mod amulet;
 pub use amulet::*;

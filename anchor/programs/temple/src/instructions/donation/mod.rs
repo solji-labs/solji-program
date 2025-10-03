@@ -1,6 +1,3 @@
-// pub mod donate;
-// pub use donate::*;
-
 pub mod donate_fund;
 pub mod mint_medal_nft;
 pub mod process_donation_rewards;

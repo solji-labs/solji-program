@@ -1,4 +1,5 @@
 use crate::error::ErrorCode;
+use crate::state::event::ShopConfigUpdated;
 use crate::state::shop_config::ShopConfig;
 use crate::state::temple_config::TempleConfig;
 use anchor_lang::prelude::*;
@@ -44,7 +45,16 @@ pub fn create_shop_config(
     shop_config.owner = ctx.accounts.owner.key();
     shop_config.created_at = clock.unix_timestamp;
     shop_config.updated_at = clock.unix_timestamp;
-    shop_config.shop_items = shop_items;
+    shop_config.shop_items = shop_items.clone();
+
+    // Emit shop config updated event
+    emit!(ShopConfigUpdated {
+        shop_config: shop_config.key(),
+        temple_config: temple_config.key(),
+        owner: ctx.accounts.owner.key(),
+        shop_items,
+        timestamp: clock.unix_timestamp,
+    });
 
     msg!("Shop config created successfully");
     Ok(())

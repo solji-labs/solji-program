@@ -1,4 +1,5 @@
 use crate::error::ErrorCode;
+use crate::state::event::ShopConfigUpdated;
 use crate::state::shop_config::ShopConfig;
 use crate::state::shop_item::ShopItem;
 use crate::state::temple_config::*;
@@ -173,8 +174,17 @@ pub fn update_shop_items(ctx: Context<UpdateShopItems>, shop_items: Vec<ShopItem
     }
 
     // Update shop items configuration
-    shop_config.shop_items = shop_items;
+    shop_config.shop_items = shop_items.clone();
     shop_config.update_timestamp(clock.unix_timestamp);
+
+    // Emit shop config updated event
+    emit!(ShopConfigUpdated {
+        shop_config: shop_config.key(),
+        temple_config: ctx.accounts.temple_config.key(),
+        owner: ctx.accounts.authority.key(),
+        shop_items,
+        timestamp: clock.unix_timestamp,
+    });
 
     msg!("Updated shop items configuration");
     Ok(())

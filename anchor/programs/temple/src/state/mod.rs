@@ -1,10 +1,8 @@
 pub mod amulet;
 pub mod buddha_nft;
-pub mod donation_leaderboard;
 pub mod event;
 pub mod global_stats;
 pub mod incense_nft;
-pub mod leaderboard;
 pub mod medal_nft;
 pub mod shop_config;
 pub mod shop_item;

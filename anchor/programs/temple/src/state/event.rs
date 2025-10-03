@@ -57,3 +57,13 @@ pub struct IncenseBurned {
     pub amount: u64,
     pub timestamp: i64,
 }
+
+// ShopConfig Events
+#[event]
+pub struct ShopConfigUpdated {
+    pub shop_config: Pubkey,
+    pub temple_config: Pubkey,
+    pub owner: Pubkey,
+    pub shop_items: Vec<crate::state::shop_item::ShopItem>,
+    pub timestamp: i64,
+}

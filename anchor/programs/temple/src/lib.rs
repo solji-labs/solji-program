@@ -5,7 +5,6 @@ pub mod error;
 pub mod instructions;
 pub mod state;
 
-use crate::state::leaderboard::LeaderboardPeriod;
 use crate::state::shop_item::ShopItem;
 use crate::state::temple_config::{
     DonationLevelConfig, DonationRewardConfig, FortuneConfig, IncenseType, TempleLevelConfig,
@@ -55,14 +54,6 @@ pub mod temple {
     pub fn create_nft_mint(ctx: Context<CreateNftMint>, incense_id: u8) -> Result<()> {
         instructions::create_nft_mint(ctx, incense_id)
     }
-
-    // /// Initialize donation leaderboard temporarily unused
-    // pub fn init_donation_leaderboard(
-    //     ctx: Context<InitDonationLeaderboard>,
-    //     donation_deadline: u64,
-    // ) -> Result<()> {
-    //     instructions::init_donation_leaderboard(ctx, donation_deadline)
-    // }
 
     /// Distribute Buddha NFT to top 10,000 donors
     // pub fn distribute_buddha_nfts(ctx: Context<DistributeBuddhaNfts>) -> Result<()> {
@@ -205,44 +196,11 @@ pub mod temple {
         instructions::update_temple_status_by_bit(ctx, bit, disabled)
     }
 
-    /// ====== Leaderboard =========
-    /// Initialize leaderboard
-    pub fn init_incense_leaderboard(ctx: Context<InitIncenseLeaderboard>) -> Result<()> {
-        instructions::init_incense_leaderboard(ctx)
-    }
-
-    /// Update leaderboard
-    pub fn update_leaderboard(
-        ctx: Context<UpdateLeaderboard>,
-        period: LeaderboardPeriod,
-    ) -> Result<()> {
-        instructions::update_leaderboard(ctx, period)
-    }
-
-    /// Get user ranking
-    pub fn get_incense_leaderboard(
-        ctx: Context<GetIncenseLeaderboard>,
-    ) -> Result<IncenseLeaderBoard> {
-        instructions::get_incense_leaderboard(ctx)
-    }
-
-    /// ===== Temple statistics related ======
-
-    /// Get temple statistics data
-    pub fn get_temple_stats(ctx: Context<GetTempleStats>) -> Result<TempleStats> {
-        instructions::get_temple_stats(ctx)
-    }
-
-    /// Get temple level information
-    pub fn get_temple_level(ctx: Context<GetTempleLevel>) -> Result<TempleLevelInfo> {
-        instructions::get_temple_level(ctx)
-    }
-
     /// === Shop related ====
     /// Get shop items list
-    pub fn get_shop_items(ctx: Context<GetShopItems>) -> Result<ShopItemsResult> {
-        instructions::get_shop_items(ctx)
-    }
+    // pub fn get_shop_items(ctx: Context<GetShopItems>) -> Result<ShopItemsResult> {
+    //     instructions::get_shop_items(ctx)
+    // }
 
     /// Purchase shop items
     pub fn purchase_item(ctx: Context<PurchaseItem>, item_id: u8, quantity: u64) -> Result<()> {
@@ -263,19 +221,6 @@ pub mod temple {
         shop_items: Vec<ShopItem>,
     ) -> Result<()> {
         instructions::update_shop_items(ctx, shop_items)
-    }
-
-    /// ==== User panel related ====
-
-    /// Get user overview information
-    pub fn get_user_profile(ctx: Context<GetUserProfile>) -> Result<UserProfile> {
-        instructions::get_user_profile(ctx)
-    }
-
-    /// ==== User amulet related ====
-    /// Get user amulet collection information
-    pub fn get_user_amulets(ctx: Context<GetUserAmulets>) -> Result<UserAmuletsInfo> {
-        instructions::get_user_amulets(ctx)
     }
 
     /// Mint amulet NFT
