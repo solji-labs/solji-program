@@ -64,9 +64,6 @@ impl UserState {
     /// 每日基础烧香次数限制
     pub const DAILY_BURN_LIMIT: u8 = 10;
 
-    /// 每日基础抽签次数限制
-    pub const DAILY_DRAW_LIMIT: u8 = 1;
-
     /// 每日基础许愿次数限制
     pub const DAILY_WISH_LIMIT: u8 = 3;
 
@@ -122,7 +119,12 @@ impl UserState {
     }
 
     // 烧香
-    pub fn burn_incense(&mut self, karma_points: u64, incense_value: u64, amount: u32) -> Result<()> {
+    pub fn burn_incense(
+        &mut self,
+        karma_points: u64,
+        incense_value: u64,
+        amount: u32,
+    ) -> Result<()> {
         // 增加功德值
         self.karma_points = self
             .karma_points
@@ -153,14 +155,18 @@ impl UserState {
             .checked_add(1)
             .ok_or(UserError::DailyBurnLimitExceeded)?;
 
-        
         self.last_active_at = Clock::get()?.unix_timestamp;
         Ok(())
     }
 
-    /// 获取当日可用抽签次数
-    pub fn get_available_draw_count(&self) -> u8 {
-        Self::DAILY_DRAW_LIMIT.saturating_sub(self.daily_draw_count)
+    // 获取功德值
+    pub fn get_karma_points(&self) -> u64 {
+        self.karma_points
+    }
+
+    // 获取今日抽签次数
+    pub fn get_daily_draw_count(&self) -> u8 {
+        self.daily_draw_count
     }
 
     /// 获取当日可用许愿次数
@@ -233,15 +239,17 @@ impl UserState {
         Ok(())
     }
 
-    /// 记录抽签操作
-    pub fn record_draw_operation(&mut self) -> Result<()> {
-        require!(
-            self.get_available_draw_count() > 0,
-            UserError::DailyDrawLimitExceeded
-        );
-
+    /// 抽签
+    pub fn draw_fortune(&mut self, karma_points: u64) -> Result<()> {
         self.daily_draw_count = self.daily_draw_count.saturating_add(1);
         self.total_draw_count = self.total_draw_count.saturating_add(1);
+        require!(
+            self.karma_points >= karma_points,
+            UserError::NotEnoughKarmaPoints
+        );
+        if karma_points > 0 {
+            self.karma_points = self.karma_points.saturating_sub(karma_points);
+        }
         self.last_active_at = Clock::get()?.unix_timestamp;
         Ok(())
     }
@@ -364,6 +372,10 @@ impl UserIncenseState {
 /// 用户相关错误定义
 #[error_code]
 pub enum UserError {
+    #[msg("Invalid randomness account")]
+    InvalidRandomnessAccount,
+    #[msg("Not enough karma points")]
+    NotEnoughKarmaPoints,
     #[msg("Burn operations overflow")]
     BurnOperationsOverflow,
     #[msg("Incense burned overflow")]

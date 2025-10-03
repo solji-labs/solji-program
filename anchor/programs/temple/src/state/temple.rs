@@ -117,11 +117,11 @@ impl TempleState {
     }
 
     /// 增加抽签次数
-    pub fn add_draw_count(&mut self, value: u64) -> Result<()> {
+    pub fn draw_fortune(&mut self) -> Result<()> {
 
         // 检查抽签次数是否溢出 
         self.total_draws = self.total_draws
-        .checked_add(value)
+        .checked_add(1)
         .ok_or(TempleError::DrawCountOverflow)?;
  
         self.updated_at = Clock::get().unwrap().unix_timestamp;

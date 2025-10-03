@@ -48,4 +48,8 @@ pub mod temple {
     pub fn burn_incense<'info>(ctx: Context< BurnIncense>,incense_type_id: u8, amount: u8) -> Result<()> {
         instructions::burn_incense::burn_incense(ctx, incense_type_id, amount)
     }
+
+    pub fn draw_fortune(ctx: Context< DrawFortune>) -> Result<DrawResult> {
+        instructions::fortune::draw_fortune(ctx)
+    }
 }

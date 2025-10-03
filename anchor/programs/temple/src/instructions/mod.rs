@@ -8,3 +8,5 @@ pub mod user;
 pub use user::*;
 
 
+pub mod fortune;
+pub use fortune::*;

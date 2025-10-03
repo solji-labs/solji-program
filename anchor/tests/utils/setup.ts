@@ -379,6 +379,92 @@ export class TestContext {
     }
 
 
+    public async drawFortune(user: Keypair): Promise<{ tx: string, fortuneResult: any }> {
+        console.log("draw fortune...");
+
+        // 设置事件监听器
+        let fortuneResult: any = null;
+        const eventListener = this.program.addEventListener('drawFortuneEvent', (event, slot) => {
+            console.log("🎯 收到抽签事件:", event);
+            fortuneResult = event;
+        });
+
+        try {
+            const tx = await this.program.methods
+                .drawFortune()
+                .accounts({
+                    user: user.publicKey,
+                }) 
+                .signers([user])
+                .rpc();
+
+            console.log(`Fortune drawn: ${tx}`);
+
+            // 等待事件被触发
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // 移除事件监听器
+            await this.program.removeEventListener(eventListener);
+
+            if (fortuneResult) {
+                console.log("\n🎊 抽签结果详情:");
+                console.log("==================");
+                console.log(`👤 用户: ${fortuneResult.user.toString()}`);
+                console.log(`🔮 运势: ${this.getFortuneText(fortuneResult.fortune)}`);
+                console.log(`📝 描述: ${this.getFortuneDescription(fortuneResult.fortune)}`);
+                console.log(`⏰ 时间: ${new Date(fortuneResult.timestamp * 1000).toLocaleString()}`);
+                console.log(`🆓 免费抽签: ${fortuneResult.freeDraw ? '是' : '否'}`);
+            }
+
+            return { tx, fortuneResult };
+
+        } catch (error) {
+            // 确保在错误情况下也移除监听器
+            await this.program.removeEventListener(eventListener);
+            throw error;
+        }
+    }
+
+    // 运势类型映射方法
+    private getFortuneText(fortune: any): string {
+        const fortuneMap: { [key: string]: string } = {
+            'greatLuck': '大吉',
+            'lucky': '吉',
+            'good': '小吉',
+            'normal': '正常',
+            'nobad': '小凶',
+            'bad': '凶',
+            'veryBad': '大凶'
+        };
+        
+        // 如果fortune是对象，获取第一个键
+        if (typeof fortune === 'object' && fortune !== null) {
+            const key = Object.keys(fortune)[0];
+            return fortuneMap[key] || `未知(${key})`;
+        }
+        
+        return fortuneMap[fortune] || `未知(${fortune})`;
+    }
+
+    private getFortuneDescription(fortune: any): string {
+        const descriptionMap: { [key: string]: string } = {
+            'greatLuck': '万事顺意，心想事成',
+            'lucky': '诸事顺利，渐入佳境',
+            'good': '平平淡淡，稳中求进',
+            'normal': '平平淡淡，顺其自然',
+            'nobad': '小心谨慎，化险为夷',
+            'bad': '诸事不利，谨慎为上',
+            'veryBad': '凶险重重，静待时机'
+        };
+        
+        // 如果fortune是对象，获取第一个键
+        if (typeof fortune === 'object' && fortune !== null) {
+            const key = Object.keys(fortune)[0];
+            return descriptionMap[key] || `运势未明，静观其变 (${key})`;
+        }
+        
+        return descriptionMap[fortune] || `运势未明，静观其变 (${fortune})`;
+    }
 
     public async printUserState(userStatePda: PublicKey): Promise<void> {
         const userStateAccount = await this.program.account.userState.fetch(userStatePda);
