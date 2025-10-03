@@ -33,6 +33,10 @@ pub mod temple {
         instructions::incense::init_incense_type(ctx, params)
     }
 
+    pub fn init_incense_nft(ctx: Context<InitIncenseNft>, incense_type_id: u8) -> Result<()> {
+        instructions::incense::init_incense_nft(ctx, incense_type_id)
+    }
+
     pub fn init_user(ctx: Context<InitUser>) -> Result<()> {
         instructions::user::init_user(ctx)
     }

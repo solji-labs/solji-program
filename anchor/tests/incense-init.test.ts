@@ -49,6 +49,31 @@ describe("incense init", () => {
             console.log("Created At:", new Date(incenseTypeConfig.createdAt.toNumber() * 1000).toISOString());
             console.log("Updated At:", new Date(incenseTypeConfig.updatedAt.toNumber() * 1000).toISOString());
             console.log("=======================\n");
+
+
+
+
+
+
+        // init incense nft 
+
+        const incenseNftMintPda = ctx.getIncenseNftMintPda(incenseTypeConfigItem.incenseTypeId);
+
+        const existingIncenseNftMint = await ctx.program.account.incenseTypeConfig.fetchNullable(incenseNftMintPda);
+
+        if (existingIncenseNftMint) {
+            console.log("🔍 Incense NFT already exists, reading existing data...");
+        } else {
+            console.log("🚀 Initializing new incense NFT...");
+            await ctx.initIncenseNft(ctx.authority, incenseTypeConfigItem.incenseTypeId);
+            console.log("✅ Incense NFT initialization completed!");
+        }
+
+        
+
+
+
+
         })
         // 检查寺庙状态是否更新了香型计数
         console.log("\n🏛️ Temple State Update:");

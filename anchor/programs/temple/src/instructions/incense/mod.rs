@@ -6,3 +6,6 @@ pub use burn_incense::*;
 
 pub mod init_incense_type;
 pub use init_incense_type::*;
+
+pub mod init_incense_nft;
+pub use init_incense_nft::*;

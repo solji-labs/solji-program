@@ -14,7 +14,7 @@ describe("incense buy", () => {
 
     it("should buy incense", async () => {
         // 生成新用户并进行airdrop
-        const user = getUserKeypairs(1);
+        const user = getUserKeypairs(2);
         console.log("User: ", user.publicKey.toString());
 
         // 检查用户SOL余额，如果不足则进行airdrop

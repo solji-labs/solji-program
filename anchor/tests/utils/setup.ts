@@ -4,6 +4,7 @@ import { Temple } from "../../target/types/temple";
 import { PublicKey, Keypair, LAMPORTS_PER_SOL, AccountMeta } from "@solana/web3.js";
 import { BN } from "bn.js";
 import { web3 } from "@coral-xyz/anchor";
+import { getUserKeypairs } from "./user-generate";
 
 // Test configuration
 export const TEST_CONFIG = {
@@ -143,7 +144,7 @@ export class TestContext {
         anchor.setProvider(this.provider);
         this.program = anchor.workspace.Temple as Program<Temple>;
         this.authority = anchor.Wallet.local().payer;
-        this.treasury = this.authority.publicKey;
+        this.treasury = getUserKeypairs(9).publicKey;
         this.templeStatePda = this.getTempleStatePda();
     }
 
@@ -327,6 +328,27 @@ export class TestContext {
         return tx;
     }
 
+    public async initIncenseNft(authority:Keypair, incense_type_id: number): Promise<string> {
+        console.log("init incense nft...");
+
+        const incenseTypeConfigPda = this.getIncenseTypeConfigPda(incense_type_id);
+
+        const tx = await this.program.methods
+            .initIncenseNft(incense_type_id)
+            .accounts({
+                incenseTypeConfig: incenseTypeConfigPda,
+                authority: authority.publicKey,
+                templeAuthority: this.authority.publicKey,  
+                nftMintAccount: this.getIncenseNftMintPda(incense_type_id),   
+            })
+            .signers([authority])
+            .rpc();
+
+        console.log(`Incense nft created: ${tx}`);
+        console.log(`Incense type config PDA: ${incenseTypeConfigPda.toString()}`);
+
+        return tx;
+    }
 
 
 
