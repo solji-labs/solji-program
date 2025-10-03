@@ -40,4 +40,8 @@ pub mod temple {
     pub fn buy_incense<'info>(ctx: Context<'_, '_, 'info, 'info, BuyIncense<'info>>, buy_incense_params: Vec<BuyIncenseItem>) -> Result<()> {
         instructions::buy_incense::buy_incense(ctx, buy_incense_params)
     }
+
+    pub fn burn_incense<'info>(ctx: Context< BurnIncense>,incense_type_id: u8, amount: u8) -> Result<()> {
+        instructions::burn_incense::burn_incense(ctx, incense_type_id, amount)
+    }
 }

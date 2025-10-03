@@ -189,6 +189,8 @@ export class TestContext {
         return pda;
     }
 
+ 
+
 
 
 
@@ -225,16 +227,65 @@ export class TestContext {
         return tx;
     }
 
+    public async burnIncense(
+        user: Keypair,
+        incenseTypeId: number,
+        amount: number
+    ): Promise<string> {
+        console.log(`Burning ${amount} incense of type ${incenseTypeId}...`);
+
+        const incenseTypeConfigPda = this.getIncenseTypeConfigPda(incenseTypeId);
+        const incenseNftMintPda = this.getIncenseNftMintPda(incenseTypeId);
+        const userIncenseNftAssociatedTokenAccount = this.getUserIncenseNftAssociatedTokenAccount(incenseNftMintPda,user.publicKey);
+
+        const tx = await this.program.methods
+            .burnIncense(incenseTypeId, amount)
+            .accounts({
+                user: user.publicKey,
+                incenseTypeConfig: incenseTypeConfigPda,
+                templeAuthority: this.authority.publicKey,     
+                nftMintAccount: incenseNftMintPda, 
+            })
+            .signers([user])
+            .rpc();
+
+        console.log(`Incense burned: ${tx}`);
+        return tx;
+    }
 
 
 
+    public  getUserIncenseNftAssociatedTokenAccount(incenseNftMintPda: PublicKey,user: PublicKey): PublicKey {
+        return anchor.utils.token.associatedAddress({mint: incenseNftMintPda, owner: user});
+    }
 
+    // 获取香型NFT Mint PDA
+    public getIncenseNftMintPda(incenseTypeId: number): PublicKey {
+        const templeStatePda = this.getTempleStatePda();
+        const [pda] = PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("IncenseNFT"),
+                templeStatePda.toBuffer(),
+                Buffer.from([incenseTypeId]),
+            ],
+            this.program.programId
+        );
+        return pda;
+    }
 
-
-
-
-
-
+    // 获取NFT元数据PDA
+    public getNftMetadataPda(mintPda: PublicKey): PublicKey {
+        const TOKEN_METADATA_PROGRAM_ID = new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
+        const [pda] = PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("metadata"),
+                TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+                mintPda.toBuffer(),
+            ],
+            TOKEN_METADATA_PROGRAM_ID
+        );
+        return pda;
+    }
 
     public async initTemple(): Promise<string> {
         console.log("init temple...");
@@ -345,6 +396,25 @@ export class TestContext {
         console.log("Incense Total Balances:", userIncenseStateAccount.incenseTotalBalances);
         console.log("Incense Burned Balances:", userIncenseStateAccount.incenseBurnedBalances);
         console.log("Last Active At:", new Date(userIncenseStateAccount.lastActiveAt.toNumber() * 1000).toISOString());
+    }
+
+    public async printTempleState(): Promise<void> {
+        const templeStateAccount = await this.program.account.templeState.fetch(this.templeStatePda);
+        console.log("\n📊 Reading Temple State PDA Data:");
+        console.log("================================");
+        // console.log("templeStateAccount", JSON.stringify(templeStateAccount));
+
+        console.log("Authority:", templeStateAccount.authority.toString());
+        console.log("Treasury:", templeStateAccount.treasury.toString());
+        console.log("Temple Level:", templeStateAccount.treasury.toString());
+        console.log("Total Incense Value:", templeStateAccount.totalIncenseValue.toString());
+        console.log("Total Draws:", templeStateAccount.totalDraws.toString());
+        console.log("Total Wishes:", templeStateAccount.totalWishes.toString());
+        console.log("Total Donations:", templeStateAccount.totalDonations.toString());
+        console.log("Buddha NFT Count:", templeStateAccount.buddhaNftCount.toString());
+        console.log("Incense Type Count:", templeStateAccount.incenseTypeCount.toString());
+        console.log("Created At:", new Date(templeStateAccount.createdAt.toNumber() * 1000).toISOString());
+        console.log("Updated At:", new Date(templeStateAccount.updatedAt.toNumber() * 1000).toISOString());
     }
 
 

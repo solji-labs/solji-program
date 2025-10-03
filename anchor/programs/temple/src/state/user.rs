@@ -121,6 +121,43 @@ impl UserState {
         total_limit.saturating_sub(self.daily_burn_operations)
     }
 
+    // 烧香
+    pub fn burn_incense(&mut self, karma_points: u64, incense_value: u64, amount: u32) -> Result<()> {
+        // 增加功德值
+        self.karma_points = self
+            .karma_points
+            .checked_add(karma_points)
+            .ok_or(UserError::KarmaPointsOverflow)?;
+
+        // 增加香火值
+        self.total_incense_value = self
+            .total_incense_value
+            .checked_add(incense_value)
+            .ok_or(UserError::IncenseValueOverflow)?;
+
+        // 增加烧香次数
+        self.total_burn_operations = self
+            .total_burn_operations
+            .checked_add(1)
+            .ok_or(UserError::BurnOperationsOverflow)?;
+
+        // 增加烧香根数
+        self.total_incense_burned = self
+            .total_incense_burned
+            .checked_add(amount)
+            .ok_or(UserError::IncenseBurnedOverflow)?;
+
+        // 增加今日烧香次数
+        self.daily_burn_operations = self
+            .daily_burn_operations
+            .checked_add(1)
+            .ok_or(UserError::DailyBurnLimitExceeded)?;
+
+        
+        self.last_active_at = Clock::get()?.unix_timestamp;
+        Ok(())
+    }
+
     /// 获取当日可用抽签次数
     pub fn get_available_draw_count(&self) -> u8 {
         Self::DAILY_DRAW_LIMIT.saturating_sub(self.daily_draw_count)
@@ -279,7 +316,6 @@ impl UserIncenseState {
                     .balance
                     .checked_add(amount)
                     .ok_or(UserError::IncenseValueOverflow)?;
- 
             }
         }
         for balance in self.incense_total_balances.iter_mut() {
@@ -328,6 +364,10 @@ impl UserIncenseState {
 /// 用户相关错误定义
 #[error_code]
 pub enum UserError {
+    #[msg("Burn operations overflow")]
+    BurnOperationsOverflow,
+    #[msg("Incense burned overflow")]
+    IncenseBurnedOverflow,
     #[msg("Buy count overflow")]
     BuyCountOverflow,
 
