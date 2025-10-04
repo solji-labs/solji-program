@@ -190,7 +190,7 @@ export class TestContext {
         return pda;
     }
 
- 
+
 
 
 
@@ -237,15 +237,15 @@ export class TestContext {
 
         const incenseTypeConfigPda = this.getIncenseTypeConfigPda(incenseTypeId);
         const incenseNftMintPda = this.getIncenseNftMintPda(incenseTypeId);
-        const userIncenseNftAssociatedTokenAccount = this.getUserIncenseNftAssociatedTokenAccount(incenseNftMintPda,user.publicKey);
+        const userIncenseNftAssociatedTokenAccount = this.getUserIncenseNftAssociatedTokenAccount(incenseNftMintPda, user.publicKey);
 
         const tx = await this.program.methods
             .burnIncense(incenseTypeId, amount)
             .accounts({
                 user: user.publicKey,
                 incenseTypeConfig: incenseTypeConfigPda,
-                templeAuthority: this.authority.publicKey,     
-                nftMintAccount: incenseNftMintPda, 
+                templeAuthority: this.authority.publicKey,
+                nftMintAccount: incenseNftMintPda,
             })
             .signers([user])
             .rpc();
@@ -256,8 +256,8 @@ export class TestContext {
 
 
 
-    public  getUserIncenseNftAssociatedTokenAccount(incenseNftMintPda: PublicKey,user: PublicKey): PublicKey {
-        return anchor.utils.token.associatedAddress({mint: incenseNftMintPda, owner: user});
+    public getUserIncenseNftAssociatedTokenAccount(incenseNftMintPda: PublicKey, user: PublicKey): PublicKey {
+        return anchor.utils.token.associatedAddress({ mint: incenseNftMintPda, owner: user });
     }
 
     // 获取香型NFT Mint PDA
@@ -328,7 +328,7 @@ export class TestContext {
         return tx;
     }
 
-    public async initIncenseNft(authority:Keypair, incense_type_id: number): Promise<string> {
+    public async initIncenseNft(authority: Keypair, incense_type_id: number): Promise<string> {
         console.log("init incense nft...");
 
         const incenseTypeConfigPda = this.getIncenseTypeConfigPda(incense_type_id);
@@ -338,8 +338,8 @@ export class TestContext {
             .accounts({
                 incenseTypeConfig: incenseTypeConfigPda,
                 authority: authority.publicKey,
-                templeAuthority: this.authority.publicKey,  
-                nftMintAccount: this.getIncenseNftMintPda(incense_type_id),   
+                templeAuthority: this.authority.publicKey,
+                nftMintAccount: this.getIncenseNftMintPda(incense_type_id),
             })
             .signers([authority])
             .rpc();
@@ -394,7 +394,7 @@ export class TestContext {
                 .drawFortune()
                 .accounts({
                     user: user.publicKey,
-                }) 
+                })
                 .signers([user])
                 .rpc();
 
@@ -410,8 +410,8 @@ export class TestContext {
                 console.log("\n🎊 抽签结果详情:");
                 console.log("==================");
                 console.log(`👤 用户: ${fortuneResult.user.toString()}`);
-                console.log(`🔮 运势: ${this.getFortuneText(fortuneResult.fortune)}`);
-                console.log(`📝 描述: ${this.getFortuneDescription(fortuneResult.fortune)}`);
+                console.log(`🔮 运势: ${getFortuneText(fortuneResult.fortune)}`);
+                console.log(`📝 描述: ${getFortuneDescription(fortuneResult.fortune)}`);
                 console.log(`⏰ 时间: ${new Date(fortuneResult.timestamp * 1000).toLocaleString()}`);
                 console.log(`🆓 免费抽签: ${fortuneResult.freeDraw ? '是' : '否'}`);
             }
@@ -425,46 +425,38 @@ export class TestContext {
         }
     }
 
-    // 运势类型映射方法
-    private getFortuneText(fortune: any): string {
-        const fortuneMap: { [key: string]: string } = {
-            'greatLuck': '大吉',
-            'lucky': '吉',
-            'good': '小吉',
-            'normal': '正常',
-            'nobad': '小凶',
-            'bad': '凶',
-            'veryBad': '大凶'
-        };
-        
-        // 如果fortune是对象，获取第一个键
-        if (typeof fortune === 'object' && fortune !== null) {
-            const key = Object.keys(fortune)[0];
-            return fortuneMap[key] || `未知(${key})`;
-        }
-        
-        return fortuneMap[fortune] || `未知(${fortune})`;
-    }
 
-    private getFortuneDescription(fortune: any): string {
-        const descriptionMap: { [key: string]: string } = {
-            'greatLuck': '万事顺意，心想事成',
-            'lucky': '诸事顺利，渐入佳境',
-            'good': '平平淡淡，稳中求进',
-            'normal': '平平淡淡，顺其自然',
-            'nobad': '小心谨慎，化险为夷',
-            'bad': '诸事不利，谨慎为上',
-            'veryBad': '凶险重重，静待时机'
-        };
-        
-        // 如果fortune是对象，获取第一个键
-        if (typeof fortune === 'object' && fortune !== null) {
-            const key = Object.keys(fortune)[0];
-            return descriptionMap[key] || `运势未明，静观其变 (${key})`;
-        }
-        
-        return descriptionMap[fortune] || `运势未明，静观其变 (${fortune})`;
+
+
+    public async createWish(user: Keypair,wishId: number,contentHash: number[],isAnonymous: boolean): Promise<string> {
+        console.log("create wish...");
+
+        const tx = await this.program.methods
+            .createWish(
+                new anchor.BN(wishId),
+                contentHash,
+                isAnonymous
+            )
+            .accounts({
+                user: user.publicKey,
+            })
+            .signers([user])
+            .rpc();
+
+        console.log(`Wish created: ${tx}`);
+        console.log(`Wish ID: ${wishId}`);
+        console.log(`Content Hash: ${contentHash}`);
+        console.log(`Is Anonymous: ${isAnonymous}`);
+
+        return tx;
     }
+        
+
+
+
+
+
+
 
     public async printUserState(userStatePda: PublicKey): Promise<void> {
         const userStateAccount = await this.program.account.userState.fetch(userStatePda);
@@ -597,4 +589,46 @@ export interface BuyIncenseItem {
     quantity: number;
     unitPrice: anchor.BN;
     subtotal: anchor.BN;
+}
+
+
+// 运势类型映射方法
+export function getFortuneText(fortune: any): string {
+    const fortuneMap: { [key: string]: string } = {
+        'greatLuck': '大吉',
+        'lucky': '吉',
+        'good': '小吉',
+        'normal': '正常',
+        'nobad': '小凶',
+        'bad': '凶',
+        'veryBad': '大凶'
+    };
+
+    // 如果fortune是对象，获取第一个键
+    if (typeof fortune === 'object' && fortune !== null) {
+        const key = Object.keys(fortune)[0];
+        return fortuneMap[key] || `未知(${key})`;
+    }
+
+    return fortuneMap[fortune] || `未知(${fortune})`;
+}
+
+export function getFortuneDescription(fortune: any): string {
+    const descriptionMap: { [key: string]: string } = {
+        'greatLuck': '万事顺意，心想事成',
+        'lucky': '诸事顺利，渐入佳境',
+        'good': '平平淡淡，稳中求进',
+        'normal': '平平淡淡，顺其自然',
+        'nobad': '小心谨慎，化险为夷',
+        'bad': '诸事不利，谨慎为上',
+        'veryBad': '凶险重重，静待时机'
+    };
+
+    // 如果fortune是对象，获取第一个键
+    if (typeof fortune === 'object' && fortune !== null) {
+        const key = Object.keys(fortune)[0];
+        return descriptionMap[key] || `运势未明，静观其变 (${key})`;
+    }
+
+    return descriptionMap[fortune] || `运势未明，静观其变 (${fortune})`;
 }

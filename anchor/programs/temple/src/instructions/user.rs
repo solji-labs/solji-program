@@ -25,8 +25,7 @@ pub fn init_user(ctx: Context<InitUser>) -> Result<()> {
         msg!("User: {}", user);
         msg!("User State PDA: {}", ctx.accounts.user_state.key());
         msg!("Created at: {}", current_timestamp);
-        msg!("Daily burn limit: {}", UserState::DAILY_BURN_LIMIT);
-        msg!("Daily wish limit: {}", UserState::DAILY_WISH_LIMIT);
+        msg!("Daily burn limit: {}", UserState::DAILY_BURN_LIMIT); 
 
     Ok(())
 }

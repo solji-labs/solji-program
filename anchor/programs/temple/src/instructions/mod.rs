@@ -10,3 +10,6 @@ pub use user::*;
 
 pub mod fortune;
 pub use fortune::*;
+
+pub mod wish;
+pub use wish::*;

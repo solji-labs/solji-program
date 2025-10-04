@@ -129,6 +129,19 @@ impl TempleState {
         Ok(())
     }
 
+    /// 增加许愿次数
+    pub fn create_wish(&mut self) -> Result<()> {
+
+        // 检查许愿次数是否溢出 
+        self.total_wishes = self.total_wishes
+        .checked_add(1)
+        .ok_or(TempleError::WishCountOverflow)?;
+ 
+        self.updated_at = Clock::get().unwrap().unix_timestamp;
+
+        Ok(())
+    }
+
  
 
     /// 增加捐助金额
@@ -170,6 +183,9 @@ impl TempleState {
 
 #[error_code]
 pub enum TempleError {
+    /// 许愿次数溢出
+    #[msg("Wish count overflow")]
+    WishCountOverflow,
     /// 寺庙等级无效
     #[msg("Invalid Temple Level, must be between 1 and 4")]
     InvalidTempleLevel,

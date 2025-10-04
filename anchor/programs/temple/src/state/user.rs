@@ -64,8 +64,8 @@ impl UserState {
     /// 每日基础烧香次数限制
     pub const DAILY_BURN_LIMIT: u8 = 10;
 
-    /// 每日基础许愿次数限制
-    pub const DAILY_WISH_LIMIT: u8 = 3;
+    /// 每日免费许愿次数限制
+    pub const DAILY_FREE_WISH_LIMIT: u8 = 3;
 
     /// 初始化用户状态
     pub fn initialize(&mut self, user: Pubkey, current_timestamp: i64) -> Result<()> {
@@ -170,8 +170,8 @@ impl UserState {
     }
 
     /// 获取当日可用许愿次数
-    pub fn get_available_wish_count(&self) -> u8 {
-        Self::DAILY_WISH_LIMIT.saturating_sub(self.daily_wish_count)
+    pub fn get_daily_wish_count(&self) -> u8 {
+        self.daily_wish_count
     }
 
     /// 增加购买次数
@@ -254,18 +254,27 @@ impl UserState {
         Ok(())
     }
 
-    /// 记录许愿操作
-    pub fn record_wish_operation(&mut self) -> Result<()> {
-        require!(
-            self.get_available_wish_count() > 0,
-            UserError::DailyWishLimitExceeded
-        );
-
+    /// 许愿
+    pub fn create_wish(&mut self, karma_points: u64) -> Result<()> {
+        if karma_points > 0 {
+            require!(
+                self.karma_points >= karma_points,
+                UserError::NotEnoughKarmaPoints
+            );
+            self.karma_points = self.karma_points.saturating_sub(karma_points);
+        }
         self.daily_wish_count = self.daily_wish_count.saturating_add(1);
         self.total_wish_count = self.total_wish_count.saturating_add(1);
         self.last_active_at = Clock::get()?.unix_timestamp;
         Ok(())
     }
+
+
+    pub fn get_total_wish_count(&self) -> u32 {
+        self.total_wish_count.into()
+    }
+
+
 }
 
 #[account]
@@ -372,6 +381,8 @@ impl UserIncenseState {
 /// 用户相关错误定义
 #[error_code]
 pub enum UserError {
+    #[msg("Wish count overflow")]
+    WishCountOverflow,
     #[msg("Invalid randomness account")]
     InvalidRandomnessAccount,
     #[msg("Not enough karma points")]
