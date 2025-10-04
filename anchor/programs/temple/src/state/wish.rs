@@ -82,17 +82,14 @@ pub struct WishLike {
 impl WishLike {
     pub const SEED_PREFIX: &'static str = "wish_like_v1";
 
-    // pub fn is_wish_like_pda_exists(wish_id: u64, creator: &Pubkey, liker: &Pubkey,program_id: &Pubkey) -> bool {
-    //     let seeds = &[
-    //         Self::SEED_PREFIX.as_bytes(),
-    //         creator.as_ref(),
-    //         liker.as_ref(),
-    //         &wish_id.to_le_bytes(),
-    //     ];
-    //     let (pda, bump) = Pubkey::find_program_address(seeds, program_id);
-        
-    //     pda.is_zero()
-    // }
+
+    pub fn initialize(&mut self, wish_id: u64, creator: Pubkey, liker: Pubkey, created_at: i64) -> Result<()> {
+        self.wish_id = wish_id;
+        self.creator = creator;
+        self.liker = liker;
+        self.created_at = created_at;
+        Ok(())
+    }
 }
 
 
@@ -101,6 +98,12 @@ impl WishLike {
 
 #[error_code]
 pub enum WishError {
+    #[msg("Wish like already exists")]
+    WishLikeAlreadyExists,
+    #[msg("Invalid creator")]
+    InvalidCreator,
+    #[msg("Invalid liker")]
+    InvalidLiker,
     #[msg("Invalid wish")]
     InvalidWish,
 }

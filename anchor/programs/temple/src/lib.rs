@@ -56,4 +56,12 @@ pub mod temple {
     pub fn create_wish(ctx: Context< CreateWish>, wish_id: u64, content_hash: [u8; 32], is_anonymous: bool) -> Result<()> {
         instructions::wish::create_wish(ctx, wish_id, content_hash, is_anonymous)
     }
+
+    pub fn like_wish(ctx: Context< LikeWish>, wish_id: u64) -> Result<()> {
+        instructions::wish::like_wish(ctx, wish_id)
+    }
+
+    pub fn cancel_like_wish(ctx: Context<CancelWishLike>, wish_id: u64) -> Result<()> {
+        instructions::wish::cancel_like_wish(ctx, wish_id)
+    }
 }

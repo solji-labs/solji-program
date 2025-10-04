@@ -450,8 +450,72 @@ export class TestContext {
 
         return tx;
     }
-        
 
+
+    public async likeWish(liker: Keypair,creator: PublicKey,wishId: number): Promise<string> {
+        console.log("like wish...");
+
+        const tx = await this.program.methods
+            .likeWish(
+                new anchor.BN(wishId)
+            )
+            .accounts({
+                liker: liker.publicKey,
+                creator: creator,
+            })
+            .signers([liker])
+            .rpc();
+
+        console.log(`Wish liked tx: ${tx}`);
+        console.log(`Wish ID: ${wishId}`);
+
+        return tx;
+    }
+
+    public async cancelLikeWish(liker: Keypair,creator: PublicKey,wishId: number): Promise<string> {
+        console.log("cancel like wish...");
+
+        const tx = await this.program.methods
+            .cancelLikeWish(
+                new anchor.BN(wishId)
+            )
+            .accounts({
+                liker: liker.publicKey,
+                creator: creator,
+            })
+            .signers([liker])
+            .rpc();
+
+        console.log(`Wish canceled tx: ${tx}`);
+        console.log(`Wish ID: ${wishId}`);
+
+        return tx;
+    }
+        
+    public getWishPda(creator: PublicKey, wishId: number): PublicKey {
+        const [pda] = PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("wish_v1"),
+                creator.toBuffer(),
+                new anchor.BN(wishId).toArrayLike(Buffer, 'le', 8)
+            ],
+            this.program.programId
+        );
+        return pda;
+    }
+
+    public getWishLikePda(liker: PublicKey, creator: PublicKey, wishId: number): PublicKey {
+        const [pda] = PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("wish_like_v1"),
+                liker.toBuffer(),
+                creator.toBuffer(),
+                new anchor.BN(wishId).toArrayLike(Buffer, 'le', 8)
+            ],
+            this.program.programId
+        );
+        return pda;
+    }
 
 
 
