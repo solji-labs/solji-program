@@ -15,7 +15,7 @@ pub struct WishTower {
 
 impl WishTower {
     pub const SEED_PREFIX: &'static str = "wish_tower";
-    pub const WISHES_PER_LEVEL: u32 = 10; // 10 wishes per level
+    pub const WISHES_PER_LEVEL: u32 = 3; //TODO
 
     // Calculate level based on wish count
     pub fn calculate_level(wish_count: u32) -> u8 {

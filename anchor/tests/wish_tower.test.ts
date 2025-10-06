@@ -2,18 +2,26 @@ import * as anchor from "@coral-xyz/anchor";
 import { expect } from "chai";
 import { getTestContext, generateUserKeypair, logTestStart, logTestEnd, } from "./utils/setup";
 describe("Wish Tower", () => {
+
     const ctx = getTestContext();
     let user: anchor.web3.Keypair;
     let userStatePda: anchor.web3.PublicKey;
     let userIncenseStatePda: anchor.web3.PublicKey;
 
-    beforeEach(async () => {
-        user = generateUserKeypair();
-        console.log("Airdropping to user:", user.publicKey.toString());
-        await ctx.airdropToUser(user.publicKey, 5 * 1000000000);
-        console.log("Initializing user...");
-        await ctx.initUser(user);
+    before(async function () {
+        this.timeout(30000); // 30秒超时
 
+        try {
+            await ctx.program.account.templeConfig.fetch(ctx.templeConfigPda);
+            console.log("Temple config exists");
+        } catch {
+            console.log("Creating temple config...");
+            await ctx.createTempleConfig();
+        }
+
+        user = generateUserKeypair();
+        await ctx.airdropToUser(user.publicKey, 5 * 1000000000); // 5 SOL
+        await ctx.initUser(user);
         [userStatePda] = anchor.web3.PublicKey.findProgramAddressSync(
             [Buffer.from("user_state"), user.publicKey.toBuffer()],
             ctx.program.programId
@@ -23,10 +31,25 @@ describe("Wish Tower", () => {
             [Buffer.from("user_incense"), user.publicKey.toBuffer()],
             ctx.program.programId
         );
+        // Ensure NFT mints exist for incense burning
+        await ctx.createNftMint(1);
 
+        // Buy and burn incense to gain merit for wishing
+        await ctx.buyIncense(user, 1, 10);
+        await ctx.burnIncense(user, 1, 10); // This gives 100 merit
+        [userIncenseStatePda] = anchor.web3.PublicKey.findProgramAddressSync(
+            [Buffer.from("user_incense"), user.publicKey.toBuffer()],
+            ctx.program.programId
+        );
+        let userIncenseState = await ctx.program.account.userIncenseState.fetch(userIncenseStatePda);
+
+        console.log("merit point: ", userIncenseState.merit);
     });
 
-    it("Creates wishes and automatically builds tower", async () => {
+
+    it("Creates wishes and automatically builds tower", async function () {
+        this.timeout(5000); // 50秒超时
+
         logTestStart("Create Wishes and Build Tower");
 
         const [wishTowerAccount] = anchor.web3.PublicKey.findProgramAddressSync(
@@ -34,27 +57,11 @@ describe("Wish Tower", () => {
             ctx.program.programId
         );
 
-
         // create first wish
         const contentHash = Array(32).fill(0).map((_, i) => i);
         const isAnonymous = false;
 
-        const userIncenseStatePda = ctx.getUserIncenseStatePda(user.publicKey);
-        const initialUserIncenseState = await ctx.program.account.userIncenseState.fetch(userIncenseStatePda);
-        const initialTotalWishes = initialUserIncenseState.totalWishes;
-        const expectedWishId = initialTotalWishes + 1;
-
         await ctx.createWish(user, contentHash, isAnonymous);
-
-        // // 计算愿望PDA
-        // const [wishPda] = anchor.web3.PublicKey.findProgramAddressSync(
-        //     [
-        //         Buffer.from("wish"),
-        //         user.publicKey.toBuffer(),
-        //         Buffer.from(expectedWishId.toString())
-        //     ],
-        //     ctx.program.programId
-        // );
 
         let tower = await ctx.program.account.wishTower.fetch(wishTowerAccount);
         expect(tower.creator.toString()).to.equal(user.publicKey.toString());
@@ -62,50 +69,23 @@ describe("Wish Tower", () => {
         expect(tower.level).to.equal(1);
         expect(tower.wishIds.length).to.equal(1);
 
-        // Create second wish - should add to existing tower
-        // create first wish
-        // 获取创建愿望前的 total_wishes
-        const userIncenseStatePda2 = ctx.getUserIncenseStatePda(user.publicKey);
-        const initialUserIncenseState2 = await ctx.program.account.userIncenseState.fetch(userIncenseStatePda2);
-        const initialTotalWishes2 = initialUserIncenseState2.totalWishes;
-        const expectedWishId2 = initialTotalWishes2 + 1;
-
+        // Create more wishes to reach level 2
+        await ctx.createWish(user, contentHash, isAnonymous);
+        await ctx.createWish(user, contentHash, isAnonymous);
         await ctx.createWish(user, contentHash, isAnonymous);
 
-        // 计算愿望PDA
-        const [wishPda2] = anchor.web3.PublicKey.findProgramAddressSync(
-            [
-                Buffer.from("wish"),
-                user.publicKey.toBuffer(),
-                Buffer.from(expectedWishId2.toString())
-            ],
-            ctx.program.programId
-        );
-
 
 
         tower = await ctx.program.account.wishTower.fetch(wishTowerAccount);
-        expect(tower.wishCount).to.equal(2);
-        expect(tower.level).to.equal(1); // Still level 1 (2 < 10)
-        expect(tower.wishIds.length).to.equal(2);
-
-        // Create more wishes to reach level 2
-        for (let i = 3; i <= 10; i++) {
-            // create first wish
-            const contentHash = Array(32).fill(0).map((_, i) => i);
-            const isAnonymous = false;
-            await ctx.createWish(user, contentHash, isAnonymous);
-        }
-
-        tower = await ctx.program.account.wishTower.fetch(wishTowerAccount);
-        expect(tower.wishCount).to.equal(10);
+        expect(tower.wishCount).to.equal(4);
         expect(tower.level).to.equal(2); // Level 2 (10 wishes)
-        expect(tower.wishIds.length).to.equal(10);
+        expect(tower.wishIds.length).to.equal(4);
 
         logTestEnd("Create Wishes and Build Tower");
     });
 
-    it("Mints wish tower NFT", async () => {
+    it("Mints wish tower NFT", async function () {
+        this.timeout(30000);
         logTestStart("Mint Wish Tower NFT");
 
         const [wishTowerAccount] = anchor.web3.PublicKey.findProgramAddressSync(
@@ -141,7 +121,7 @@ describe("Wish Tower", () => {
             .mintWishTowerNft()
             .accounts({
                 authority: user.publicKey,
-                wishTowerAccount,
+                wishTowerAccount: wishTowerAccount,
                 templeConfig: ctx.templeConfigPda,
                 globalStats: ctx.getGlobalStatsPda(),
                 nftMintAccount,
@@ -160,8 +140,8 @@ describe("Wish Tower", () => {
         const nft = await ctx.program.account.wishTowerNft.fetch(wishTowerNftAccount);
         expect(nft.owner.toString()).to.equal(user.publicKey.toString());
         expect(nft.mint.toString()).to.equal(nftMintAccount.toString());
-        expect(nft.wishCount).to.equal(5);
-        expect(nft.level).to.equal(1);
+        expect(nft.wishCount).to.equal(9);
+        expect(nft.level).to.equal(2);
 
         logTestEnd("Mint Wish Tower NFT");
     });

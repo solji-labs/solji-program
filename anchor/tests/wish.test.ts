@@ -25,6 +25,13 @@ describe("Wish Tests", () => {
             console.log("Creating temple config...");
             await ctx.createTempleConfig();
         }
+
+        // Ensure NFT mints exist for incense burning
+        await ctx.createNftMint(1);
+
+        // Buy and burn incense to gain merit for wishing
+        await ctx.buyIncense(user, 1, 10);
+        await ctx.burnIncense(user, 1, 10); // This gives 100 merit
     });
 
 
