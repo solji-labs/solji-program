@@ -364,7 +364,7 @@ impl UserDonationState {
         self.total_donation_count = self.total_donation_count.saturating_add(1);
         self.last_donation_time = now;
 
-        // Update level
+        // 更新等级
         self.update_donation_level();
     }
 }

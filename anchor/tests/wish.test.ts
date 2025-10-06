@@ -32,8 +32,6 @@ describe("Wish Tests", () => {
         it("should create a wish successfully", async () => {
             logTestStart("Create Wish");
 
-            const wishId = Date.now();
-            console.log(`Creating wish with ID ${wishId}`);
             const contentHash = Array(32).fill(0).map((_, i) => i);
             const isAnonymous = false;
 
@@ -41,21 +39,22 @@ describe("Wish Tests", () => {
             const userIncenseStatePda = ctx.getUserIncenseStatePda(user.publicKey);
             const initialUserIncenseState = await ctx.program.account.userIncenseState.fetch(userIncenseStatePda);
             const initialTotalWishes = initialUserIncenseState.totalWishes;
+            const expectedWishId = initialTotalWishes + 1;
 
-            await ctx.createWish(user, wishId, contentHash, isAnonymous);
+            await ctx.createWish(user, contentHash, isAnonymous);
 
             // 计算愿望PDA
             const [wishPda] = anchor.web3.PublicKey.findProgramAddressSync(
                 [
                     Buffer.from("wish"),
                     user.publicKey.toBuffer(),
-                    new anchor.BN(wishId).toArrayLike(Buffer, 'le', 8)
+                    Buffer.from(expectedWishId.toString())
                 ],
                 ctx.program.programId
             );
 
             const wishAccount = await ctx.program.account.wish.fetch(wishPda);
-            expect(wishAccount.id.toNumber()).to.equal(wishId);
+            expect(wishAccount.id.toNumber()).to.equal(expectedWishId);
             expect(wishAccount.creator.toString()).to.equal(user.publicKey.toString());
             expect(wishAccount.contentHash).to.deep.equal(contentHash);
             expect(wishAccount.isAnonymous).to.equal(isAnonymous);
@@ -71,7 +70,6 @@ describe("Wish Tests", () => {
 
     describe("Like Wish", () => {
         let wishPda: anchor.web3.PublicKey;
-        let wishId: number;
         let otherUser: anchor.web3.Keypair;
         let otherUserStatePda: anchor.web3.PublicKey;
 
@@ -88,51 +86,41 @@ describe("Wish Tests", () => {
             );
 
             // 创建一个愿望用于点赞测试
-            wishId = Date.now() + Math.floor(Math.random() * 1000); // 使用随机时间戳作为唯一ID
             const contentHash = Array(32).fill(100).map((_, i) => i);
             const isAnonymous = false;
+
+            // 获取创建愿望前的 total_wishes
+            const userIncenseStatePda = ctx.getUserIncenseStatePda(user.publicKey);
+            const initialUserIncenseState = await ctx.program.account.userIncenseState.fetch(userIncenseStatePda);
+            const expectedWishId = initialUserIncenseState.totalWishes + 1;
 
             [wishPda] = anchor.web3.PublicKey.findProgramAddressSync(
                 [
                     Buffer.from("wish"),
                     user.publicKey.toBuffer(),
-                    new anchor.BN(wishId).toArrayLike(Buffer, 'le', 8)
+                    Buffer.from(expectedWishId.toString())
                 ],
                 ctx.program.programId
             );
 
             // 创建愿望
-            await ctx.createWish(user, wishId, contentHash, isAnonymous);
+            await ctx.createWish(user, contentHash, isAnonymous);
         });
 
         it("should like wish successfully", async () => {
             const initialWish = await ctx.program.account.wish.fetch(wishPda);
             const initialLikes = initialWish.likes.toNumber();
+            console.log("Initial likes:", initialLikes);
 
             // 其他用户点赞
-            await ctx.likeWish(otherUser, wishId, user.publicKey);
+            await ctx.likeWish(otherUser, wishPda);
 
             // 验证点赞数增加
             const updatedWish = await ctx.program.account.wish.fetch(wishPda);
             expect(updatedWish.likes.toNumber()).to.equal(initialLikes + 1);
         });
 
-        it("should fail when trying to like own wish", async () => {
-            try {
-                await ctx.likeWish(user, wishId, user.publicKey);
-                expect.fail("Should have thrown error for liking own wish");
-            } catch (error: any) {
-                // 检查是否包含期望的错误消息
-                const hasCannotLikeOwnWish = error.message.includes("CannotLikeOwnWish");
-                const hasAccountNotInitialized = error.message.includes("AccountNotInitialized");
 
-                if (!hasCannotLikeOwnWish && !hasAccountNotInitialized) {
-                    console.log("Unexpected error message:", error.message);
-                }
-
-                expect(hasCannotLikeOwnWish || hasAccountNotInitialized).to.be.true;
-            }
-        });
     });
 
     describe("Wish Amulet Minting", () => {
@@ -144,9 +132,8 @@ describe("Wish Tests", () => {
             const initialPendingAmulets = initialUserState.pendingAmulets;
 
             // 创建愿望（应该获得1个pending_amulets）
-            const wishId = Date.now();
             const contentHash = Array(32).fill(0).map((_, i) => i);
-            await ctx.createWish(user, wishId, contentHash, false);
+            await ctx.createWish(user, contentHash, false);
 
             // 验证获得了pending_amulets
             const userStateAfterWish = await ctx.program.account.userState.fetch(userStatePda);

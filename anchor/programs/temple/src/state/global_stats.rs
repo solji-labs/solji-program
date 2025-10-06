@@ -39,6 +39,13 @@ impl GlobalStats {
         self.updated_at = Clock::get().unwrap().unix_timestamp;
     }
 
+    // Wish tower
+    pub fn increment_wish_towers(&mut self) {
+        // For now, we don't track total wish towers in global stats
+        // This method is here for consistency and future expansion
+        self.updated_at = Clock::get().unwrap().unix_timestamp;
+    }
+
     // Donate
     pub fn add_donation(&mut self, amount_lamports: u64) {
         self.total_donations_lamports = self

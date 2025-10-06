@@ -86,16 +86,20 @@ pub mod temple {
     /// Make wish
     pub fn create_wish(
         ctx: Context<CreateWish>,
-        wish_id: u64,
         content_hash: [u8; 32],
         is_anonymous: bool,
     ) -> Result<()> {
-        instructions::create_wish(ctx, wish_id, content_hash, is_anonymous)
+        instructions::create_wish(ctx, content_hash, is_anonymous)
     }
 
     /// Like wish
-    pub fn like_wish(ctx: Context<LikeWish>, wish_id: u64) -> Result<()> {
+    pub fn like_wish(ctx: Context<LikeWish>) -> Result<()> {
         instructions::like_wish(ctx)
+    }
+
+    /// Mint wish tower NFT
+    pub fn mint_wish_tower_nft(ctx: Context<MintWishTowerNFT>) -> Result<()> {
+        instructions::mint_wish_tower_nft(ctx)
     }
 
     /// Mint Buddha NFT

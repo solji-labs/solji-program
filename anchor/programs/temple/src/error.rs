@@ -113,4 +113,14 @@ pub enum ErrorCode {
     InvalidShopItemId,
     #[msg("Shop item not available")]
     ShopItemNotAvailable,
+
+    // 愿力塔相关错误
+    #[msg("Invalid max level for wish tower")]
+    InvalidMaxLevel,
+    #[msg("Wish tower is completed")]
+    WishTowerCompleted,
+    #[msg("Wish tower level is full")]
+    WishTowerLevelFull,
+    #[msg("Wish not owned by user")]
+    WishNotOwnedByUser,
 }

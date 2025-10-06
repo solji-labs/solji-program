@@ -49,6 +49,43 @@ pub struct WishCreated {
     pub timestamp: i64,
 }
 
+// WishTower Events
+#[event]
+pub struct WishTowerCreated {
+    pub user: Pubkey,
+    pub tower_id: u64,
+    pub max_level: u8,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct WishAddedToTower {
+    pub user: Pubkey,
+    pub tower_id: u64,
+    pub wish_id: u64,
+    pub level: u8,
+    pub level_completed: bool,
+    pub tower_completed: bool,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct WishTowerUpdated {
+    pub user: Pubkey,
+    pub wish_count: u32,
+    pub level: u8,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct WishTowerNFTMinted {
+    pub user: Pubkey,
+    pub nft_mint: Pubkey,
+    pub wish_count: u32,
+    pub level: u8,
+    pub timestamp: i64,
+}
+
 // BurnIncense Events
 #[event]
 pub struct IncenseBurned {

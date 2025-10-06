@@ -712,11 +712,10 @@ export class TestContext {
 
     public async createWish(
         user: Keypair,
-        wishId: number,
         contentHash: number[],
         isAnonymous: boolean = false
     ): Promise<string> {
-        console.log(`User creating wish with ID: ${wishId}`);
+        console.log(`User creating wish`);
 
         const [userStatePda] = PublicKey.findProgramAddressSync(
             [Buffer.from("user_state"), user.publicKey.toBuffer()],
@@ -728,23 +727,29 @@ export class TestContext {
             this.program.programId
         );
 
+        // Get current total_wishes to calculate expected wish ID
+        const userIncenseState = await this.program.account.userIncenseState.fetch(userIncenseStatePda);
+        const expectedWishId = userIncenseState.totalWishes + 1;
+
         const [wishPda] = PublicKey.findProgramAddressSync(
             [
                 Buffer.from("wish"),
                 user.publicKey.toBuffer(),
-                new BN(wishId).toArrayLike(Buffer, 'le', 8)
+                Buffer.from(expectedWishId.toString())
             ],
             this.program.programId
         );
 
         const tx = await this.program.methods
-            .createWish(new BN(wishId), contentHash, isAnonymous)
+            .createWish(contentHash, isAnonymous)
             .accounts({
                 user: user.publicKey,
                 wishAccount: wishPda,
+                wishTowerAccount: this.getWishTowerPda(user.publicKey),
                 userState: userStatePda,
                 userIncenseState: userIncenseStatePda,
                 templeConfig: this.templeConfigPda,
+                globalStats: this.getGlobalStatsPda(),
                 systemProgram: anchor.web3.SystemProgram.programId,
             })
             .signers([user])
@@ -754,20 +759,11 @@ export class TestContext {
         return tx;
     }
 
-    public async likeWish(user: Keypair, wishId: number, wishCreator: PublicKey): Promise<string> {
-        console.log(`User liking wish with ID: ${wishId}`);
-
-        const [wishPda] = PublicKey.findProgramAddressSync(
-            [
-                Buffer.from("wish"),
-                wishCreator.toBuffer(),
-                new BN(wishId).toArrayLike(Buffer, 'le', 8)
-            ],
-            this.program.programId
-        );
+    public async likeWish(user: Keypair, wishPda: PublicKey): Promise<string> {
+        console.log(`User liking wish`);
 
         const tx = await this.program.methods
-            .likeWish(new BN(wishId))
+            .likeWish()
             .accounts({
                 user: user.publicKey,
                 wishAccount: wishPda,
@@ -1084,6 +1080,14 @@ export class TestContext {
     public getUserDonationStatePda(userPubkey: PublicKey): PublicKey {
         const [pda] = PublicKey.findProgramAddressSync(
             [Buffer.from("user_donation"), userPubkey.toBuffer()],
+            this.program.programId
+        );
+        return pda;
+    }
+
+    public getWishTowerPda(userPubkey: PublicKey): PublicKey {
+        const [pda] = PublicKey.findProgramAddressSync(
+            [Buffer.from("wish_tower"), userPubkey.toBuffer()],
             this.program.programId
         );
         return pda;

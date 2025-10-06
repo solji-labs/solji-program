@@ -9,3 +9,5 @@ pub mod shop_item;
 pub mod temple_config;
 pub mod user_state;
 pub mod wish;
+pub mod wish_tower;
+pub mod wish_tower_nft;
