@@ -5,6 +5,8 @@ use crate::state::global_stats::GlobalStats;
 use crate::state::temple_config::*;
 use crate::state::user_state::{UserIncenseState, UserState};
 use anchor_lang::prelude::*;
+use anchor_lang::system_program::transfer;
+use anchor_lang::system_program::Transfer;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::metadata::Metadata;
 use anchor_spl::token::burn;
@@ -33,29 +35,44 @@ pub fn burn_incense(ctx: Context<BurnIncense>, incense_id: u8, amount: u64) -> R
     let incense_points = incense_type.incense_points as u64;
     let merit = incense_type.merit as u64;
 
-    // Check if user incense burn count exceeds daily limit
+    // Check daily limit
     ctx.accounts
         .user_incense_state
         .check_daily_incense_limit(incense_id, amount as u8)?;
 
-    // Check and deduct incense balance (alternative to SOL payment)
-    let current_balance = ctx
-        .accounts
-        .user_incense_state
-        .get_incense_balance(incense_id);
-    if current_balance < amount {
-        return err!(ErrorCode::InsufficientIncenseBalance);
+    if amount == 0 {
+        return err!(ErrorCode::InvalidAmount);
     }
-    ctx.accounts
-        .user_incense_state
-        .subtract_incense_balance(incense_id, amount)?;
+
+    let fee_per_incense = ctx.accounts.temple_config.get_fee_per_incense(incense_id);
+    let total_fee = fee_per_incense
+        .checked_mul(amount)
+        .ok_or(ErrorCode::MathOverflow)?;
+
+    // enough balance
+    if ctx.accounts.authority.lamports() < total_fee {
+        return err!(ErrorCode::InsufficientSolBalance);
+    }
+
+    transfer(
+        CpiContext::new(
+            ctx.accounts.system_program.to_account_info(),
+            Transfer {
+                from: ctx.accounts.authority.to_account_info(),
+                to: ctx.accounts.temple_treasury.to_account_info(),
+            },
+        ),
+        total_fee,
+    )?;
+
     msg!(
-        "Consumed {} incense of type {} from user balance",
+        "User bought {} of incense type {} (total fee: {} SOL)",
         amount,
-        incense_id
+        incense_id,
+        total_fee as f64 / 1e9
     );
 
-    // Build signer seeds for minting NFT
+    // Mint NFT
     let temple_config_key: Pubkey = ctx.accounts.temple_config.key();
     let signer_seeds: &[&[&[u8]]] = &[&[
         IncenseNFT::SEED_PREFIX.as_bytes(),
@@ -64,7 +81,6 @@ pub fn burn_incense(ctx: Context<BurnIncense>, incense_id: u8, amount: u64) -> R
         &[ctx.bumps.nft_mint_account],
     ]];
 
-    // Mint NFT to user
     mint_to(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
@@ -79,7 +95,7 @@ pub fn burn_incense(ctx: Context<BurnIncense>, incense_id: u8, amount: u64) -> R
     )?;
     msg!("NFT minted successfully");
 
-    // Immediately burn NFT (consumable mode)
+    // Immediately burn NFT
     burn(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
@@ -93,13 +109,9 @@ pub fn burn_incense(ctx: Context<BurnIncense>, incense_id: u8, amount: u64) -> R
     )?;
     msg!("NFT burned successfully - consumable incense used");
 
-    // Update daily incense burn count
-    ctx.accounts
-        .user_incense_state
-        .update_daily_count(incense_id, amount as u8);
     ctx.accounts.user_incense_state.incense_number += amount as u8;
 
-    // Update user's incense points and merit (title will be updated automatically internally)
+    // Update user's incense points and merit
     ctx.accounts
         .user_incense_state
         .add_incense_value_and_merit(incense_points * amount, merit * amount);

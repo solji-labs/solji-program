@@ -41,17 +41,16 @@ describe("Temple Initialize Tests", () => {
     });
 
     describe("NFT Mint Creation", () => {
-        it("should create NFT mint for incense type", async () => {
+        it("should create NFT mint for incense type", async function () {
+            this.timeout(60000);
             logTestStart("Create NFT Mint");
 
-            const incenseId = 1;
-            const tx = await ctx.createNftMint(incenseId);
-
-            if (tx) {
-                console.log(`✅ NFT mint created for incense type ${incenseId}`);
-            } else {
-                console.log(`⚠️  NFT mint already exists for incense type ${incenseId}`);
-            }
+            const tx1 = await ctx.createNftMint(1);
+            const tx2 = await ctx.createNftMint(2);
+            const tx3 = await ctx.createNftMint(3);
+            const tx4 = await ctx.createNftMint(4);
+            const tx5 = await ctx.createNftMint(5);
+            const tx6 = await ctx.createNftMint(6);
 
             logTestEnd("Create NFT Mint");
         });

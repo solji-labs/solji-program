@@ -60,10 +60,10 @@ pub mod temple {
     //     instructions::distribute_buddha_nfts(ctx)
     // }
 
-    /// Buy incense
-    pub fn buy_incense(ctx: Context<BuyIncense>, incense_id: u8, amount: u64) -> Result<()> {
-        instructions::buy_incense::buy_incense(ctx, incense_id, amount)
-    }
+    // /// Buy incense
+    // pub fn buy_incense(ctx: Context<BuyIncense>, incense_id: u8, amount: u64) -> Result<()> {
+    //     instructions::buy_incense::buy_incense(ctx, incense_id, amount)
+    // }
     /// Burn incense
     pub fn burn_incense(ctx: Context<BurnIncense>, incense_id: u8, amount: u64) -> Result<()> {
         instructions::burn_incense::burn_incense(ctx, incense_id, amount)

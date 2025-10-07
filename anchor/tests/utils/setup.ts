@@ -385,45 +385,7 @@ export class TestContext {
         return tx;
     }
 
-    public async buyIncense(
-        user: Keypair,
-        incenseId: number,
-        amount: number,
-        pricePerUnit?: number
-    ): Promise<string> {
-        console.log(`User buying ${amount} incense of type ${incenseId}...`);
-
-        // 如果没有提供价格，从商城配置中获取
-        let price = pricePerUnit;
-        if (price === undefined) {
-            // 从商城配置中查找价格
-            const shopConfig = await this.program.account.shopConfig.fetch(this.getShopConfigPda());
-            const shopItem = shopConfig.shopItems.find(
-                (item: any) => item.itemType.incense !== undefined && item.id === incenseId
-            );
-            if (!shopItem) {
-                throw new Error(`Shop item not found for incense type ${incenseId}`);
-            }
-            price = shopItem.price.toNumber();
-        }
-
-        // 使用通用的purchase_item指令购买香火
-        const tx = await this.program.methods
-            .purchaseItem(incenseId, new BN(amount))
-            .accounts({
-                authority: user.publicKey,
-                templeTreasury: this.treasury,
-                shopConfig: this.getShopConfigPda(),
-                templeConfig: this.templeConfigPda,
-                userIncenseState: this.getUserIncenseStatePda(user.publicKey),
-                systemProgram: anchor.web3.SystemProgram.programId,
-            })
-            .signers([user])
-            .rpc();
-
-        console.log(`Incense purchased: ${tx}`);
-        return tx;
-    }
+    // Note: buyIncense has been merged into burnIncense - burning now includes payment
 
     public async burnIncense(
         user: Keypair,
