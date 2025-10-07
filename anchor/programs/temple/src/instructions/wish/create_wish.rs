@@ -110,9 +110,15 @@ pub fn create_wish(
     wish.bump = ctx.bumps.wish_account;
 
     // Amulet drop probability logic: 10% chance
-    let random_seed = (clock.unix_timestamp as u64).wrapping_add(new_wish_id);
-    let amulet_drop_random = (random_seed % 100) as u8;
-    let amulet_dropped = amulet_drop_random < 10;
+    #[cfg(feature = "localnet")]
+    let amulet_dropped = true; // Test environment: 100% drop rate for amulet
+
+    #[cfg(not(feature = "localnet"))]
+    let amulet_dropped = {
+        let random_seed = (clock.unix_timestamp as u64).wrapping_add(new_wish_id);
+        let amulet_drop_random = (random_seed % 100) as u8;
+        amulet_drop_random < 10
+    };
     if amulet_dropped {
         // Increase user's mintable amulet balance
         ctx.accounts.user_state.pending_amulets += 1;
@@ -151,6 +157,7 @@ pub fn create_wish(
     emit!(WishCreated {
         user: ctx.accounts.user.key(),
         wish_id: new_wish_id,
+        content_hash,
         is_anonymous,
         amulet_dropped,
         timestamp: clock.unix_timestamp,

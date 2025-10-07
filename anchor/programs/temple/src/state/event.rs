@@ -62,6 +62,7 @@ pub struct AmuletMinted {
 pub struct WishCreated {
     pub user: Pubkey,
     pub wish_id: u64,
+    pub content_hash: [u8; 32],
     pub is_anonymous: bool,
     pub amulet_dropped: bool,
     pub timestamp: i64,

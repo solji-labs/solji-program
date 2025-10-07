@@ -35,7 +35,7 @@ pub fn mint_amulet_nft(ctx: Context<MintAmuletNFT>, source: u8) -> Result<()> {
     // Consume one pending_amulet
     ctx.accounts.user_state.pending_amulets -= 1;
 
-    // Get serial number (increment total_amulets first)
+    // Get serial number
     ctx.accounts.user_state.total_amulets += 1;
     let serial_number: u32 = ctx.accounts.user_state.total_amulets;
 

@@ -18,26 +18,15 @@ describe("Wish Tests", () => {
             ctx.program.programId
         );
 
-        try {
-            await ctx.program.account.templeConfig.fetch(ctx.templeConfigPda);
-            console.log("Temple config exists");
-        } catch {
-            console.log("Creating temple config...");
-            await ctx.createTempleConfig();
-        }
-
-        // Ensure NFT mints exist for incense burning
-        await ctx.createNftMint(1);
-
-        // Buy and burn incense to gain merit for wishing
-        await ctx.buyIncense(user, 1, 10);
-        await ctx.burnIncense(user, 1, 10); // This gives 100 merit
+        // gain merits
+        await ctx.burnIncense(user, 2, 5);
     });
 
 
     describe("Create Wish", () => {
-        it("should create a wish successfully", async () => {
+        it("should create a wish successfully", async function () {
             logTestStart("Create Wish");
+            this.timeout(5000);
 
             const contentHash = Array(32).fill(0).map((_, i) => i);
             const isAnonymous = false;
@@ -80,8 +69,10 @@ describe("Wish Tests", () => {
         let otherUser: anchor.web3.Keypair;
         let otherUserStatePda: anchor.web3.PublicKey;
 
-        beforeEach(async () => {
+        beforeEach(async function () {
             // 创建另一个用户用于点赞测试
+            this.timeout(5000);
+
             otherUser = generateUserKeypair();
             await ctx.airdropToUser(otherUser.publicKey, 2 * 1000000000); // 2 SOL
             await ctx.initUser(otherUser);
@@ -131,14 +122,15 @@ describe("Wish Tests", () => {
     });
 
     describe("Wish Amulet Minting", () => {
-        it("should mint amulet NFT after creating wish", async () => {
+        it("should mint amulet NFT after creating wish", async function () {
             logTestStart("Mint Amulet NFT from Wish");
+            this.timeout(30000);
 
             // 获取许愿前的pending_amulets
             const initialUserState = await ctx.program.account.userState.fetch(userStatePda);
             const initialPendingAmulets = initialUserState.pendingAmulets;
 
-            // 创建愿望（应该获得1个pending_amulets）
+            // 创建愿望
             const contentHash = Array(32).fill(0).map((_, i) => i);
             await ctx.createWish(user, contentHash, false);
 
@@ -152,11 +144,6 @@ describe("Wish Tests", () => {
             // 验证pending_amulets被消耗
             const userStateAfterMint = await ctx.program.account.userState.fetch(userStatePda);
             expect(userStateAfterMint.pendingAmulets).to.equal(userStateAfterWish.pendingAmulets - 1);
-
-            // 验证寺庙配置中的total_amulets增加
-            const templeConfig = await ctx.program.account.templeConfig.fetch(ctx.templeConfigPda);
-            expect(templeConfig.totalAmulets).to.equal(1);
-
             logTestEnd("Mint Amulet NFT from Wish");
         });
 

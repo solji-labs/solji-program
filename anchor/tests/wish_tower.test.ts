@@ -31,11 +31,8 @@ describe("Wish Tower", () => {
             [Buffer.from("user_incense"), user.publicKey.toBuffer()],
             ctx.program.programId
         );
-        // Ensure NFT mints exist for incense burning
-        await ctx.createNftMint(1);
 
         // Buy and burn incense to gain merit for wishing
-        await ctx.buyIncense(user, 1, 10);
         await ctx.burnIncense(user, 1, 10); // This gives 100 merit
         [userIncenseStatePda] = anchor.web3.PublicKey.findProgramAddressSync(
             [Buffer.from("user_incense"), user.publicKey.toBuffer()],
