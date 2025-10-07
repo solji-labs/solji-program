@@ -8,13 +8,16 @@ skip-lint = false
 [programs.localnet]
 temple = "D9immZaczS2ASFqqSux2iCCAaFat7vcusB1PQ2SW6d95"
 
+[programs.devnet]
+temple = "D9immZaczS2ASFqqSux2iCCAaFat7vcusB1PQ2SW6d95"
+
 [registry]
 url = "https://api.apr.dev"
 [scripts]
 test = "npx mocha --require tsx --recursive tests/*.test.ts"
 
 # Run specific test files individually
-temple-init = "npx mocha --require tsx tests/temple-init.test.ts"
+init = "npx mocha --require tsx tests/intialize.test.ts"
 donate = "npx mocha --require tsx tests/donate.test.ts"
 draw-fortune = "npx mocha --require tsx tests/draw-fortune.test.ts"
 stake = "npx mocha --require tsx tests/stake_medal_nft.test.ts"
@@ -28,8 +31,12 @@ get-user-profile = "npx mocha --require tsx tests/get_user_profile.test.ts"
 wish-tower = "npx mocha --require tsx tests/wish_tower.test.ts"
 [provider]
 cluster = "http://localhost:8899"
+# cluster = "https://api.devnet.solana.com"
+
 wallet = "~/.config/solana/id.json"
 
 [test]
 validator = { url = "http://localhost:8899" }
+# validator = { url = "https://api.devnet.solana.com" }
+
 startup_wait = 10000

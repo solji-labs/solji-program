@@ -13,7 +13,6 @@ describe("Temple Initialize Tests", () => {
         it("should create temple config successfully", async () => {
             logTestStart("Create Temple Config");
 
-            // 检查 temple config 是否已存在
             let tx: string | undefined;
             try {
                 await ctx.program.account.templeConfig.fetch(ctx.templeConfigPda);
@@ -25,10 +24,10 @@ describe("Temple Initialize Tests", () => {
             const templeConfigAccount = await ctx.program.account.templeConfig.fetch(ctx.templeConfigPda);
 
             console.log("Temple config:", templeConfigAccount);
-            // 验证 GlobalStats 初始化
+
             const globalStatsPda = ctx.getGlobalStatsPda();
             const globalStatsAccount = await ctx.program.account.globalStats.fetch(globalStatsPda);
-            // 打印出来寺庙面板
+            //print global stats
             console.log("Global Stats:", globalStatsAccount);
 
             if (tx) {
@@ -38,46 +37,7 @@ describe("Temple Initialize Tests", () => {
             logTestEnd("Create Temple Config");
         });
 
-        it("should initialize leaderboards successfully", async () => {
-            logTestStart("Initialize Leaderboards");
 
-
-            // try {
-            //     await ctx.program.account.donationLeaderboard.fetch(ctx.getDonationLeaderboardPda());
-            //     console.log("Donation leaderboard already exists, skipping initialization");
-            // } catch {
-            //     const deadline = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60; // 30 days from now
-            //     await ctx.program.methods
-            //         .initDonationLeaderboard(new anchor.BN(deadline))
-            //         .accounts({
-            //             owner: ctx.owner.publicKey,
-            //             donationLeaderboard: ctx.getDonationLeaderboardPda(),
-            //             templeConfig: ctx.templeConfigPda,
-            //             systemProgram: anchor.web3.SystemProgram.programId,
-            //             rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-            //         })
-            //         .signers([ctx.owner])
-            //         .rpc();
-            // }
-
-            // 初始化香火排行榜
-            try {
-                await ctx.program.account.leaderboard.fetch(ctx.leaderboardPda);
-                console.log("Incense leaderboard already exists, skipping initialization");
-            } catch {
-                await ctx.program.methods
-                    .initIncenseLeaderboard()
-                    .accounts({
-                        authority: ctx.owner.publicKey,
-                        leaderboard: ctx.leaderboardPda,
-                        systemProgram: anchor.web3.SystemProgram.programId,
-                    })
-                    .signers([ctx.owner])
-                    .rpc();
-            }
-
-            logTestEnd("Initialize Leaderboards");
-        });
     });
 
     describe("NFT Mint Creation", () => {

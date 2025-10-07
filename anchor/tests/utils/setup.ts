@@ -132,7 +132,6 @@ export class TestContext {
     public owner: Keypair;
     public treasury: PublicKey;
     public templeConfigPda: PublicKey;
-    public leaderboardPda: PublicKey;
 
     constructor() {
         this.provider = anchor.AnchorProvider.env();
@@ -141,7 +140,6 @@ export class TestContext {
         this.owner = anchor.Wallet.local().payer;
         this.treasury = this.owner.publicKey;
         this.templeConfigPda = this.getTempleConfigPda();
-        this.leaderboardPda = this.getLeaderboardPda();
     }
 
     private getTempleConfigPda(): PublicKey {
@@ -152,13 +150,7 @@ export class TestContext {
         return pda;
     }
 
-    private getLeaderboardPda(): PublicKey {
-        const [pda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("leaderboard")],
-            this.program.programId
-        );
-        return pda;
-    }
+
 
     public getGlobalStatsPda(): PublicKey {
         const [pda] = PublicKey.findProgramAddressSync(
@@ -168,9 +160,11 @@ export class TestContext {
         return pda;
     }
 
-    public getDonationLeaderboardPda(): PublicKey {
+
+
+    public getUserStatePda(user: PublicKey): PublicKey {
         const [pda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("donation_leaderboard")],
+            [Buffer.from("user_state"), user.toBuffer()],
             this.program.programId
         );
         return pda;
@@ -273,45 +267,6 @@ export class TestContext {
             .rpc();
 
         console.log(`Donation rewards updated: ${tx}`);
-        return tx;
-    }
-
-    public async initDonationLeaderboard(donationDeadline?: number): Promise<string> {
-        console.log("Initializing donation leaderboard...");
-
-        // 如果没有提供截止时间，使用默认值（当前时间 + 30天）
-        const deadline = donationDeadline || (Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60);
-
-        const tx = await this.program.methods
-            .initDonationLeaderboard(new BN(deadline))
-            .accounts({
-                owner: this.owner.publicKey,
-                donationLeaderboard: this.getDonationLeaderboardPda(),
-                templeConfig: this.templeConfigPda,
-                systemProgram: anchor.web3.SystemProgram.programId,
-                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-            })
-            .signers([this.owner])
-            .rpc();
-
-        console.log(`Donation leaderboard initialized: ${tx}`);
-        return tx;
-    }
-
-    public async initIncenseLeaderboard(): Promise<string> {
-        console.log("Initializing incense leaderboard...");
-
-        const tx = await this.program.methods
-            .initIncenseLeaderboard()
-            .accounts({
-                authority: this.owner.publicKey,
-                leaderboard: this.leaderboardPda,
-                systemProgram: anchor.web3.SystemProgram.programId,
-            })
-            .signers([this.owner])
-            .rpc();
-
-        console.log(`Incense leaderboard initialized: ${tx}`);
         return tx;
     }
 
@@ -930,137 +885,6 @@ export class TestContext {
         console.log(`Fortune shared: ${tx}`);
         return tx;
     }
-
-    public async initLeaderboard(): Promise<string> {
-        console.log("Initializing leaderboard...");
-
-        const tx = await this.program.methods
-            .initIncenseLeaderboard()
-            .accounts({
-                authority: this.owner.publicKey,
-                leaderboard: this.leaderboardPda,
-                systemProgram: anchor.web3.SystemProgram.programId,
-            })
-            .signers([this.owner])
-            .rpc();
-
-        console.log(`Leaderboard initialized: ${tx}`);
-        return tx;
-    }
-
-    public async updateLeaderboard(user: Keypair, period: number = 0): Promise<string> {
-        console.log(`Updating leaderboard for user: ${user.publicKey.toString()}`);
-
-        const [userStatePda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("user_state"), user.publicKey.toBuffer()],
-            this.program.programId
-        );
-
-        const [userIncenseStatePda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("user_incense"), user.publicKey.toBuffer()],
-            this.program.programId
-        );
-
-        // 根据周期选择正确的枚举值
-        let periodEnum: any;
-        switch (period) {
-            case 0:
-                periodEnum = { daily: {} };
-                break;
-            case 1:
-                periodEnum = { weekly: {} };
-                break;
-            case 2:
-                periodEnum = { monthly: {} };
-                break;
-            default:
-                periodEnum = { daily: {} };
-        }
-
-        const tx = await this.program.methods
-            .updateLeaderboard(periodEnum)
-            .accounts({
-                user: user.publicKey,
-                userState: userStatePda,
-                userIncenseState: userIncenseStatePda,
-                leaderboard: this.leaderboardPda,
-                systemProgram: anchor.web3.SystemProgram.programId,
-            })
-            .signers([user])
-            .rpc();
-
-        console.log(`Leaderboard updated: ${tx}`);
-        return tx;
-    }
-
-    public async getUserProfile(user: Keypair): Promise<any> {
-        console.log(`Getting user profile for: ${user.publicKey.toString()}`);
-
-        const [userStatePda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("user_state"), user.publicKey.toBuffer()],
-            this.program.programId
-        );
-
-        const [userIncenseStatePda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("user_incense"), user.publicKey.toBuffer()],
-            this.program.programId
-        );
-
-        const [userDonationStatePda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("user_donation"), user.publicKey.toBuffer()],
-            this.program.programId
-        );
-
-        const [globalStatsPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("global_stats_v1")],
-            this.program.programId
-        );
-
-        // Use view method to get the return value from the instruction
-        const profile = await this.program.methods
-            .getUserProfile()
-            .accounts({
-                user: user.publicKey,
-                userState: userStatePda,
-                userIncenseState: userIncenseStatePda,
-                userDonationState: userDonationStatePda,
-                templeConfig: this.templeConfigPda,
-                globalStats: globalStatsPda,
-            })
-            .view();
-
-        console.log("User Profile Data:", JSON.stringify(profile, null, 2));
-        return profile;
-    }
-
-    public async getUserRank(user: Keypair): Promise<any> {
-        console.log(`Getting user rank for: ${user.publicKey.toString()}`);
-
-        const result = await this.program.methods
-            .getUserRank()
-            .accounts({
-                user: user.publicKey,
-                leaderboard: this.leaderboardPda,
-            })
-            .view();
-
-        return result;
-    }
-
-    public async getIncenseLeaderboard(user: Keypair): Promise<any> {
-        console.log(`Getting incense leaderboard for: ${user.publicKey.toString()}`);
-
-        const result = await this.program.methods
-            .getIncenseLeaderboard()
-            .accounts({
-                user: user.publicKey,
-                leaderboard: this.leaderboardPda,
-            })
-            .view();
-
-        return result;
-    }
-
     public getUserIncenseStatePda(userPubkey: PublicKey): PublicKey {
         const [pda] = PublicKey.findProgramAddressSync(
             [Buffer.from("user_incense"), userPubkey.toBuffer()],
