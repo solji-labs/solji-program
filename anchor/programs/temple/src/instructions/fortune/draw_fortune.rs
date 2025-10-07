@@ -1,6 +1,6 @@
 use crate::error::ErrorCode;
 use crate::state::event::FortuneDrawn;
-use crate::state::global_stats::GlobalStats;
+// use crate::state::global_stats::GlobalStats;
 use crate::state::temple_config::TempleConfig;
 use crate::state::user_state::{UserIncenseState, UserState};
 use anchor_lang::prelude::*;
@@ -70,13 +70,6 @@ pub struct DrawFortune<'info> {
         bump,
     )]
     pub temple_config: Box<Account<'info, TempleConfig>>,
-
-    #[account(
-        mut,
-        seeds = [GlobalStats::SEED_PREFIX.as_bytes()],
-        bump,
-    )]
-    pub global_stats: Account<'info, GlobalStats>,
 
     /// CHECK: Randomness account (only needed in non-local environment)
     #[cfg(not(feature = "localnet"))]
@@ -181,13 +174,13 @@ pub fn draw_fortune(ctx: Context<DrawFortune>, use_merit: bool) -> Result<DrawRe
     // Update user draw count
     ctx.accounts.user_incense_state.update_draw_count();
 
-    // Update global stats
-    ctx.accounts.global_stats.increment_draw_fortune();
+    // // Update global stats
+    // ctx.accounts.global_stats.increment_draw_fortune();
 
-    // Update temple level
-    ctx.accounts
-        .temple_config
-        .update_level(&ctx.accounts.global_stats);
+    // // Update temple level
+    // ctx.accounts
+    //     .temple_config
+    //     .update_level(&ctx.accounts.global_stats);
 
     // Give merit reward
     if !use_merit {
@@ -202,9 +195,15 @@ pub fn draw_fortune(ctx: Context<DrawFortune>, use_merit: bool) -> Result<DrawRe
     msg!("Draw result: {}", fortune_str);
     msg!("Fortune explanation: {}", fortune_desc);
 
-    // TODO Amulet drop probability logic: 10% chance (should it be optimized to oracle randomness?)
-    let amulet_drop_random = (random_value.wrapping_add(42) % 100) as u8;
-    let amulet_dropped = amulet_drop_random < 10;
+    // TODO Amulet drop probability logic: 10% chance
+    #[cfg(feature = "localnet")]
+    let amulet_dropped = true; // Test environment: 100% drop rate for amulet
+
+    #[cfg(not(feature = "localnet"))]
+    let amulet_dropped = {
+        let amulet_drop_random = (random_value.wrapping_add(42) % 100) as u8;
+        amulet_drop_random < 10
+    };
     if amulet_dropped {
         // Increase user's mintable amulet balance
         ctx.accounts.user_state.pending_amulets += 1;
@@ -212,6 +211,13 @@ pub fn draw_fortune(ctx: Context<DrawFortune>, use_merit: bool) -> Result<DrawRe
             "Congratulations! Got 1 amulet minting opportunity from drawing fortune! Current balance: {}",
             ctx.accounts.user_state.pending_amulets
         );
+
+        // Emit amulet dropped event
+        emit!(crate::state::event::AmuletDropped {
+            user: ctx.accounts.user.key(),
+            source: "fortune".to_string(),
+            timestamp: now,
+        });
     }
 
     // Emit draw fortune event

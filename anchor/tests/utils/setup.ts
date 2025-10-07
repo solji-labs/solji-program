@@ -906,38 +906,18 @@ export class TestContext {
 
     public async mintAmuletNft(user: Keypair, source: number): Promise<string> {
         console.log(`User minting amulet NFT with source: ${source}`);
+        const user_state = await this.program.account.userState.fetch(this.getUserStatePda(user.publicKey));
+        const serialNumber = user_state.totalAmulets;
+        const serialNumberString = serialNumber.toString();
 
-        const [userStatePda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("user_state"), user.publicKey.toBuffer()],
-            this.program.programId
-        );
+        console.log(`Serial number: ${serialNumber}`);
 
-        const [globalStatsPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("global_stats_v1")],
-            this.program.programId
-        );
-
-        // 获取当前total_amulets作为序列号
-        const templeConfig = await this.program.account.templeConfig.fetch(this.templeConfigPda);
-        const serialNumber = templeConfig.totalAmulets;
-
+        // Calculate PDAs
         const [nftMintPda] = PublicKey.findProgramAddressSync(
             [
-                Buffer.from("AmuletNFT"),
-                this.templeConfigPda.toBuffer(),
+                Buffer.from("amulet_nft"),
                 user.publicKey.toBuffer(),
-                Buffer.from([serialNumber]),
-            ],
-            this.program.programId
-        );
-
-        const [amuletNftPda] = PublicKey.findProgramAddressSync(
-            [
-                Buffer.from("AmuletNFT"),
-                Buffer.from("account"),
-                this.templeConfigPda.toBuffer(),
-                user.publicKey.toBuffer(),
-                Buffer.from([serialNumber]),
+                Buffer.from(serialNumberString, 'utf8'), // 👈 将字符串转为 UTF-8 字节
             ],
             this.program.programId
         );
@@ -947,21 +927,22 @@ export class TestContext {
             owner: user.publicKey,
         });
 
+        const metaAccount = this.getMetadataPda(nftMintPda);
+
         const tx = await this.program.methods
             .mintAmuletNft(source)
             .accounts({
                 authority: user.publicKey,
                 templeConfig: this.templeConfigPda,
-                globalStats: globalStatsPda,
-                userState: userStatePda,
+                globalStats: this.getGlobalStatsPda(),
+                userState: this.getUserStatePda(user.publicKey),
                 nftMintAccount: nftMintPda,
-                nftAssociatedTokenAccount,
-                amuletNftAccount: amuletNftPda,
-                metaAccount: this.getMetadataPda(nftMintPda),
+                nftAssociatedTokenAccount: nftAssociatedTokenAccount,
+                metaAccount: metaAccount,
                 tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
                 systemProgram: anchor.web3.SystemProgram.programId,
-                tokenMetadataProgram: new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"),
-                associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
+                tokenMetadataProgram: this.TOKEN_METADATA_PROGRAM_ID,
+                associatedTokenProgram: this.ASSOCIATED_TOKEN_PROGRAM_ID,
                 rent: anchor.web3.SYSVAR_RENT_PUBKEY,
             })
             .signers([user])

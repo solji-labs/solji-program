@@ -120,6 +120,13 @@ pub fn create_wish(
             "Congratulations! Got 1 amulet minting opportunity from making a wish! Current balance: {}",
             ctx.accounts.user_state.pending_amulets
         );
+
+        // Emit amulet dropped event
+        emit!(crate::state::event::AmuletDropped {
+            user: ctx.accounts.user.key(),
+            source: "wish".to_string(),
+            timestamp: clock.unix_timestamp,
+        });
     }
 
     // Update wish tower

@@ -39,6 +39,24 @@ pub struct FortuneDrawn {
     pub timestamp: i64,
 }
 
+// Amulet Dropped Events
+#[event]
+pub struct AmuletDropped {
+    pub user: Pubkey,
+    pub source: String, // "fortune" or "wish"
+    pub timestamp: i64,
+}
+
+// AmuletMinted Events
+#[event]
+pub struct AmuletMinted {
+    pub user: Pubkey,
+    pub amulet_mint: Pubkey,
+    pub source: String,
+    pub serial_number: u32,
+    pub timestamp: i64,
+}
+
 // WishCreated Events
 #[event]
 pub struct WishCreated {

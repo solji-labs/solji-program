@@ -57,6 +57,7 @@ pub struct UserState {
 
     // Amulet related
     pub pending_amulets: u32, // Amulet balance: for minting
+    pub total_amulets: u32,
 }
 
 impl UserState {

@@ -35,14 +35,15 @@ pub fn mint_amulet_nft(ctx: Context<MintAmuletNFT>, source: u8) -> Result<()> {
     // Consume one pending_amulet
     ctx.accounts.user_state.pending_amulets -= 1;
 
-    // Get serial number
-    let serial_number = ctx.accounts.temple_config.total_amulets;
+    // Get serial number (increment total_amulets first)
+    ctx.accounts.user_state.total_amulets += 1;
+    let serial_number: u32 = ctx.accounts.user_state.total_amulets;
 
     let nft_name_str = format!("Amulet #{}", serial_number);
-    let nft_description = match source {
-        0 => "Lucky amulet obtained through drawing fortune",
-        1 => "Blessed amulet obtained through making wishes",
-        _ => "Obtained amulet",
+    let source_str = match source {
+        0 => "fortune",
+        1 => "wish",
+        _ => "unknown",
     };
 
     // Create metadata account
@@ -102,20 +103,20 @@ pub fn mint_amulet_nft(ctx: Context<MintAmuletNFT>, source: u8) -> Result<()> {
     )?;
     msg!("Amulet NFT minted successfully");
 
-    // Initialize AmuletNFT account data
-    ctx.accounts.amulet_nft_account.owner = ctx.accounts.authority.key();
-    ctx.accounts.amulet_nft_account.mint = ctx.accounts.nft_mint_account.key();
-    ctx.accounts.amulet_nft_account.name = nft_name_str.clone();
-    ctx.accounts.amulet_nft_account.description = nft_description.to_string();
-    ctx.accounts.amulet_nft_account.minted_at = clock.unix_timestamp;
-    ctx.accounts.amulet_nft_account.source = source;
-    ctx.accounts.amulet_nft_account.serial_number = serial_number as u32;
-
     // Update temple config
     ctx.accounts.temple_config.total_amulets += 1;
 
     // Update global stats
     ctx.accounts.global_stats.increment_amulets();
+
+    // Emit amulet minted event
+    emit!(crate::state::event::AmuletMinted {
+        user: ctx.accounts.authority.key(),
+        amulet_mint: ctx.accounts.nft_mint_account.key(),
+        source: source_str.to_string(),
+        serial_number,
+        timestamp: clock.unix_timestamp,
+    });
 
     Ok(())
 }
@@ -153,9 +154,8 @@ pub struct MintAmuletNFT<'info> {
         payer = authority,
         seeds = [
             AmuletNFT::SEED_PREFIX.as_bytes(),
-            temple_config.key().as_ref(),
             authority.key().as_ref(),
-            &[temple_config.total_amulets as u8], // Use current total as serial number seed
+            &format!("{}", user_state.total_amulets).as_bytes(), 
         ],
         bump,
         mint::decimals = AmuletNFT::TOKEN_DECIMALS,
@@ -172,16 +172,7 @@ pub struct MintAmuletNFT<'info> {
     )]
     pub nft_associated_token_account: Account<'info, TokenAccount>,
 
-    #[account(
-        init,
-        payer = authority,
-        space = 8 + AmuletNFT::INIT_SPACE,
-        seeds = [AmuletNFT::SEED_PREFIX.as_bytes(), b"account", temple_config.key().as_ref(), authority.key().as_ref(), &[temple_config.total_amulets as u8]],
-        bump
-    )]
-    pub amulet_nft_account: Account<'info, AmuletNFT>,
-
-    /// CHECK: this is the metadata account
+    /// CHECK： Metadata account
     #[account(
         mut,
         seeds = [
