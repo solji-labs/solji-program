@@ -8,8 +8,8 @@ export function getIncenseRulesConfig() {
 
 // 获取 nft_mint_account pda
 
-export function getNftMintAccount(name: string) {
-  const [nftMintAccount] = anchor.web3.PublicKey.findProgramAddressSync([Buffer.from("create_burn_token"), Buffer.from(name)], program.programId);
+export function getNftMintAccount(wallet: anchor.Wallet, name: string) {
+  const [nftMintAccount] = anchor.web3.PublicKey.findProgramAddressSync([Buffer.from("create_burn_token"), wallet.publicKey.toBuffer(), Buffer.from(name)], program.programId);
   return nftMintAccount;
 }
 

@@ -2670,13 +2670,13 @@
   "errors": [
     {
       "code": 6000,
-      "name": "Insufficient",
-      "msg": "insufficient merit value"
+      "name": "AmountMustBeGreaterThanZero",
+      "msg": "Withdraw amount must be greater than 0"
     },
     {
       "code": 6001,
-      "name": "InvalidValue",
-      "msg": "invalid value"
+      "name": "AmountMustBeLessThanTempleBalance",
+      "msg": "Withdraw amount exceeds available balance (after reserving rent-exempt minimum)."
     }
   ],
   "types": [

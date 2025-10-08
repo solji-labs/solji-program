@@ -8,7 +8,7 @@ import { createUser } from "./api/user";
   const visitorWallet = getVisitorWallet();
 
 
-  const sbtName = "Test SBT 02";
+  const sbtName = "Test SBT 01";
   const r1 = await sbtNftMint(sbtName, "SBT_NFT", "https://poor-gold-wildebeest.myfilebase.com/ipfs/QmPCWecKXa6darBrnsKuveDqyhYxFGcnJZzoo7fkFFn6oS", false, true, wallet, visitorWallet);
   console.log("SBT Mint Result:", r1);
 

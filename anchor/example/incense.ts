@@ -1,10 +1,10 @@
 import { initializeLotteryPoetry } from "./api/draw_lots";
-import { incenseBurn, incenseBuy, getInfo } from "./api/incense_burn";
+import { incenseBurn, incenseBuy, getInfo, destroy } from "./api/incense_burn";
 import { getWallet } from "./api/wallet";
 
 (async () => {
   const wallet = getWallet();
-  const name = "Test NFT 05";
+  const name = "Test NFT 06";
 
   const r1 = await incenseBuy(1);
   console.log("Buy Incense Result:", r1);
@@ -18,5 +18,8 @@ import { getWallet } from "./api/wallet";
     true,
   );
   console.log("Burn Result:", r2);
+
+  const r3 = await destroy(wallet, name);
+  console.log("Destroy Result:", r3);
 
 })()

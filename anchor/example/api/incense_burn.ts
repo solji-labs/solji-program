@@ -67,7 +67,7 @@ export async function destroy(wallet: anchor.Wallet, name: string) {
   return await program.methods.destroy()
     .accounts({
       authority: wallet.payer.publicKey,
-      nftMintAccount: getNftMintAccount(name),
+      nftMintAccount: getNftMintAccount(wallet, name),
     })
     .rpc();
 }

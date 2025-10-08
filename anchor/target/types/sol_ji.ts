@@ -2676,13 +2676,13 @@ export type SolJi = {
   "errors": [
     {
       "code": 6000,
-      "name": "insufficient",
-      "msg": "insufficient merit value"
+      "name": "amountMustBeGreaterThanZero",
+      "msg": "Withdraw amount must be greater than 0"
     },
     {
       "code": 6001,
-      "name": "invalidValue",
-      "msg": "invalid value"
+      "name": "amountMustBeLessThanTempleBalance",
+      "msg": "Withdraw amount exceeds available balance (after reserving rent-exempt minimum)."
     }
   ],
   "types": [
