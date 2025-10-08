@@ -89,7 +89,7 @@ describe("draw fortune", () => {
         console.log("\n📊 查看用户状态和寺庙状态的变化：");
 
         ctx.printUserState(userStatePda);
-        ctx.printTempleState();
+        ctx.printTempleConfig();
 
 
     });

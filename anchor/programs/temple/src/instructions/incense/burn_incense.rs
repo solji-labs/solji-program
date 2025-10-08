@@ -9,14 +9,14 @@ use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 use crate::state::BurnIncenseError;
 use crate::state::IncenseNFT;
 use crate::state::IncenseTypeConfig;
-use crate::state::TempleState;
+use crate::state::TempleConfig;
 use crate::state::UserIncenseState;
 use crate::state::UserState;
 
 pub fn burn_incense(ctx: Context<BurnIncense>, incense_type_id: u8, amount: u8) -> Result<()> {
     let user_state = &mut ctx.accounts.user_state;
     let user_incense_state = &mut ctx.accounts.user_incense_state;
-    let temple_state = &mut ctx.accounts.temple_state;
+    let temple_config = &mut ctx.accounts.temple_config;
     let incense_type_config = &mut ctx.accounts.incense_type_config;
 
     // 检查香型配置是否激活
@@ -40,11 +40,11 @@ pub fn burn_incense(ctx: Context<BurnIncense>, incense_type_id: u8, amount: u8) 
         BurnIncenseError::DailyBurnLimitExceeded
     );
 
-    let temple_state_key = temple_state.key();
+    let temple_config_key = temple_config.key();
 
     let signer_seeds: &[&[&[u8]]] = &[&[
         IncenseNFT::SEED_PREFIX.as_bytes(),
-        temple_state_key.as_ref(),
+        temple_config_key.as_ref(),
         &[incense_type_id],
         &[ctx.bumps.nft_mint_account],
     ]];
@@ -68,44 +68,7 @@ pub fn burn_incense(ctx: Context<BurnIncense>, incense_type_id: u8, amount: u8) 
         ),
         mint_amount,
     )?;
-
-    // // 2. 如果metadata账户尚未创建，则创建metadata
-    // if ctx.accounts.meta_account.data_is_empty() {
-    //     // 构建NFT元数据
-    //     let clock = Clock::get()?;
-    //     let data_v2 = DataV2 {
-    //         name: format!("Merit Incense #{}", incense_type_id),
-    //         symbol: "MERIT".to_string(),
-    //         uri: format!(
-    //             "https://api.temple.example.com/metadata/incense/{}/{}",
-    //             incense_type_id, clock.unix_timestamp
-    //         ),
-    //         seller_fee_basis_points: 0,
-    //         creators: None,
-    //         collection: None,
-    //         uses: None,
-    //     };
-
-    //     create_metadata_accounts_v3(
-    //         CpiContext::new_with_signer(
-    //             ctx.accounts.token_metadata_program.to_account_info(),
-    //             CreateMetadataAccountsV3 {
-    //                 metadata: ctx.accounts.meta_account.to_account_info(),
-    //                 mint: ctx.accounts.nft_mint_account.to_account_info(),
-    //                 mint_authority: ctx.accounts.nft_mint_account.to_account_info(),
-    //                 update_authority: temple_state.to_account_info(),
-    //                 payer: ctx.accounts.user.to_account_info(),
-    //                 system_program: ctx.accounts.system_program.to_account_info(),
-    //                 rent: ctx.accounts.rent.to_account_info(),
-    //             },
-    //             signer_seeds,
-    //         ),
-    //         data_v2,
-    //         true, // is_mutable
-    //         true, // update_authority_is_signer
-    //         None, // collection_details
-    //     )?;
-    // }
+ 
 
     // 烧香
     // into()表示将u8转换为u32
@@ -118,7 +81,7 @@ pub fn burn_incense(ctx: Context<BurnIncense>, incense_type_id: u8, amount: u8) 
     // 消耗香
     user_incense_state.sub_incense_balance(incense_type_id, amount.into())?;
 
-    temple_state.add_incense_value(incense_type_config.incense_value.into())?;
+    temple_config.add_incense_value(incense_type_config.incense_value.into())?;
 
     Ok(())
 }
@@ -139,16 +102,16 @@ pub struct BurnIncense<'info> {
 
     /// CHECK: 寺庙管理员账号
     #[account(mut,
-        constraint = temple_authority.key() == temple_state.authority @ BurnIncenseError::InvalidOwner)]
+        constraint = temple_authority.key() == temple_config.authority @ BurnIncenseError::InvalidOwner)]
     pub temple_authority: AccountInfo<'info>,
 
     /// 寺庙状态账户
     #[account(
         mut,
-        seeds = [TempleState::SEED_PREFIX.as_bytes()],
+        seeds = [TempleConfig::SEED_PREFIX.as_bytes()],
         bump,
     )]
-    pub temple_state: Account<'info, TempleState>,
+    pub temple_config: Account<'info, TempleConfig>,
 
     /// 用户香型状态账户
     #[account(
@@ -176,7 +139,7 @@ pub struct BurnIncense<'info> {
         payer = user,
         seeds = [
             IncenseNFT::SEED_PREFIX.as_bytes(),
-               temple_state.key().as_ref(),
+               temple_config.key().as_ref(),
                &[incense_type_id]],
         bump,
         mint::decimals = IncenseNFT::TOKEN_DECIMALS,

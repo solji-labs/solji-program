@@ -7,7 +7,7 @@ describe("incense init", () => {
     console.log("Incense Type Initialization Test Suite");
     console.log("=====================================");
     console.log("Authority: ", ctx.authority.publicKey.toString());
-    console.log("Temple State PDA: ", ctx.templeStatePda.toString());
+    console.log("Temple State PDA: ", ctx.templeConfigPda.toString());
     console.log("Program ID: ", ctx.program.programId.toString());
 
     it("should initialize incense type successfully", async () => {
@@ -54,8 +54,8 @@ describe("incense init", () => {
         // 检查寺庙状态是否更新了香型计数
         console.log("\n🏛️ Temple State Update:");
         console.log("=======================");
-        const templeState = await ctx.program.account.templeState.fetch(ctx.templeStatePda);
-        console.log("Incense type count:", templeState.incenseTypeCount);
+        const templeConfig = await ctx.program.account.templeConfig.fetch(ctx.templeConfigPda);
+        console.log("Incense type count:", templeConfig.incenseTypeCount);
 
     });
 

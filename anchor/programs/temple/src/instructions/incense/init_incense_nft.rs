@@ -11,11 +11,11 @@ pub fn init_incense_nft(ctx: Context<InitIncenseNft>, incense_type_id: u8) -> Re
 
     let nft_name = format!("{} NFT", incense_type_config.name);
 
-    let temple_state_key = &mut ctx.accounts.temple_state.key();
+    let temple_config_key = &mut ctx.accounts.temple_config.key();
 
     let signer_seeds: &[&[&[u8]]] = &[&[
         IncenseNFT::SEED_PREFIX.as_bytes(),
-        temple_state_key.as_ref(),
+        temple_config_key.as_ref(),
         &[incense_type_id],
         &[ctx.bumps.nft_mint_account],
     ]];
@@ -72,16 +72,16 @@ pub struct InitIncenseNft<'info> {
 
     /// CHECK: 寺庙管理员账号
     #[account(mut,
-        constraint = temple_authority.key() == temple_state.authority @ BurnIncenseError::InvalidOwner)]
+        constraint = temple_authority.key() == temple_config.authority @ BurnIncenseError::InvalidOwner)]
     pub temple_authority: AccountInfo<'info>,
 
     /// 寺庙状态账户
     #[account(
-        mut,
-        seeds = [TempleState::SEED_PREFIX.as_bytes()],
+        mut,    
+        seeds = [TempleConfig::SEED_PREFIX.as_bytes()],
         bump,
     )]
-    pub temple_state: Account<'info, TempleState>,
+    pub temple_config: Account<'info, TempleConfig>,
 
     /// nft mint
     #[account(
@@ -89,7 +89,7 @@ pub struct InitIncenseNft<'info> {
         payer = authority,
         seeds = [
             IncenseNFT::SEED_PREFIX.as_bytes(),
-               temple_state.key().as_ref(),
+               temple_config.key().as_ref(),
                &[incense_type_id]],
         bump,
         mint::decimals = IncenseNFT::TOKEN_DECIMALS,

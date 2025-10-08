@@ -137,7 +137,7 @@ export class TestContext {
     public program: Program<Temple>;
     public authority: Keypair;
     public treasury: PublicKey;
-    public templeStatePda: PublicKey;
+    public templeConfigPda: PublicKey;
 
     constructor() {
         this.provider = anchor.AnchorProvider.env();
@@ -145,13 +145,13 @@ export class TestContext {
         this.program = anchor.workspace.Temple as Program<Temple>;
         this.authority = anchor.Wallet.local().payer;
         this.treasury = getUserKeypairs(9).publicKey;
-        this.templeStatePda = this.getTempleStatePda();
+        this.templeConfigPda = this.getTempleConfigPda();
     }
 
-    // 获取寺庙状态PDA
-    public getTempleStatePda(): PublicKey {
+    // 获取寺庙配置PDA
+    public getTempleConfigPda(): PublicKey {
         const [pda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("temple_state_v1")],
+            [Buffer.from("temple_config_v1")],
             this.program.programId
         );
         return pda;
@@ -262,11 +262,11 @@ export class TestContext {
 
     // 获取香型NFT Mint PDA
     public getIncenseNftMintPda(incenseTypeId: number): PublicKey {
-        const templeStatePda = this.getTempleStatePda();
+        const templeConfigPda = this.getTempleConfigPda();
         const [pda] = PublicKey.findProgramAddressSync(
             [
                 Buffer.from("IncenseNFT"),
-                templeStatePda.toBuffer(),
+                templeConfigPda.toBuffer(),
                 Buffer.from([incenseTypeId]),
             ],
             this.program.programId
@@ -393,7 +393,7 @@ export class TestContext {
             const tx = await this.program.methods
                 .drawFortune()
                 .accounts({
-                    user: user.publicKey,
+                    user: user.publicKey, 
                 })
                 .signers([user])
                 .rpc();
@@ -491,6 +491,23 @@ export class TestContext {
 
         return tx;
     }
+
+
+    public async mintBuddhaNft(user: Keypair): Promise<string> {
+        console.log("mint buddha nft...");
+
+        const tx = await this.program.methods
+            .mintBuddhaNft()
+            .accounts({
+                user: user.publicKey,
+            })
+            .signers([user])
+            .rpc();
+
+        console.log(`Buddha NFT minted: ${tx}`);
+
+        return tx;
+    }
         
     public getWishPda(creator: PublicKey, wishId: number): PublicKey {
         const [pda] = PublicKey.findProgramAddressSync(
@@ -533,13 +550,11 @@ export class TestContext {
         console.log("User:", userStateAccount.user.toString());
         console.log("Karma Points:", userStateAccount.karmaPoints.toString());
         console.log("Total Incense Value:", userStateAccount.totalIncenseValue.toString());
-        console.log("Total Sol Spent:", userStateAccount.totalSolSpent.toString());
-        console.log("Total Donated:", userStateAccount.totalDonated.toString());
-        console.log("Total Buy Count:", userStateAccount.totalBuyCount.toString());
+        console.log("Total Sol Spent:", userStateAccount.totalSolSpent.toString());  
         console.log("Total Draw Count:", userStateAccount.totalDrawCount.toString());
         console.log("Total Wish Count:", userStateAccount.totalWishCount.toString());
         console.log("Donation Unlocked Burns:", userStateAccount.donationUnlockedBurns);
-        console.log("Daily Burn Operations:", userStateAccount.dailyBurnOperations);
+        console.log("Daily Burn Count:", userStateAccount.dailyBurnCount);
         console.log("Daily Draw Count:", userStateAccount.dailyDrawCount);
         console.log("Daily Wish Count:", userStateAccount.dailyWishCount);
         console.log("Created At:", new Date(userStateAccount.createdAt.toNumber() * 1000).toISOString());
@@ -562,23 +577,23 @@ export class TestContext {
         console.log("Last Active At:", new Date(userIncenseStateAccount.lastActiveAt.toNumber() * 1000).toISOString());
     }
 
-    public async printTempleState(): Promise<void> {
-        const templeStateAccount = await this.program.account.templeState.fetch(this.templeStatePda);
+    public async printTempleConfig(): Promise<void> {
+        const templeConfigAccount = await this.program.account.templeConfig.fetch(this.templeConfigPda);
         console.log("\n📊 Reading Temple State PDA Data:");
         console.log("================================");
-        // console.log("templeStateAccount", JSON.stringify(templeStateAccount));
+        // console.log("templeConfigAccount", JSON.stringify(templeConfigAccount));
 
-        console.log("Authority:", templeStateAccount.authority.toString());
-        console.log("Treasury:", templeStateAccount.treasury.toString());
-        console.log("Temple Level:", templeStateAccount.treasury.toString());
-        console.log("Total Incense Value:", templeStateAccount.totalIncenseValue.toString());
-        console.log("Total Draws:", templeStateAccount.totalDraws.toString());
-        console.log("Total Wishes:", templeStateAccount.totalWishes.toString());
-        console.log("Total Donations:", templeStateAccount.totalDonations.toString());
-        console.log("Buddha NFT Count:", templeStateAccount.buddhaNftCount.toString());
-        console.log("Incense Type Count:", templeStateAccount.incenseTypeCount.toString());
-        console.log("Created At:", new Date(templeStateAccount.createdAt.toNumber() * 1000).toISOString());
-        console.log("Updated At:", new Date(templeStateAccount.updatedAt.toNumber() * 1000).toISOString());
+        console.log("Authority:", templeConfigAccount.authority.toString());
+        console.log("Treasury:", templeConfigAccount.treasury.toString());
+        console.log("Temple Level:", templeConfigAccount.treasury.toString());
+        console.log("Total Incense Value:", templeConfigAccount.totalIncenseValue.toString());
+        console.log("Total Draws:", templeConfigAccount.totalDraws.toString());
+        console.log("Total Wishes:", templeConfigAccount.totalWishes.toString());
+        console.log("Total Donations:", templeConfigAccount.totalDonations.toString());
+        console.log("Total Buddha NFT:", templeConfigAccount.totalBuddhaNft.toString());
+        console.log("Incense Type Count:", templeConfigAccount.incenseTypeCount.toString());
+        console.log("Created At:", new Date(templeConfigAccount.createdAt.toNumber() * 1000).toISOString());
+        console.log("Updated At:", new Date(templeConfigAccount.updatedAt.toNumber() * 1000).toISOString());
     }
 
 

@@ -20,7 +20,7 @@ pub fn buy_incense<'info>(
 
     let user_state = &mut ctx.accounts.user_state;
     let user_incense_state = &mut ctx.accounts.user_incense_state;
-    let _temple_state = &mut ctx.accounts.temple_state;
+    let _temple_config = &mut ctx.accounts.temple_config;
 
     let user_key = ctx.accounts.user.key();
     let current_timestamp = Clock::get().unwrap().unix_timestamp;
@@ -108,7 +108,7 @@ pub fn buy_incense<'info>(
             ctx.accounts.system_program.to_account_info(),
             Transfer {
                 from: ctx.accounts.user.to_account_info(),
-                to: ctx.accounts.temple_state.to_account_info(),
+                to: ctx.accounts.temple_config.to_account_info(),
             },
         ),
         total_cost,
@@ -118,9 +118,7 @@ pub fn buy_incense<'info>(
 
     // 记录用户消费
     user_state.record_spending(total_cost)?;
-
-    // 增加购买次数
-    user_state.add_buy_count()?;
+ 
 
     emit!(BuyIncenseEvent {
         user: user_key,
@@ -162,18 +160,18 @@ pub struct BuyIncense<'info> {
     pub user_state: Account<'info, UserState>,
 
     /// CHECK: This account is validated through the constraint that ensures it matches the treasury in temple_config
-    #[account(mut, constraint = temple_treasury.key() == temple_state.treasury @ BuyIncenseError::InvalidTreasury)]
+    #[account(mut, constraint = temple_treasury.key() == temple_config.treasury @ BuyIncenseError::InvalidTreasury)]
     pub temple_treasury: AccountInfo<'info>, // 寺庙国库
 
     /// 寺庙状态账户
     #[account(
         mut,
         seeds = [
-            TempleState::SEED_PREFIX.as_bytes(),
+            TempleConfig::SEED_PREFIX.as_bytes(),
         ],
         bump,
     )]
-    pub temple_state: Account<'info, TempleState>,
+    pub temple_config: Account<'info, TempleConfig>,
 
     /// 用户账户
     #[account(mut)]

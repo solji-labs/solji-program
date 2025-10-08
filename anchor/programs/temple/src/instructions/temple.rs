@@ -1,21 +1,21 @@
 
 pub use anchor_lang::prelude::*;
 
-use crate::state::TempleState;
+use crate::state::TempleConfig;
 
 
 pub fn init_temple(ctx: Context<InitTemple>,treasury: Pubkey) -> Result<()> {
 
-    let temple_state = &mut ctx.accounts.temple_state;
+    let temple_config = &mut ctx.accounts.temple_config;
     let authority = &ctx.accounts.authority.key();
     let current_timestamp = Clock::get().unwrap().unix_timestamp;
     
-    temple_state.initialize(*authority,treasury, current_timestamp)?;
+    temple_config.initialize(*authority,treasury, current_timestamp)?;
     
     emit!(TempleInitEvent {
-        temple_state: temple_state.key(),
+        temple_config: temple_config.key(),
         authority: *authority,
-        temple_level: temple_state.temple_level,
+        temple_level: temple_config.temple_level,
         timestamp: current_timestamp,
     });
 
@@ -23,8 +23,8 @@ pub fn init_temple(ctx: Context<InitTemple>,treasury: Pubkey) -> Result<()> {
         // 记录成功日志
     msg!("Temple state initialized successfully");
     msg!("Authority: {}", authority);
-    msg!("Initial level: {}", temple_state.temple_level); 
-    msg!("Created at: {}", temple_state.created_at);
+    msg!("Initial level: {}", temple_config.temple_level); 
+    msg!("Created at: {}", temple_config.created_at);
     
     Ok(())
 }
@@ -41,13 +41,13 @@ pub struct InitTemple<'info> {
     #[account(
         init,
         payer = authority,
-        space = 8 + TempleState::INIT_SPACE,
+        space = 8 + TempleConfig::INIT_SPACE,
         seeds = [
-            TempleState::SEED_PREFIX.as_bytes(), 
+            TempleConfig::SEED_PREFIX.as_bytes(), 
         ],
         bump,
     )]
-    pub temple_state: Account<'info, TempleState>,
+    pub temple_config: Account<'info, TempleConfig>,
 
 
     /// 管理员账户
@@ -61,7 +61,7 @@ pub struct InitTemple<'info> {
 
 #[event]
 pub struct TempleInitEvent {
-    pub temple_state: Pubkey,
+    pub temple_config: Pubkey,
     pub authority: Pubkey,
     pub temple_level: u8,
     pub timestamp: i64,

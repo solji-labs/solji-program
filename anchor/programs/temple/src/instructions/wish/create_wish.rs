@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::state::{TempleState, UserError, UserState, Wish};
+use crate::state::{TempleConfig, UserError, UserState, Wish};
 
 /// 创建许愿
 ///
@@ -17,7 +17,7 @@ pub fn create_wish(
     let wish = &mut ctx.accounts.wish;
     let user_state = &mut ctx.accounts.user_state;
     let user = &ctx.accounts.user;
-    let temple_state = &mut ctx.accounts.temple_state;
+    let temple_config = &mut ctx.accounts.temple_config;
 
     // 检查并重置每日限制
     user_state.check_and_reset_daily_limits();
@@ -62,7 +62,7 @@ pub fn create_wish(
     user_state.create_wish(karma_points_cost)?;
 
     // 更新寺庙全局状态：增加总许愿次数
-    temple_state.create_wish()?;
+    temple_config.create_wish()?;
 
     // 发出事件
     emit!(CreateWishEvent {
@@ -110,10 +110,10 @@ pub struct CreateWish<'info> {
     /// 寺庙全局状态账户 - 存储全局统计信息
     #[account(
         mut,
-        seeds = [TempleState::SEED_PREFIX.as_bytes()],
+        seeds = [TempleConfig::SEED_PREFIX.as_bytes()],
         bump,
     )]
-    pub temple_state: Account<'info, TempleState>,
+    pub temple_config: Account<'info, TempleConfig>,
 
     /// 系统程序 - 用于创建账户
     pub system_program: Program<'info, System>,

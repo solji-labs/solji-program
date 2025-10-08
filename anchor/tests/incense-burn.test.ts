@@ -82,8 +82,8 @@ describe("incense burn", () => {
         console.log("===========================");
         console.log("Karma Points:", userStateBefore.karmaPoints.toString());
         console.log("Total Incense Value:", userStateBefore.totalIncenseValue.toString());
-        console.log("Daily Burn Operations:", userStateBefore.dailyBurnOperations);
-        console.log("Total Burn Operations:", userStateBefore.totalBurnOperations);
+        console.log("Daily Burn Count:", userStateBefore.dailyBurnCount);
+        console.log("Total Burn Count:", userStateBefore.totalBurnCount);
 
         // 执行烧香操作
         try {
@@ -118,10 +118,10 @@ describe("incense burn", () => {
                    `(+${userStateAfter.karmaPoints.sub(userStateBefore.karmaPoints).toString()})`);
         console.log("Total Incense Value:", userStateAfter.totalIncenseValue.toString(),
                    `(+${userStateAfter.totalIncenseValue.sub(userStateBefore.totalIncenseValue).toString()})`);
-        console.log("Daily Burn Operations:", userStateAfter.dailyBurnOperations,
-                   `(+${userStateAfter.dailyBurnOperations - userStateBefore.dailyBurnOperations})`);
-        console.log("Total Burn Operations:", userStateAfter.totalBurnOperations,
-                   `(+${userStateAfter.totalBurnOperations - userStateBefore.totalBurnOperations})`);
+        console.log("Daily Burn Count:", userStateAfter.dailyBurnCount,
+                   `(+${userStateAfter.dailyBurnCount - userStateBefore.dailyBurnCount})`);
+        console.log("Total Burn Count:", userStateAfter.totalBurnCount,
+                   `(+${userStateAfter.totalBurnCount - userStateBefore.totalBurnCount})`);
 
         // 验证状态变化的正确性
         console.log("\n✅ Validation Results:");
@@ -133,7 +133,7 @@ describe("incense burn", () => {
         console.log(`Incense consumed correctly: ${havingBefore - havingAfter === burnAmount ? '✅' : '❌'}`);
 
         // 验证烧香次数增加
-        const burnOpsIncrease = userStateAfter.dailyBurnOperations - userStateBefore.dailyBurnOperations;
+        const burnOpsIncrease = userStateAfter.dailyBurnCount - userStateBefore.dailyBurnCount;
         console.log(`Daily burn operations increased by 1: ${burnOpsIncrease === 1 ? '✅' : '❌'}`);
 
         // 验证功德值和香火值增加
@@ -145,7 +145,7 @@ describe("incense burn", () => {
 
         ctx.printUserIncenseState(userIncenseStatePda);
         ctx.printUserState(userStatePda);
-        ctx.printTempleState();
+        ctx.printTempleConfig();
 
 
         console.log("\n🎉 Burn incense test completed successfully!");

@@ -16,15 +16,13 @@ pub struct UserState {
 
     /// 用户总消费金额 (lamports)
     pub total_sol_spent: u64,
-
-    /// 用户总捐助金额 (lamports)
-    pub total_donated: u64,
+ 
 
     /// 通过捐助解锁的额外烧香次数（每日重置）
     pub donation_unlocked_burns: u8,
 
     /// 今日已进行烧香操作次数 (每日重置)
-    pub daily_burn_operations: u8,
+    pub daily_burn_count: u8,
 
     /// 今日已抽签次数 (每日重置)
     pub daily_draw_count: u8,
@@ -34,15 +32,10 @@ pub struct UserState {
 
     /// 上次操作日期，用于每日重置判断
     pub last_action_day: u16, // 存储自纪元开始的天数
-
-    /// 总购买次数统计
-    pub total_buy_count: u64,
+ 
 
     /// 总烧香操作次数统计
-    pub total_burn_operations: u32,
-
-    /// 总烧毁香的根数统计
-    pub total_incense_burned: u32,
+    pub total_burn_count: u32,
 
     /// 总抽签次数统计
     pub total_draw_count: u32,
@@ -74,16 +67,13 @@ impl UserState {
         self.user = user;
         self.karma_points = 0;
         self.total_incense_value = 0;
-        self.total_sol_spent = 0;
-        self.total_donated = 0;
+        self.total_sol_spent = 0; 
         self.donation_unlocked_burns = 0;
-        self.daily_burn_operations = 0;
+        self.daily_burn_count = 0;
         self.daily_draw_count = 0;
         self.daily_wish_count = 0;
-        self.last_action_day = current_day;
-        self.total_buy_count = 0;
-        self.total_burn_operations = 0;
-        self.total_incense_burned = 0;
+        self.last_action_day = current_day; 
+        self.total_burn_count = 0; 
         self.total_draw_count = 0;
         self.total_wish_count = 0;
         self.created_at = current_timestamp;
@@ -98,7 +88,7 @@ impl UserState {
         let current_day = (Clock::get()?.unix_timestamp / 86400) as u16;
 
         if self.last_action_day != current_day {
-            self.daily_burn_operations = 0;
+            self.daily_burn_count = 0;
             self.daily_draw_count = 0;
             self.daily_wish_count = 0;
             self.donation_unlocked_burns = 0;
@@ -114,8 +104,8 @@ impl UserState {
         let base_limit = Self::DAILY_BURN_LIMIT;
         // saturating_add: 先加上donation_unlocked_burns，如果结果大于u8::MAX，返回u8::MAX
         let total_limit = base_limit.saturating_add(self.donation_unlocked_burns);
-        // saturating_sub: 先减去daily_burn_operations，如果结果小于0，返回0
-        total_limit.saturating_sub(self.daily_burn_operations)
+        // saturating_sub: 先减去daily_burn_count，如果结果小于0，返回0
+        total_limit.saturating_sub(self.daily_burn_count)
     }
 
     // 烧香
@@ -138,20 +128,14 @@ impl UserState {
             .ok_or(UserError::IncenseValueOverflow)?;
 
         // 增加烧香次数
-        self.total_burn_operations = self
-            .total_burn_operations
+        self.total_burn_count = self
+            .total_burn_count
             .checked_add(1)
-            .ok_or(UserError::BurnOperationsOverflow)?;
-
-        // 增加烧香根数
-        self.total_incense_burned = self
-            .total_incense_burned
-            .checked_add(amount)
-            .ok_or(UserError::IncenseBurnedOverflow)?;
+            .ok_or(UserError::BurnCountOverflow)?;
 
         // 增加今日烧香次数
-        self.daily_burn_operations = self
-            .daily_burn_operations
+        self.daily_burn_count = self
+            .daily_burn_count
             .checked_add(1)
             .ok_or(UserError::DailyBurnLimitExceeded)?;
 
@@ -174,15 +158,7 @@ impl UserState {
         self.daily_wish_count
     }
 
-    /// 增加购买次数
-    pub fn add_buy_count(&mut self) -> Result<()> {
-        // saturating_add: 先加上1，如果结果大于u64::MAX，返回u64::MAX
-        self.total_buy_count = self
-            .total_buy_count
-            .checked_add(1)
-            .ok_or(UserError::BuyCountOverflow)?;
-        Ok(())
-    }
+ 
 
     /// 增加功德值
     pub fn add_karma_points(&mut self, amount: u64) -> Result<()> {
@@ -206,15 +182,7 @@ impl UserState {
         Ok(())
     }
 
-    /// 记录捐助
-    pub fn record_donation(&mut self, amount: u64) -> Result<()> {
-        self.total_donated = self
-            .total_donated
-            .checked_add(amount)
-            .ok_or(UserError::DonationOverflow)?;
-        self.last_active_at = Clock::get()?.unix_timestamp;
-        Ok(())
-    }
+ 
 
     /// 增加捐助解锁的烧香次数
     pub fn add_donation_unlocked_burns(&mut self, count: u8) -> Result<()> {
@@ -230,11 +198,8 @@ impl UserState {
             UserError::DailyBurnLimitExceeded
         );
 
-        self.daily_burn_operations = self.daily_burn_operations.saturating_add(1);
-        self.total_burn_operations = self.total_burn_operations.saturating_add(1);
-        self.total_incense_burned = self
-            .total_incense_burned
-            .saturating_add(incense_count as u32);
+        self.daily_burn_count = self.daily_burn_count.saturating_add(1);
+        self.total_burn_count = self.total_burn_count.saturating_add(1);
         self.last_active_at = Clock::get()?.unix_timestamp;
         Ok(())
     }
@@ -378,9 +343,46 @@ impl UserIncenseState {
     }
 }
 
+
+#[account]
+#[derive(Debug, InitSpace)]
+pub struct UserDonationState {
+    pub user: Pubkey,
+    pub total_donation_amount: u64,
+    pub total_donation_count: u64,
+    pub donation_level: u8,
+    pub last_donation_at: i64,
+    
+    pub can_mint_buddha_nft: bool,
+    pub has_minted_buddha_nft: bool,
+}
+
+impl UserDonationState {
+ pub const SEED_PREFIX: &'static str = "user_donation_state_v1";
+
+
+    pub fn can_mint_buddha_nft(&self) -> bool {
+        self.can_mint_buddha_nft
+    }   
+    
+    pub fn has_minted_buddha_nft(&self) -> bool {
+        self.has_minted_buddha_nft   
+    }   
+    
+    pub fn mint_buddha_nft(&mut self) -> Result<()> {
+        self.has_minted_buddha_nft = true;
+        Ok(())
+    }
+     
+ 
+}
+
+
 /// 用户相关错误定义
 #[error_code]
 pub enum UserError {
+    #[msg("Burn count overflow")]
+    BurnCountOverflow,
     #[msg("Wish count overflow")]
     WishCountOverflow,
     #[msg("Invalid randomness account")]

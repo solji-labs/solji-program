@@ -8,7 +8,7 @@ pub use anchor_lang::prelude::*;
 /// 这是整个Solji应用的核心状态账户
 #[account]
 #[derive(Debug, InitSpace)]
-pub struct TempleState {
+pub struct TempleConfig {
     /// 寺庙管理员地址 - 拥有管理权限的地址
     pub authority: Pubkey,
 
@@ -37,7 +37,7 @@ pub struct TempleState {
     
     /// 佛像 NFT 铸造数量统计 (为未来功能预留)
     /// 预留给后续SBT系统使用
-    pub buddha_nft_count: u32,
+    pub total_buddha_nft: u32,
     
     /// 已初始化的香型数量
     /// 用于统计当前可用的香型种类
@@ -53,11 +53,11 @@ pub struct TempleState {
 }
 
 
-impl TempleState {
+impl TempleConfig {
 
-    /// 定义TempleState账户的种子前缀
+    /// 定义TempleConfig账户的种子前缀
     /// 用于生成PDA地址
-    pub const SEED_PREFIX: &'static str = "temple_state_v1";
+    pub const SEED_PREFIX: &'static str = "temple_config_v1";
 
     /// 初始化寺庙状态
     pub fn initialize(&mut self, authority: Pubkey,treasury: Pubkey, current_timestamp: i64) -> Result<()> {
@@ -69,7 +69,7 @@ impl TempleState {
         self.total_draws = 0;
         self.total_wishes = 0;
         self.total_donations = 0;
-        self.buddha_nft_count = 0;
+        self.total_buddha_nft = 0;
         self.incense_type_count = 0;
         self.created_at = current_timestamp;
         self.updated_at = current_timestamp;
@@ -79,6 +79,12 @@ impl TempleState {
         Ok(())
     }
 
+
+    /// 增加佛像NFT铸造数量
+    pub fn mint_buddha_nft(&mut self) -> Result<()> {
+        self.total_buddha_nft = self.total_buddha_nft.checked_add(1).unwrap();
+        Ok(())
+    }
 
     /// 判断传入的地址是否为寺庙管理员
     pub fn is_authority(&self, authority: Pubkey) -> bool {
@@ -183,6 +189,12 @@ impl TempleState {
 
 #[error_code]
 pub enum TempleError {
+    /// 佛像NFT数量溢出
+    #[msg("Buddha NFT count overflow")]
+    BuddhaNftCountOverflow,
+    /// 未经授权的寺庙访问
+    #[msg("Invalid owner")]
+    InvalidOwner,
     /// 许愿次数溢出
     #[msg("Wish count overflow")]
     WishCountOverflow,

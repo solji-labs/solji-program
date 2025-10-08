@@ -64,4 +64,8 @@ pub mod temple {
     pub fn cancel_like_wish(ctx: Context<CancelWishLike>, wish_id: u64) -> Result<()> {
         instructions::wish::cancel_like_wish(ctx, wish_id)
     }
+
+    pub fn mint_buddha_nft(ctx: Context<MintBuddhaNft>) -> Result<()> {
+        instructions::mint_buddha_nft::mint_buddha_nft(ctx)
+    }
 }

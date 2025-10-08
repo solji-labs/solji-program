@@ -13,3 +13,6 @@ pub use fortune::*;
 
 pub mod wish;
 pub use wish::*;
+
+pub mod mint_buddha_nft;
+pub use mint_buddha_nft::*;

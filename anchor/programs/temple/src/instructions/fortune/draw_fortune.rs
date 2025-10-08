@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::clock::Clock;
 
-use crate::state::{TempleState, UserError, UserState};
+use crate::state::{TempleConfig, UserError, UserState};
 
 pub fn draw_fortune(ctx: Context<DrawFortune>) -> Result<DrawResult> {
     let clock = Clock::get()?;
@@ -35,7 +35,7 @@ pub fn draw_fortune(ctx: Context<DrawFortune>) -> Result<DrawResult> {
     ctx.accounts.user_state.draw_fortune(karma_points_per_draw)?;
 
     // 更新寺庙状态（可变借用）
-    ctx.accounts.temple_state.draw_fortune()?;
+    ctx.accounts.temple_config.draw_fortune()?;
 
     // 发射抽签事件
     emit!(DrawFortuneEvent {
@@ -108,10 +108,10 @@ pub struct DrawFortune<'info> {
     /// 寺庙状态账户
     #[account(
         mut,
-        seeds = [TempleState::SEED_PREFIX.as_bytes()],
+        seeds = [TempleConfig::SEED_PREFIX.as_bytes()],
         bump,
     )]
-    pub temple_state: Account<'info, TempleState>,
+    pub temple_config: Account<'info, TempleConfig>,
 
     /// CHECK: 随机数账户（仅在非本地环境需要）
     #[cfg(not(feature = "localnet"))]

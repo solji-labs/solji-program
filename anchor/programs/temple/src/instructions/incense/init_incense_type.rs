@@ -4,12 +4,12 @@ use crate::state::*;
 
 pub fn init_incense_type(ctx: Context<InitIncenseType>, params: InitializeIncenseTypeParams) -> Result<()> {
     let incense_type_config = &mut ctx.accounts.incense_type_config;
-    let temple_state = &mut ctx.accounts.temple_state;
+    let temple_config = &mut ctx.accounts.temple_config;
     let current_timestamp = Clock::get()?.unix_timestamp;
     
     // 验证寺庙管理员权限
     require!(
-        temple_state.is_authority(ctx.accounts.authority.key()),
+        temple_config.is_authority(ctx.accounts.authority.key()),
         TempleError::UnauthorizedTempleAccess
     );
     
@@ -17,7 +17,7 @@ pub fn init_incense_type(ctx: Context<InitIncenseType>, params: InitializeIncens
     incense_type_config.initialize(params.clone(), current_timestamp)?;
     
     // 更新寺庙状态中的香型计数
-    temple_state.increment_incense_type_count()?;
+    temple_config.increment_incense_type_count()?;
 
     // 发射事件
     emit!(IncenseInitEvent {
@@ -39,7 +39,7 @@ pub fn init_incense_type(ctx: Context<InitIncenseType>, params: InitializeIncens
     msg!("Karma Reward: {}", params.karma_reward);
     msg!("Incense Value: {}", params.incense_value);
     msg!("Is Active: {}", params.is_active);
-    msg!("Total Incense Types: {}", temple_state.incense_type_count);
+    msg!("Total Incense Types: {}", temple_config.incense_type_count);
     
     Ok(())
 }
@@ -82,10 +82,10 @@ pub struct InitIncenseType<'info> {
     /// 需要更新香型计数
     #[account(
         mut,                                                     // 可变，需要更新计数
-        seeds = [TempleState::SEED_PREFIX.as_bytes()],           
+        seeds = [TempleConfig::SEED_PREFIX.as_bytes()],           
         bump                                                     // PDA验证
     )]
-    pub temple_state: Account<'info, TempleState>,
+    pub temple_config: Account<'info, TempleConfig>,
 
     /// 寺庙管理员账户
     /// 只有管理员可以创建香型

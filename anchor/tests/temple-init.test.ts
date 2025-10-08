@@ -10,7 +10,7 @@ describe("temple init", () => {
     console.log("Temple Program Test Suite");
     console.log("========================");
     console.log("Authority: ", ctx.authority.publicKey.toString());
-    console.log("Temple State PDA: ", ctx.templeStatePda.toString());
+    console.log("Temple State PDA: ", ctx.templeConfigPda.toString());
     console.log("Program ID: ", ctx.program.programId.toString());
 
     it("should initialize temple or read existing data", async () => {
@@ -18,7 +18,7 @@ describe("temple init", () => {
 
         try {
             // 尝试检查账户是否已经存在
-            const existingAccount = await ctx.program.account.templeState.fetchNullable(ctx.templeStatePda);
+            const existingAccount = await ctx.program.account.templeConfig.fetchNullable(ctx.templeConfigPda);
 
             if (existingAccount) {
                 console.log("🔍 Temple already exists, reading existing data...");
@@ -39,7 +39,7 @@ describe("temple init", () => {
         console.log("\n📊 Reading Temple State Data:");
         console.log("================================");
 
-        const templeStateAccount = await ctx.program.account.templeState.fetch(ctx.templeStatePda);
+        const templeStateAccount = await ctx.program.account.templeConfig.fetch(ctx.templeConfigPda);
 
         console.log("templeStateAccount", JSON.stringify(templeStateAccount));
 
@@ -49,7 +49,7 @@ describe("temple init", () => {
         console.log("Total Draws:", templeStateAccount.totalDraws.toString());
         console.log("Total Wishes:", templeStateAccount.totalWishes.toString());
         console.log("Total Donations:", templeStateAccount.totalDonations.toString());
-        console.log("Buddha NFT Count:", templeStateAccount.buddhaNftCount);
+        console.log("Total Buddha NFT:", templeStateAccount.totalBuddhaNft);
         console.log("Incense Type Count:", templeStateAccount.incenseTypeCount);
         console.log("Created At:", new Date(templeStateAccount.createdAt.toNumber() * 1000).toISOString());
         console.log("Updated At:", new Date(templeStateAccount.updatedAt.toNumber() * 1000).toISOString());
