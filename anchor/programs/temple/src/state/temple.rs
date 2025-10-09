@@ -30,9 +30,8 @@ pub struct TempleConfig {
     /// 总许愿次数统计 (为未来功能预留)
     /// 预留给后续许愿功能使用
     pub total_wishes: u64,
-    
-    /// 总捐助 SOL 数量 (以lamports为单位)
-    /// 所有用户捐助的SOL总和
+     
+    /// 所有用户捐助的次数
     pub total_donations: u64,
     
     /// 佛像 NFT 铸造数量统计 (为未来功能预留)
@@ -75,6 +74,35 @@ impl TempleConfig {
         self.updated_at = current_timestamp;
 
         msg!("Temple initialized successfully >>> authority: {}", authority);
+
+        Ok(())
+    }
+
+    /// 增加捐助金额
+    pub fn donate_fund(&mut self, amount: u64, current_timestamp: i64) -> Result<()> {
+
+        // 每次捐助增加1
+        self.total_donations = self.total_donations
+        .checked_add(1)
+        .ok_or(TempleError::DonationOverflow)?;
+
+        let donate_sol = (amount / 100_000_000) as f64;
+        let add_incense_value  = if donate_sol >=5.0 {
+            100000
+        } else if donate_sol >=1.0 {
+            30000
+        } else if donate_sol >=0.2 {
+            6300
+        } else {
+            1200
+        };
+ 
+        //增加香火值
+        self.total_incense_value = self.total_incense_value
+        .checked_add(add_incense_value)
+        .ok_or(TempleError::IncenseValueOverflow)?;
+ 
+        self.updated_at = current_timestamp;
 
         Ok(())
     }
@@ -148,20 +176,7 @@ impl TempleConfig {
         Ok(())
     }
 
- 
-
-    /// 增加捐助金额
-    pub fn add_donation(&mut self, value: u64) -> Result<()> {
-
-        // 检查捐助金额是否溢出
-        self.total_donations = self.total_donations
-        .checked_add(value)
-        .ok_or(TempleError::DonationOverflow)?;
- 
-        self.updated_at = Clock::get().unwrap().unix_timestamp;
-
-        Ok(())
-    }
+  
 
 
     /// 增加香型数量
@@ -189,6 +204,9 @@ impl TempleConfig {
 
 #[error_code]
 pub enum TempleError {
+
+    #[msg("Invalid treasury")]
+    InvalidTreasury,
     /// 佛像NFT数量溢出
     #[msg("Buddha NFT count overflow")]
     BuddhaNftCountOverflow,

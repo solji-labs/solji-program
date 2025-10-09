@@ -168,6 +168,17 @@ export class TestContext {
         );
         return pda;
     }
+    // 获取用户捐助统计PDA
+    public getUserDonationStatePda(user: PublicKey): PublicKey {
+        const [pda] = PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("user_donation_state_v1"),
+                user.toBuffer(),
+            ],
+            this.program.programId
+        );
+        return pda;
+    }
 
     // 获取用户香炉状态PDA
     public getUserIncenseStatePda(user: PublicKey): PublicKey {
@@ -508,6 +519,32 @@ export class TestContext {
 
         return tx;
     }
+
+
+    public async donateFund(user: Keypair, amount: number): Promise<string> {
+        console.log("donate fund...");
+
+        // 将 SOL 转换为 lamports (1 SOL = 1,000,000,000 lamports)
+        const amountInLamports = amount * 1_000_000_000;
+
+        const tx = await this.program.methods
+            .donateFund(
+                new anchor.BN(amountInLamports)
+            )
+            .accounts({
+                user: user.publicKey,
+                templeTreasury: this.treasury,
+            })
+            .signers([user])
+            .rpc();
+
+        console.log(`Fund donated: ${tx}`);
+        console.log(`Amount: ${amount}`);
+
+        return tx;
+    }
+
+
         
     public getWishPda(creator: PublicKey, wishId: number): PublicKey {
         const [pda] = PublicKey.findProgramAddressSync(
@@ -575,6 +612,23 @@ export class TestContext {
         console.log("Incense Total Balances:", userIncenseStateAccount.incenseTotalBalances);
         console.log("Incense Burned Balances:", userIncenseStateAccount.incenseBurnedBalances);
         console.log("Last Active At:", new Date(userIncenseStateAccount.lastActiveAt.toNumber() * 1000).toISOString());
+    }
+
+    public async printUserDonationState(userDonationStatePda: PublicKey): Promise<void> {
+        const userDonationStateAccount = await this.program.account.userDonationState.fetch(userDonationStatePda);
+        // 获取PDA账户的数据信息
+        console.log("\n📊 Reading User Donation State PDA Data:");
+        console.log("================================");
+
+        console.log("userDonationStateAccount", JSON.stringify(userDonationStateAccount));
+
+        console.log("User:", userDonationStateAccount.user.toString());
+        console.log("Total Donation Amount:", userDonationStateAccount.totalDonationAmount.toString());
+        console.log("Total Donation Count:", userDonationStateAccount.totalDonationCount.toString());
+        console.log("Donation Level:", userDonationStateAccount.donationLevel);
+        console.log("Last Donation At:", new Date(userDonationStateAccount.lastDonationAt.toNumber() * 1000).toISOString());
+        console.log("Can Mint Buddha NFT:", userDonationStateAccount.canMintBuddhaNft);
+        console.log("Has Minted Buddha NFT:", userDonationStateAccount.hasMintedBuddhaNft);
     }
 
     public async printTempleConfig(): Promise<void> {

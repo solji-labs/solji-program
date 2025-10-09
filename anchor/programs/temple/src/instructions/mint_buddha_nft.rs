@@ -27,7 +27,13 @@ pub fn mint_buddha_nft(ctx: Context<MintBuddhaNft>) -> Result<()> {
     );
 
     require!(
-        ctx.accounts.user_donation_state.can_mint_buddha_nft(),
+        // 用户捐助状态账户未初始化
+        ctx.accounts.user_donation_state.user == Pubkey::default(),
+        BuddhaNftError::UserCannotMintBuddhaNft,
+    );
+
+    require!(
+        !ctx.accounts.user_donation_state.can_mint_buddha_nft(),
         BuddhaNftError::UserCannotMintBuddhaNft,
     );
 
@@ -161,7 +167,9 @@ pub struct MintBuddhaNft<'info> {
 
     /// 用户捐助状态账户
     #[account(
-        mut,
+        init_if_needed,
+        payer = user,
+        space = 8 + UserDonationState::INIT_SPACE,
         seeds = [UserDonationState::SEED_PREFIX.as_bytes(), user.key().as_ref()],
         bump,
     )]

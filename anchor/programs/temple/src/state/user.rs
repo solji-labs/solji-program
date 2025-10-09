@@ -83,6 +83,38 @@ impl UserState {
         Ok(())
     }
 
+    pub fn donate_fund(&mut self, amount: u64, current_timestamp: i64) -> Result<()> {
+        self.check_and_reset_daily_limits()?;
+        // 每捐助0.01sol ，可以增加烧香的1次
+        // 如果捐助 0.011sol，可以增加烧香的1次, 0.009sol 不增加
+        let donate_sol = (amount / 100_000_000) as f64;
+
+        //floor: 向下取整 - 0.011 -> 0.01； 0.009 -> 0.00
+        let donate_burns =  if donate_sol >= 1.0 {
+            donate_sol.floor() as u8
+        } else {
+            0
+        };
+        
+        //增加烧香次数
+        self.donation_unlocked_burns = self.donation_unlocked_burns.saturating_add(donate_burns);
+        
+        //增加功德值
+        let add_karma_points  = if donate_sol >=5.0 {
+            1200000
+        } else if donate_sol >=1.0 {
+            140000
+        } else if donate_sol >=0.2 {
+            1300
+        } else {
+            65
+        };
+        self.karma_points = self.karma_points.saturating_add(add_karma_points);
+        
+        self.last_active_at = current_timestamp;
+        Ok(())
+    }
+
     /// 检查并重置每日限制
     pub fn check_and_reset_daily_limits(&mut self) -> Result<()> {
         let current_day = (Clock::get()?.unix_timestamp / 86400) as u16;
@@ -360,6 +392,16 @@ pub struct UserDonationState {
 impl UserDonationState {
  pub const SEED_PREFIX: &'static str = "user_donation_state_v1";
 
+    pub fn initialize(&mut self, user: Pubkey) -> Result<()> {
+        self.user = user;
+        self.can_mint_buddha_nft = false;
+        self.has_minted_buddha_nft = false;
+        self.total_donation_amount = 0;
+        self.total_donation_count = 0;
+        self.donation_level = self.calculate_donation_level();
+        self.last_donation_at = 0;
+        Ok(())
+    }
 
     pub fn can_mint_buddha_nft(&self) -> bool {
         self.can_mint_buddha_nft
@@ -372,6 +414,39 @@ impl UserDonationState {
     pub fn mint_buddha_nft(&mut self) -> Result<()> {
         self.has_minted_buddha_nft = true;
         Ok(())
+    }
+
+    // donate fund
+    pub fn donate_fund(&mut self, amount: u64, current_timestamp: i64) -> Result<()> {
+        self.total_donation_amount = self.total_donation_amount.checked_add(amount).unwrap();
+        self.total_donation_count = self.total_donation_count.checked_add(1).unwrap();
+        self.donation_level = self.calculate_donation_level();
+        self.last_donation_at = current_timestamp;
+
+        // more than 0.5 SOL can mint
+        // 1 sol = 1_000_000_000 lamports
+        if self.total_donation_amount >= 500_000_000 {
+            self.can_mint_buddha_nft = true;
+        }
+
+        Ok(())
+    }
+
+    // calculate donation level
+    pub fn calculate_donation_level(&mut self) -> u8 {
+        let donation_sol = (self.total_donation_amount as f64 / 1_000_000_000.0);
+
+        if donation_sol >= 5.0 {
+            4 // Supreme Patron
+        } else if donation_sol >= 1.0 {
+            3 // Gold Protector
+        } else if donation_sol >= 0.2 {
+            2 // Silver Disciple
+        } else if donation_sol >= 0.05 {
+            1 // Bronze Believer
+        } else {
+            0 // No level
+        }
     }
      
  

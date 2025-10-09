@@ -21,6 +21,7 @@ incense-buy = "npx mocha --require tsx tests/incense-buy.test.ts"
 incense-burn = "npx mocha --require tsx tests/incense-burn.test.ts"
 draw-fortune = "npx mocha --require tsx tests/draw-fortune.test.ts"
 wish = "npx mocha --require tsx tests/wish.test.ts"
+donation = "npx mocha --require tsx tests/donation.test.ts"
 
 [provider]
 cluster = "http://localhost:8899"

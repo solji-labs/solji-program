@@ -68,4 +68,8 @@ pub mod temple {
     pub fn mint_buddha_nft(ctx: Context<MintBuddhaNft>) -> Result<()> {
         instructions::mint_buddha_nft::mint_buddha_nft(ctx)
     }
+
+    pub fn donate_fund(ctx: Context<DonateFund>,amount: u64) -> Result<()> {
+        instructions::donation::donate_fund(ctx,amount)
+    }
 }

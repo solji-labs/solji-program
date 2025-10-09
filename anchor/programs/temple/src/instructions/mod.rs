@@ -16,3 +16,6 @@ pub use wish::*;
 
 pub mod mint_buddha_nft;
 pub use mint_buddha_nft::*;
+
+pub mod donation;
+pub use donation::*;
