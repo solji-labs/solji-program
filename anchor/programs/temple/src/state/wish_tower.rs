@@ -15,11 +15,25 @@ pub struct WishTower {
 
 impl WishTower {
     pub const SEED_PREFIX: &'static str = "wish_tower";
-    pub const WISHES_PER_LEVEL: u32 = 3; //TODO
 
-    // Calculate level based on wish count
+    // Calculate level based on new requirements:
+    // Level 0: 0 wishes (obtained by minting)
+    // Level 1: 10 wishes
+    // Level 2: 50 wishes
+    // Level 3: 200 wishes
+    // Level 4: 500 wishes
     pub fn calculate_level(wish_count: u32) -> u8 {
-        (wish_count / Self::WISHES_PER_LEVEL) as u8 + 1
+        if wish_count >= 500 {
+            4 // Perfection Tower
+        } else if wish_count >= 200 {
+            3 // Grand Wish Tower
+        } else if wish_count >= 50 {
+            2 // Advanced Tower
+        } else if wish_count >= 10 {
+            1 // Basic Tower
+        } else {
+            0 // Seed Tower
+        }
     }
 
     // Get current level

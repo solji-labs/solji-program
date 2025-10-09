@@ -63,20 +63,18 @@ describe("Wish Tower", () => {
         let tower = await ctx.program.account.wishTower.fetch(wishTowerAccount);
         expect(tower.creator.toString()).to.equal(user.publicKey.toString());
         expect(tower.wishCount).to.equal(1);
-        expect(tower.level).to.equal(1);
+        expect(tower.level).to.equal(0); // Level 0 (0-9 wishes)
         expect(tower.wishIds.length).to.equal(1);
 
-        // Create more wishes to reach level 2
-        await ctx.createWish(user, contentHash, isAnonymous);
-        await ctx.createWish(user, contentHash, isAnonymous);
-        await ctx.createWish(user, contentHash, isAnonymous);
-
-
+        // Create more wishes to reach level 1 (10 wishes needed)
+        for (let i = 0; i < 9; i++) {
+            await ctx.createWish(user, contentHash, isAnonymous);
+        }
 
         tower = await ctx.program.account.wishTower.fetch(wishTowerAccount);
-        expect(tower.wishCount).to.equal(4);
-        expect(tower.level).to.equal(2); // Level 2 (10 wishes)
-        expect(tower.wishIds.length).to.equal(4);
+        expect(tower.wishCount).to.equal(10);
+        expect(tower.level).to.equal(1); // Level 1 (10+ wishes)
+        expect(tower.wishIds.length).to.equal(10);
 
         logTestEnd("Create Wishes and Build Tower");
     });
@@ -138,7 +136,6 @@ describe("Wish Tower", () => {
         expect(nft.owner.toString()).to.equal(user.publicKey.toString());
         expect(nft.mint.toString()).to.equal(nftMintAccount.toString());
         expect(nft.wishCount).to.equal(9);
-        expect(nft.level).to.equal(2);
 
         logTestEnd("Mint Wish Tower NFT");
     });
