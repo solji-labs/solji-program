@@ -41,6 +41,11 @@ describe("incense buy", () => {
 
 
         Object.values(INCENSE_TYPE_CONFIGS).forEach((incenseTypeConfigItem) => {
+            // 只购买可以用SOL购买的香型
+            if (!incenseTypeConfigItem.purchasableWithSol) {
+                return;
+            }
+            
             // Math.floor(Math.random() * incenseTypeConfigItem.maxBuyPerTransaction); 表示随机购买0到maxBuyPerTransaction之间的香
             let randomBuyCount = Math.floor(Math.random() * incenseTypeConfigItem.maxBuyPerTransaction);
             if (randomBuyCount > 0) {

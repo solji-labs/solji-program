@@ -104,7 +104,7 @@ impl IncenseTypeConfig {
         current_timestamp: i64
     ) -> Result<()> {
         // 验证参数
-        require!(params.incense_type_id <= 5, IncenseError::InvalidIncenseTypeId);
+        require!(params.incense_type_id <= 6, IncenseError::InvalidIncenseTypeId);
         require!(!params.name.is_empty(), IncenseError::EmptyIncenseName);
         require!(params.name.len() <= Self::MAX_NAME_LEN, IncenseError::IncenseNameTooLong);
         require!(params.description.len() <= Self::MAX_DESCRIPTION_LEN, IncenseError::DescriptionTooLong);

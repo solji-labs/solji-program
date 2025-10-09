@@ -11,7 +11,7 @@ export const TEST_CONFIG = {
     confirmOptions: {
         skipPreflight: true,
     },
-    airdropAmount: 20 * LAMPORTS_PER_SOL, // 2 SOL
+    airdropAmount: 200 * LAMPORTS_PER_SOL, // 2 SOL
 
 
     defaultDonationLevels: [
@@ -84,7 +84,7 @@ export const TEST_CONFIG = {
 
 // 预定义的香型配置
 export const INCENSE_TYPE_CONFIGS = {
-    QING_XIANG: {
+    ClearIncense: {
         incenseTypeId: 1,
         name: "清香",
         description: "清淡香味，适合日常冥想，带来内心平静",
@@ -96,9 +96,9 @@ export const INCENSE_TYPE_CONFIGS = {
         isActive: true,
         rarity: { common: {} },
         nftCollection: web3.PublicKey.default, // 需要替换为实际Collection地址
-        metadataUriTemplate: "https://api.solji.com/metadata/qing_xiang/{sequence}",
+        metadataUriTemplate: "https://api.solji.com/metadata/clear_incense/{sequence}",
     },
-    TAN_XIANG: {
+    Sandalwood: {
         incenseTypeId: 2,
         name: "檀香",
         description: "珍贵檀木制香，香味浓郁持久，提升修行效果",
@@ -110,21 +110,63 @@ export const INCENSE_TYPE_CONFIGS = {
         isActive: true,
         rarity: { rare: {} },
         nftCollection: web3.PublicKey.default,
-        metadataUriTemplate: "https://api.solji.com/metadata/tan_xiang/{sequence}",
+        metadataUriTemplate: "https://api.solji.com/metadata/sandalwood/{sequence}",
     },
-    LONG_XIAN_XIANG: {
+    AmbergrisIncense: {
         incenseTypeId: 3,
         name: "龙涎香",
         description: "传说中的龙涎香，极其稀有，具有强大的灵性力量",
-        pricePerUnit: new anchor.BN(200_000_000), // 0.2 SOL
-        karmaReward: 200,
-        incenseValue: 2000,
+        pricePerUnit: new anchor.BN(100_000_000), // 0.1 SOL
+        karmaReward: 1200,
+        incenseValue: 3100,
         purchasableWithSol: true,
         maxBuyPerTransaction: 5,
         isActive: true,
         rarity: { epic: {} },
         nftCollection: web3.PublicKey.default,
-        metadataUriTemplate: "https://api.solji.com/metadata/long_xian_xiang/{sequence}",
+        metadataUriTemplate: "https://api.solji.com/metadata/ambergris_incense/{sequence}",
+    },
+    SupermeSpiritIncense: {
+        incenseTypeId: 4,
+        name:"太上灵香",
+        description: "传说中的太上灵香，极其稀有，具有强大的灵性力量",
+        pricePerUnit: new anchor.BN(300_000_000), // 0.3 SOL
+        karmaReward: 3400,
+        incenseValue: 9000,
+        purchasableWithSol: true,
+        maxBuyPerTransaction: 5,
+        isActive: true,
+        rarity: { epic: {} },
+        nftCollection: web3.PublicKey.default,
+        metadataUriTemplate: "https://api.solji.com/metadata/superme_spirit_incense/{sequence}",
+    },
+    SecretBrewIncense: {
+        incenseTypeId: 5,
+        name:"秘制香",
+        description: "传说中的秘制香，极其稀有，具有强大的灵性力量",
+        pricePerUnit: new anchor.BN(5_000_000_000), // 5 SOL
+        karmaReward: 12000,
+        incenseValue: 10000,
+        purchasableWithSol: false,
+        maxBuyPerTransaction: 5,
+        isActive: true,
+        rarity: { epic: {} },
+        nftCollection: web3.PublicKey.default,
+        metadataUriTemplate: "https://api.solji.com/metadata/secret_brew_incense/{sequence}",
+    },
+    CelestialIncense: {
+        incenseTypeId: 6,
+        name:"天界香",
+        description: "传说中的天界香，极其稀有，具有强大的灵性力量",
+        pricePerUnit: new anchor.BN(50_000_000_000), // 50 SOL
+        karmaReward: 300000,
+        incenseValue: 400000,
+        purchasableWithSol: false,
+        maxBuyPerTransaction: 5,
+        isActive: true,
+        rarity: { epic: {} },
+        nftCollection: web3.PublicKey.default,
+        metadataUriTemplate: "https://api.solji.com/metadata/celestial_incense/{sequence}",
     },
 };
 

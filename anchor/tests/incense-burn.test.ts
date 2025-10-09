@@ -13,7 +13,7 @@ describe("incense burn", () => {
 
     it("should burn incense and mint NFT", async () => {
         // 使用已有香的用户（用户1在买香测试中已购买了香）
-        const user = getUserKeypairs(2);
+        const user = getUserKeypairs(5);
         console.log("User: ", user.publicKey.toString());
 
         // 检查用户SOL余额，如果不足则进行airdrop

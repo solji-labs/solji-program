@@ -1,9 +1,9 @@
 use anchor_lang::prelude::*;
 use anchor_lang::system_program::{transfer, Transfer};
 
-use crate::state::{TempleConfig, UserDonationState, UserState};
+use crate::state::{TempleConfig, UserDonationState, UserError, UserIncenseState, UserState};
 use crate::DonationError;
-use crate::TempleError;
+use crate::TempleError; 
 
 pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
     require!(amount > 0, DonationError::InvalidDonationAmount);
@@ -42,13 +42,24 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
     )?;
 
     //捐助
-    user_donation_state.donate_fund(amount, current_timestamp)?;
+    let _total_donation_amount = user_donation_state.donate_fund(amount, current_timestamp)?;
     //增加用户功德值
     user_state.donate_fund(amount, current_timestamp)?;
     //增加寺庙功德值
     ctx.accounts
         .temple_config
         .donate_fund(amount, current_timestamp)?;
+
+    // 如果捐助金额大于等于5sol，空投高级香型
+    if amount >= 5_000_000_000 {
+        let user_incense_state = &mut ctx.accounts.user_incense_state;
+        if user_incense_state.user == Pubkey::default() {
+            user_incense_state.initialize(ctx.accounts.user.key(), current_timestamp)?;
+        }
+
+        user_incense_state.airdrop_incense_by_donation(amount)?;
+        
+    }
 
     Ok(())
 }
@@ -67,6 +78,15 @@ pub struct DonateFund<'info> {
             bump,
         )]
     pub user_state: Account<'info, UserState>,
+
+    #[account(
+        init_if_needed,
+        payer = user,
+        space = 8+ UserIncenseState::INIT_SPACE,
+        seeds = [UserIncenseState::SEED_PREFIX.as_bytes(), user.key().as_ref()],
+        bump,
+    )]
+    pub user_incense_state: Account<'info, UserIncenseState>,
 
     /// 用户捐助状态账户
     #[account(

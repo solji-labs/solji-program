@@ -302,6 +302,44 @@ impl UserIncenseState {
     /// PDA种子前缀
     pub const SEED_PREFIX: &'static str = "user_incense_state_v1";
 
+
+
+
+    pub fn initialize(&mut self, user: Pubkey,current_timestamp: i64) -> Result<()> {
+        self.user = user;
+        for i in 0..6 {
+            self.incense_having_balances[i] = IncenseBalance {
+                incense_type_id: (i + 1) as u8,
+                balance: 0,
+            };
+            self.incense_burned_balances[i] = IncenseBalance {
+                incense_type_id: (i + 1) as u8,
+                balance: 0,
+            };
+            self.incense_total_balances[i] = IncenseBalance {
+                incense_type_id: (i + 1) as u8,
+                balance: 0,
+            };
+        }
+        self.last_active_at = current_timestamp;
+        Ok(())
+    }
+
+
+    pub fn airdrop_incense_by_donation(&mut self, amount: u64) -> Result<()> {
+        let (incense_type_id, incense_amount) = if amount >= 5_000_000_000 && amount < 50_000_000_000 {
+            (5, 10)
+        } else {
+            (6, 5)
+        };
+
+        self.add_incense_balance(incense_type_id, incense_amount)?;
+
+        Ok(())
+    }
+
+
+
     /// 获取拥有的香的余额
     pub fn get_incense_having_balance(&self, incense_type_id: u8) -> u64 {
         for balance in self.incense_having_balances.iter() {
@@ -417,7 +455,7 @@ impl UserDonationState {
     }
 
     // donate fund
-    pub fn donate_fund(&mut self, amount: u64, current_timestamp: i64) -> Result<()> {
+    pub fn donate_fund(&mut self, amount: u64, current_timestamp: i64) -> Result<u64> {
         self.total_donation_amount = self.total_donation_amount.checked_add(amount).unwrap();
         self.total_donation_count = self.total_donation_count.checked_add(1).unwrap();
         self.donation_level = self.calculate_donation_level();
@@ -429,7 +467,7 @@ impl UserDonationState {
             self.can_mint_buddha_nft = true;
         }
 
-        Ok(())
+        Ok(self.total_donation_amount)
     }
 
     // calculate donation level
@@ -456,6 +494,8 @@ impl UserDonationState {
 /// 用户相关错误定义
 #[error_code]
 pub enum UserError {
+    #[msg("Invalid user")]
+    InvalidUser,
     #[msg("Burn count overflow")]
     BurnCountOverflow,
     #[msg("Wish count overflow")]

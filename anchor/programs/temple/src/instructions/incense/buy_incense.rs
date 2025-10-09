@@ -26,26 +26,17 @@ pub fn buy_incense<'info>(
     let current_timestamp = Clock::get().unwrap().unix_timestamp;
     let current_slot = Clock::get()?.slot;
 
+    // 如果是第一次使用，初始化用户状态
+    if user_state.user == Pubkey::default() {
+        user_state.initialize(user_key, current_timestamp)?;
+        msg!("User state initialized for: {}", user_key);
+    }
+
     // 如果是第一次使用，初始化用户香炉状态
     //Pubkey::default() 表示未初始化
     if user_incense_state.user == Pubkey::default() {
-        user_incense_state.user = user_key;
-        // 初始化所有香型的余额为0
-        for i in 0..6 {
-            user_incense_state.incense_having_balances[i] = IncenseBalance {
-                incense_type_id: (i + 1) as u8,
-                balance: 0,
-            };
-            user_incense_state.incense_burned_balances[i] = IncenseBalance {
-                incense_type_id: (i + 1) as u8,
-                balance: 0,
-            };
-            user_incense_state.incense_total_balances[i] = IncenseBalance {
-                incense_type_id: (i + 1) as u8,
-                balance: 0,
-            };
-        }
-        user_incense_state.last_active_at = current_timestamp;
+        user_incense_state.initialize(user_key, current_timestamp)?;
+        msg!("User incense state initialized for: {}", user_key);
     }
 
     user_state.check_and_reset_daily_limits()?;
@@ -150,7 +141,9 @@ pub struct BuyIncense<'info> {
 
     /// 用户状态账户
     #[account(
-        mut,
+        init_if_needed,
+        payer = user,
+        space = 8 + UserState::INIT_SPACE,
         seeds = [
             UserState::SEED_PREFIX.as_bytes(),
             user.key().as_ref(),

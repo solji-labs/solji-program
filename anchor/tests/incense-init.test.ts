@@ -12,9 +12,9 @@ describe("incense init", () => {
 
     it("should initialize incense type successfully", async () => {
 
-        Object.values(INCENSE_TYPE_CONFIGS).forEach(async (incenseTypeConfigItem) => {
-
-
+        // 使用 for...of 循环确保异步操作按顺序执行
+        for (const incenseTypeConfigItem of Object.values(INCENSE_TYPE_CONFIGS)) {
+            console.log(`\n🔥 Processing Incense Type ${incenseTypeConfigItem.incenseTypeId}: ${incenseTypeConfigItem.name}`);
 
             const incenseTypeConfigPda = ctx.getIncenseTypeConfigPda(incenseTypeConfigItem.incenseTypeId);
 
@@ -27,8 +27,6 @@ describe("incense init", () => {
                 await ctx.initIncenseType(incenseTypeConfigItem);
                 console.log("✅ Incense type initialization completed!");
             }
-
-
 
             const incenseTypeConfig = await ctx.program.account.incenseTypeConfig.fetch(incenseTypeConfigPda);
 
@@ -49,8 +47,8 @@ describe("incense init", () => {
             console.log("Created At:", new Date(incenseTypeConfig.createdAt.toNumber() * 1000).toISOString());
             console.log("Updated At:", new Date(incenseTypeConfig.updatedAt.toNumber() * 1000).toISOString());
             console.log("=======================\n");
+        }
 
-        })
         // 检查寺庙状态是否更新了香型计数
         console.log("\n🏛️ Temple State Update:");
         console.log("=======================");
@@ -63,25 +61,31 @@ describe("incense init", () => {
 
     it("should initialize incense nft successfully", async () => {
 
-        Object.values(INCENSE_TYPE_CONFIGS).forEach(async (incenseTypeConfigItem) => {
-
-            // init incense nft 
+        // 使用 for...of 循环确保异步操作按顺序执行
+        for (const incenseTypeConfigItem of Object.values(INCENSE_TYPE_CONFIGS)) {
+            console.log(`\n🎨 Processing Incense NFT for Type ${incenseTypeConfigItem.incenseTypeId}: ${incenseTypeConfigItem.name}`);
 
             const incenseNftMintPda = ctx.getIncenseNftMintPda(incenseTypeConfigItem.incenseTypeId);
 
-            const existingIncenseNftMint = await ctx.program.account.incenseTypeConfig.fetchNullable(incenseNftMintPda);
+            try {
+                // 尝试获取现有的NFT mint账户
+                const existingIncenseNftMint = await ctx.provider.connection.getAccountInfo(incenseNftMintPda);
 
-            if (existingIncenseNftMint) {
-                console.log("🔍 Incense NFT already exists, reading existing data...");
-            } else {
-                console.log("🚀 Initializing new incense NFT...");
+                if (existingIncenseNftMint) {
+                    console.log("🔍 Incense NFT mint already exists, skipping initialization...");
+                } else {
+                    console.log("🚀 Initializing new incense NFT mint...");
+                    await ctx.initIncenseNft(ctx.authority, incenseTypeConfigItem.incenseTypeId);
+                    console.log("✅ Incense NFT mint initialization completed!");
+                }
+            } catch (error) {
+                console.log("🚀 Initializing new incense NFT mint...");
                 await ctx.initIncenseNft(ctx.authority, incenseTypeConfigItem.incenseTypeId);
-                console.log("✅ Incense NFT initialization completed!");
+                console.log("✅ Incense NFT mint initialization completed!");
             }
- 
-        })
 
-
+            console.log(`NFT Mint PDA: ${incenseNftMintPda.toString()}`);
+        }
 
     });
 });
