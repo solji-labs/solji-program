@@ -1,10 +1,15 @@
 use anchor_lang::prelude::*;
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    metadata::Metadata,
+    token::{mint_to, Mint, MintTo, Token, TokenAccount},
+};
 use switchboard_on_demand::accounts::RandomnessAccountData;
 
 use crate::{
     events::{CoinFlipEvent, DrawLotsEvent},
     global_error::GlobalError,
-    states::{LotteryConfig, LotteryRecord, LotteryType, PlayerState, Temple, UserInfo},
+    states::{hit, LotteryConfig, LotteryRecord, LotteryType, PlayerState, Temple, UserInfo},
 };
 pub fn initialize_lottery_poetry(ctx: Context<InitializeLotteryPoetry>) -> Result<()> {
     let config = LotteryConfig::new();
@@ -63,7 +68,7 @@ pub fn coin_flip(ctx: Context<CoinFlip>) -> Result<()> {
     Ok(())
 }
 
-pub fn draw_lots(ctx: Context<DrawLots>) -> Result<()> {
+pub fn draw_lots(ctx: Context<DrawLots>, amulet: u8) -> Result<()> {
     // {
     //     let st = &ctx.accounts.player_state;
     //     require_keys_eq!(
@@ -74,11 +79,14 @@ pub fn draw_lots(ctx: Context<DrawLots>) -> Result<()> {
     //     require!(!st.settled, DrawLotsCode::AlreadySettled);
     // }
 
+    // Fortune Omikuji
+    require!(amulet == 1, GlobalError::InvalidAmulet);
+
     let clock = Clock::get()?;
     let now_ts = clock.unix_timestamp;
     {
         let user_info = &mut ctx.accounts.user_info;
-        check_is_free(user_info, now_ts);
+        check_is_free(user_info, now_ts)?;
     }
 
     {
@@ -139,7 +147,7 @@ pub fn draw_lots(ctx: Context<DrawLots>) -> Result<()> {
         }
     };
 
-    let reward: u64 = if lottery_type == LotteryType::GreatFortune {
+    let reward: u64 = if lottery_type == LotteryType::ExcellentLuck {
         3
     } else {
         2
@@ -159,6 +167,7 @@ pub fn draw_lots(ctx: Context<DrawLots>) -> Result<()> {
         let record = LotteryRecord::new(
             ctx.accounts.authority.key(),
             lottery_type,
+            lottery_type.get_lottery_poety().to_string(),
             now_ts,
             merit_value,
         );
@@ -169,14 +178,86 @@ pub fn draw_lots(ctx: Context<DrawLots>) -> Result<()> {
         ctx.accounts.temple.add_temple_lottery()?;
     }
 
+    // mint nft
+    {
+        let signer_seeds: &[&[&[u8]]] =
+            &[&[b"create_draw_token", &[ctx.bumps.draw_nft_mint_account]]];
+        mint_to(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                MintTo {
+                    mint: ctx.accounts.draw_nft_mint_account.to_account_info(),
+                    to: ctx
+                        .accounts
+                        .draw_nft_associated_token_account
+                        .to_account_info(),
+                    authority: ctx.accounts.draw_nft_mint_account.to_account_info(),
+                },
+                signer_seeds,
+            ),
+            1,
+        )?;
+
+        msg!(
+            "Mint Success ata: {}",
+            ctx.accounts.draw_nft_associated_token_account.key()
+        );
+    }
     {
         let st = &mut ctx.accounts.player_state;
         st.settled = true;
     }
 
+    // amulet nft
+    {
+        {
+            let clock = Clock::get()?;
+            let slot_le = clock.slot.to_le_bytes();
+            let total_lottery_count = ctx.accounts.temple.total_lottery_count;
+            let t = ctx.accounts.temple.key();
+            let seeds = &[
+                ctx.accounts.authority.key.as_ref(),
+                t.as_ref(),
+                &total_lottery_count.to_le_bytes(),
+                &slot_le,
+            ];
+
+            let signer_seeds: &[&[&[u8]]] = &[&[
+                b"create_amulet_token",
+                &[amulet],
+                &[ctx.bumps.amulet_nft_mint_account],
+            ]];
+
+            if hit(50, seeds) {
+                ctx.accounts.user_info.amulet_increment()?;
+                ctx.accounts.temple.amulet_increment()?;
+                mint_to(
+                    CpiContext::new_with_signer(
+                        ctx.accounts.token_program.to_account_info(),
+                        MintTo {
+                            mint: ctx.accounts.amulet_nft_mint_account.to_account_info(),
+                            to: ctx
+                                .accounts
+                                .amulet_nft_associated_token_account
+                                .to_account_info(),
+                            authority: ctx.accounts.amulet_nft_mint_account.to_account_info(),
+                        },
+                        signer_seeds,
+                    ),
+                    1,
+                )?;
+                msg!(
+                    "draw mint amulet_nft success ata:{}",
+                    ctx.accounts.amulet_nft_associated_token_account.key()
+                )
+            }
+        }
+    }
+
     emit!(DrawLotsEvent {
         user: ctx.accounts.authority.key(),
         lottery_type,
+        lottery_poetry: lottery_type.get_lottery_poety().to_string(),
         merit_change: reward,
         timestamp: now_ts,
     });
@@ -184,12 +265,13 @@ pub fn draw_lots(ctx: Context<DrawLots>) -> Result<()> {
     Ok(())
 }
 
-pub fn check_is_free(user_info: &mut UserInfo, now_ts: i64) {
-    let last_day = (user_info.lottery_time + 8 * 3600) / 86400;
-    let current_day = (now_ts + 8 * 3600) / 86400;
+pub fn check_is_free(user_info: &mut UserInfo, now_ts: i64) -> Result<()> {
+    let current_day = now_ts / 86_400;
+    let last_day = user_info.lottery_time / 86_400;
     if current_day > last_day {
         user_info.lottery_is_free = true;
     }
+    Ok(())
 }
 
 #[derive(Accounts)]
@@ -218,6 +300,7 @@ pub struct InitializeLotteryPoetry<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(amulet: u8)]
 pub struct DrawLots<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
@@ -248,7 +331,7 @@ pub struct DrawLots<'info> {
     #[account(
         mut,
         seeds = [b"temple"],
-        bump
+        bump,
     )]
     pub temple: Account<'info, Temple>,
 
@@ -264,7 +347,41 @@ pub struct DrawLots<'info> {
       )]
     pub randomness_account_data: AccountInfo<'info>,
 
+    #[account(
+        mut,
+        seeds = [b"create_draw_token"],
+        bump,
+     )]
+    pub draw_nft_mint_account: Account<'info, Mint>,
+
+    #[account(
+       init_if_needed,
+       payer = authority,
+       associated_token::mint = draw_nft_mint_account,
+       associated_token::authority = authority,
+     )]
+    pub draw_nft_associated_token_account: Account<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        seeds = [b"create_amulet_token",&[amulet]],
+        bump,
+     )]
+    pub amulet_nft_mint_account: Account<'info, Mint>,
+
+    #[account(
+        init_if_needed,
+        payer = authority,
+        associated_token::mint = amulet_nft_mint_account,
+        associated_token::authority = authority,
+      )]
+    pub amulet_nft_associated_token_account: Account<'info, TokenAccount>,
+
     pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub token_metadata_program: Program<'info, Metadata>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
 #[derive(Accounts)]

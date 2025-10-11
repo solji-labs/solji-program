@@ -1,17 +1,19 @@
 import * as anchor from "@coral-xyz/anchor";
 import { program, provider } from "./wallet";
-import { getPublishWishPda, getUserBurnInfo } from "./address";
+import { getAmuletNftMintAccount, getPublishWishPda, getUserBurnInfo } from "./address";
 
-export async function createWish(content: string, is_anonymous: boolean, wallet: anchor.Wallet)
+export async function createWish(content: string, is_anonymous: boolean, amulet: number, wallet: anchor.Wallet)
   : Promise<[any, anchor.web3.PublicKey]> {
   let userPda = getUserBurnInfo(wallet);
   let userInfo = await program.account.userInfo.fetch(userPda);
-  console.log("wishTotalCount:", userInfo.wishTotalCount);
-  let publishWishPda = getPublishWishPda(userInfo.wishTotalCount, wallet);
+  let publishWishPda = getPublishWishPda(userInfo.wishCount, wallet);
+  // let amuletNftMintAccount = getAmuletNftMintAccount(wallet, amulet);
+
   let createWishResult = await program.methods
     .createWish(content, is_anonymous)
     .accounts({
       publishWish: publishWishPda,
+      // amuletNftMintAccount: amuletNftMintAccount,
     })
     .rpc();
   return [createWishResult, publishWishPda];

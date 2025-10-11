@@ -13,7 +13,8 @@ url = "https://api.apr.dev"
 
 [provider]
 cluster = "localnet"
-wallet = "~/.config/solana/id.json"
+# wallet = "~/.config/solana/id.json"
+wallet = "~/.config/solana/wallet2.json"
 
 [scripts]
 api = "yarn run ts-node example/index.ts"

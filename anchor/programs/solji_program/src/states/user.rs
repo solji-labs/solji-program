@@ -12,21 +12,25 @@ pub struct UserInfo {
     pub user: Pubkey,
     #[max_len(4)]
     pub burn_count: [u32; 6],
-    pub incense_property_count: [u32; 6],
+    pub total_burn_count: u64,
+    pub incense_buy_count: [u32; 6],
+    pub incense_donate_count: [u32; 6],
     pub merit_value: u64,
     pub incense_value: u64,
     pub incense_time: i64,
     pub donate_amount: u64,
     pub donate_merit_value: u64,
     pub donate_incense_value: u64,
-    pub current_medal_level: Option<MedalLevel>,
+    pub current_medal_level: MedalLevel,
     pub lottery_count: u32,
     pub lottery_is_free: bool,
     pub lottery_time: i64,
-    pub wish_total_count: u32,
+    pub wish_count: u32,
     pub wish_update_time: i64,
     pub wish_daily_count: u32,
+    pub amulet_count: u64,
     pub has_sbt_token: bool,
+    pub has_burn_token: [bool; 6],
 }
 
 impl UserInfo {
@@ -34,21 +38,25 @@ impl UserInfo {
         Self {
             user,
             burn_count: [0; 6],
-            incense_property_count: [0; 6],
+            total_burn_count: 0,
+            incense_buy_count: [0; 6],
+            incense_donate_count: [0; 6],
             merit_value: 0,
             incense_value: 0,
             incense_time: 0,
             donate_amount: 0,
             donate_merit_value: 0,
             donate_incense_value: 0,
-            current_medal_level: Some(MedalLevel::None),
+            current_medal_level: MedalLevel::None,
             lottery_count: 0,
             lottery_is_free: true,
             lottery_time: 0,
-            wish_total_count: 0,
+            wish_count: 0,
             wish_update_time: 0,
             wish_daily_count: 0,
+            amulet_count: 0,
             has_sbt_token: false,
+            has_burn_token: [false; 6],
         }
     }
 
@@ -57,7 +65,19 @@ impl UserInfo {
         incense_type: IncenseType,
         number: u64,
     ) -> Result<()> {
-        self.incense_property_count[incense_type as usize] = self.incense_property_count
+        self.incense_donate_count[incense_type as usize] = self.incense_donate_count
+            [incense_type as usize]
+            .checked_add(number as u32)
+            .ok_or(GlobalError::MathOverflow)?;
+        Ok(())
+    }
+
+    pub fn update_incense_buy_count(
+        &mut self,
+        incense_type: IncenseType,
+        number: u64,
+    ) -> Result<()> {
+        self.incense_buy_count[incense_type as usize] = self.incense_buy_count
             [incense_type as usize]
             .checked_add(number as u32)
             .ok_or(GlobalError::MathOverflow)?;
@@ -78,7 +98,12 @@ impl UserInfo {
         self.user = user;
 
         if self.burn_count[incense_type as usize] >= 10 {
-            self.incense_property_count[incense_type as usize] = self.incense_property_count
+            self.incense_donate_count[incense_type as usize] = self.incense_donate_count
+                [incense_type as usize]
+                .checked_sub(1)
+                .ok_or(GlobalError::MathUnderflow)?;
+        } else {
+            self.incense_buy_count[incense_type as usize] = self.incense_buy_count
                 [incense_type as usize]
                 .checked_sub(1)
                 .ok_or(GlobalError::MathUnderflow)?;
@@ -96,6 +121,11 @@ impl UserInfo {
         self.incense_value = self
             .incense_value
             .checked_add(incense_rule.incense_value)
+            .ok_or(GlobalError::MathOverflow)?;
+
+        self.total_burn_count = self
+            .total_burn_count
+            .checked_add(1)
             .ok_or(GlobalError::MathOverflow)?;
 
         self.incense_time = now_ts;
@@ -127,8 +157,8 @@ impl UserInfo {
     }
 
     pub fn update_user_wish_count(&mut self) -> Result<()> {
-        self.wish_total_count = self
-            .wish_total_count
+        self.wish_count = self
+            .wish_count
             .checked_add(1)
             .ok_or(GlobalError::MathOverflow)?;
 
@@ -146,13 +176,15 @@ impl UserInfo {
         Ok(())
     }
 
-    pub fn check_is_free(&mut self) {
-        let last_day = (self.wish_update_time + 8 * 3600) / 86400;
-        let now_ts = Clock::get().unwrap().unix_timestamp;
-        let current_day = (now_ts + 8 * 3600) / 86400;
+    pub fn check_is_free(&mut self) -> Result<()> {
+        let now_ts = Clock::get()?.unix_timestamp;
+        let current_day = now_ts / 86_400;
+        let last_day = self.wish_update_time / 86_400;
+
         if current_day > last_day {
             self.wish_daily_count = 0;
         }
+        Ok(())
     }
 
     pub fn check_wish_daily_count(&mut self, value: u64) -> Result<()> {
@@ -188,6 +220,14 @@ impl UserInfo {
         self.donate_amount = self
             .donate_amount
             .checked_add(amount)
+            .ok_or(GlobalError::MathOverflow)?;
+        Ok(())
+    }
+
+    pub fn amulet_increment(&mut self) -> Result<()> {
+        self.amulet_count = self
+            .amulet_count
+            .checked_add(1)
             .ok_or(GlobalError::MathOverflow)?;
         Ok(())
     }

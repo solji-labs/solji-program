@@ -1,38 +1,25 @@
 import * as anchor from "@coral-xyz/anchor";
 import { program, provider } from "./wallet";
-import { getUserBurnInfo, getNftMintAccount } from "./address";
+import { getUserBurnInfo, getNftMintAccount, getAmuletNftMintAccount } from "./address";
 
 
 export async function incenseBuy(
+  incense: number,
   number: number,
 ) {
   return await program.methods.incenseBuy(
-    { orangeIncense: {} }, new anchor.BN(number),
+    incense, new anchor.BN(number),
   ).accounts({}).rpc();
 }
 export async function incenseBurn(
   wallet: anchor.Wallet,
-  name: string,
-  symbol: string,
-  url: string,
-  isMutable: boolean,
-  collectionDetails: boolean,
+  incense: number,
+  amulet: number
 ) {
-  // console.log(
-  //   program.idl.instructions.find(i => i.name === "incenseBurn")
-  // );
-
-  return await program.methods.incenseBurn(
-    {
-      name: name,
-      symbol: symbol,
-      url: url,
-      isMutable: isMutable,
-      collectionDetails: collectionDetails,
-      incenseType: { orangeIncense: {} },
-    }
-  )
+  return await program.methods.incenseBurn(incense, amulet)
     .accounts({
+      burnNftMintAccount: getNftMintAccount(wallet, incense),
+      amuletNftMintAccount: getAmuletNftMintAccount(wallet, amulet),
     })
     .rpc();
 
@@ -45,7 +32,9 @@ export async function getInfo(wallet: anchor.Wallet) {
   return {
     user: info.user.toBase58(),
     burnCount: info.burnCount, // 是数组，保持原样
-    incensePropertyCount: info.incensePropertyCount,
+    totalBurnCount: info.totalBurnCount.toNumber(),
+    incenseBuyCount: info.incenseBuyCount,
+    incenseDonateCount: info.incenseDonateCount,
     meritValue: info.meritValue.toNumber(),
     incenseValue: info.incenseValue.toNumber(),
     incenseTime: new Date(info.incenseTime.toNumber() * 1000).toLocaleString(),
@@ -56,18 +45,19 @@ export async function getInfo(wallet: anchor.Wallet) {
     lotteryCount: info.lotteryCount,
     lotteryIsFree: info.lotteryIsFree,
     lotteryTime: new Date(info.lotteryTime.toNumber() * 1000).toLocaleString(),
-    wishTotalCount: info.wishTotalCount,
+    wishCount: info.wishCount,
     wishUpdateTime: new Date(info.wishUpdateTime.toNumber() * 1000).toLocaleString(),
     wishDailyCount: info.wishDailyCount,
     hasSbtToken: info.hasSbtToken,
+    hasBurnToken: info.hasBurnToken
   }
 }
 
-export async function destroy(wallet: anchor.Wallet, name: string) {
-  return await program.methods.destroy()
+export async function destroy(wallet: anchor.Wallet, incense: number) {
+  return await program.methods.destroy(incense)
     .accounts({
       authority: wallet.payer.publicKey,
-      nftMintAccount: getNftMintAccount(wallet, name),
+      burnNftMintAccount: getNftMintAccount(wallet, incense),
     })
     .rpc();
 }

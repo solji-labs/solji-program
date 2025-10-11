@@ -16,6 +16,11 @@ pub struct WishUser {
 
 impl WishUser {
     pub const WISH_FEE: u8 = 5;
+
+    pub const NAME: &str = "Ema NFT";
+    pub const SYMBOL: &str = "Ema";
+    pub const URL: &str = "https://solji.io/";
+
     pub fn new(user: Pubkey) -> Self {
         Self {
             total_count: 0,
@@ -38,16 +43,6 @@ impl WishUser {
 
         self.update_time = Clock::get().unwrap().unix_timestamp;
         Ok(())
-    }
-
-    pub fn check_is_free(&mut self) {
-        let last_day = (self.update_time + 8 * 3600) / 86400;
-        let now_ts = Clock::get().unwrap().unix_timestamp;
-        let current_day = (now_ts + 8 * 3600) / 86400;
-        // 处理每日重置逻辑
-        if current_day > last_day {
-            self.daily_count = 0;
-        }
     }
 }
 

@@ -4,7 +4,7 @@ import { createWish, createLike, queryWish } from "./api/wish_user";
 (async () => {
   const wallet = getWallet();
   // 许愿
-  const [createWishResult, publishWishPda] = await createWish("Test Wish 03", false, wallet);
+  const [createWishResult, publishWishPda] = await createWish("Test Wish 02", true, 2, wallet);
   console.log("Create Wish Result:", createWishResult);
   console.log("Publish Wish PDA:", publishWishPda.toBase58());
 

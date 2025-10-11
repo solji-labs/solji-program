@@ -94,10 +94,10 @@ impl MedalLevel {
     pub fn get_nft_name(&self) -> String {
         match self {
             MedalLevel::None => "".to_string(),
-            MedalLevel::Bronze => "入门功德铜章".to_string(),
-            MedalLevel::Silver => "精进银章".to_string(),
-            MedalLevel::Gold => "护法金章".to_string(),
-            MedalLevel::Supreme => "至尊龙章".to_string(),
+            MedalLevel::Bronze => "Beginner Merit Bronze Medal".to_string(),
+            MedalLevel::Silver => "Diligence Silver Medal".to_string(),
+            MedalLevel::Gold => "Dharma Protector Gold Medal".to_string(),
+            MedalLevel::Supreme => "Supreme Dragon Medal".to_string(),
         }
     }
 
@@ -129,12 +129,12 @@ impl Space for MedalLevel {
 pub fn calc_incense_rewards(donation_sol: u64, user_info: &mut UserInfo) -> Result<()> {
     if donation_sol < 5 * LAMPORTS_PER_SOL {
         let number = donation_sol / 10_000_000;
-        user_info.update_incense_property_count(IncenseType::FaintScent, number)?;
+        user_info.update_incense_property_count(IncenseType::ClearIncense, number)?;
     } else if donation_sol <= 50 * LAMPORTS_PER_SOL {
         let units_of_5 = donation_sol / (5 * LAMPORTS_PER_SOL); // 每 5 SOL 一个单位（向下取整）
         let secret = units_of_5 * 10;
         msg!("secret: {}", secret);
-        user_info.update_incense_property_count(IncenseType::SecretIncense, secret)?;
+        user_info.update_incense_property_count(IncenseType::SecretBrewIncense, secret)?;
     } else {
         let units_of_50 = donation_sol / (50 * LAMPORTS_PER_SOL); // 每 50 SOL 一个单位（向下取整）
         let celestial = units_of_50 * 5;

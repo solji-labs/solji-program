@@ -1,13 +1,26 @@
 use anchor_lang::prelude::*;
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    metadata::Metadata,
+    token::{mint_to, Mint, MintTo, Token, TokenAccount},
+};
 
 use crate::{
     events::{LikeCreatedEvent, WishCreatedEvent},
     states::{PublishWish, Temple, UserInfo, WishLike, WishUser},
 };
-pub fn create_wish(ctx: Context<CreateWish>, content: String, is_anonymous: bool) -> Result<()> {
+pub fn create_wish(
+    ctx: Context<CreateWish>,
+    content: String,
+    is_anonymous: bool,
+    // amulet: u8,
+) -> Result<()> {
+    // Protection Omikuji
+    // require!(amulet == 2, GlobalError::InvalidAmulet);
+
     {
         let user_info = &mut ctx.accounts.user_info;
-        user_info.check_is_free();
+        user_info.check_is_free()?;
         user_info.check_wish_daily_count(WishUser::WISH_FEE as u64)?;
         user_info.update_user_wish_count()?;
     }
@@ -25,6 +38,80 @@ pub fn create_wish(ctx: Context<CreateWish>, content: String, is_anonymous: bool
     {
         ctx.accounts.temple.add_temple_wish()?;
     }
+
+    // mint nft
+    {
+        let signer_seeds: &[&[&[u8]]] =
+            &[&[b"create_wish_token", &[ctx.bumps.wish_nft_mint_account]]];
+        mint_to(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                MintTo {
+                    mint: ctx.accounts.wish_nft_mint_account.to_account_info(),
+                    to: ctx
+                        .accounts
+                        .wish_nft_associated_token_account
+                        .to_account_info(),
+                    authority: ctx.accounts.wish_nft_mint_account.to_account_info(),
+                },
+                signer_seeds,
+            ),
+            1,
+        )?;
+
+        msg!(
+            "Mint Success ata: {}",
+            ctx.accounts.wish_nft_associated_token_account.key()
+        );
+    }
+
+    // {
+    //     // amulet nft
+    //     {
+    //         {
+    //             let clock = Clock::get()?;
+    //             let slot_le = clock.slot.to_le_bytes();
+    //             let total_wish_count = ctx.accounts.temple.total_wish_count;
+    //             let t = ctx.accounts.temple.key();
+    //             let seeds = &[
+    //                 ctx.accounts.authority.key.as_ref(),
+    //                 t.as_ref(),
+    //                 &total_wish_count.to_le_bytes(),
+    //                 &slot_le,
+    //             ];
+
+    //             let signer_seeds: &[&[&[u8]]] = &[&[
+    //                 b"create_amulet_token",
+    //                 &[amulet],
+    //                 &[ctx.bumps.amulet_nft_mint_account],
+    //             ]];
+
+    //             if hit(10, seeds) {
+    //                 ctx.accounts.user_info.amulet_increment()?;
+    //                 ctx.accounts.temple.amulet_increment()?;
+    //                 mint_to(
+    //                     CpiContext::new_with_signer(
+    //                         ctx.accounts.token_program.to_account_info(),
+    //                         MintTo {
+    //                             mint: ctx.accounts.amulet_nft_mint_account.to_account_info(),
+    //                             to: ctx
+    //                                 .accounts
+    //                                 .amulet_nft_associated_token_account
+    //                                 .to_account_info(),
+    //                             authority: ctx.accounts.amulet_nft_mint_account.to_account_info(),
+    //                         },
+    //                         signer_seeds,
+    //                     ),
+    //                     1,
+    //                 )?;
+    //                 msg!(
+    //                     "wish mint amulet_nft success ata:{}",
+    //                     ctx.accounts.amulet_nft_associated_token_account.key()
+    //                 )
+    //             }
+    //         }
+    //     }
+    // }
 
     emit!(WishCreatedEvent {
         user: ctx.accounts.authority.key(),
@@ -72,6 +159,7 @@ pub struct CreateWishUser<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(amulet: u8)]
 pub struct CreateWish<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
@@ -80,7 +168,7 @@ pub struct CreateWish<'info> {
       init,
       payer = authority,
       space = 8 + PublishWish::INIT_SPACE,
-      seeds = [b"publish_wish",user_info.key().as_ref(),(user_info.wish_total_count+1).to_string().as_bytes()], 
+      seeds = [b"publish_wish",user_info.key().as_ref(),(user_info.wish_count+1).to_string().as_bytes()],
       bump
     )]
     pub publish_wish: Account<'info, PublishWish>,
@@ -95,11 +183,44 @@ pub struct CreateWish<'info> {
     #[account(
         mut,
         seeds = [b"temple"],
-        bump
+        bump,
     )]
     pub temple: Account<'info, Temple>,
 
+    #[account(
+        mut,
+        seeds = [b"create_wish_token"],
+        bump,
+     )]
+    pub wish_nft_mint_account: Account<'info, Mint>,
+
+    #[account(
+       init_if_needed,
+       payer = authority,
+       associated_token::mint = wish_nft_mint_account,
+       associated_token::authority = authority,
+     )]
+    pub wish_nft_associated_token_account: Account<'info, TokenAccount>,
+
+    // #[account(
+    //     mut,
+    //     seeds = [b"create_amulet_token",&[amulet]],
+    //     bump,
+    //  )]
+    // pub amulet_nft_mint_account: Account<'info, Mint>,
+
+    // #[account(
+    //     init_if_needed,
+    //     payer = authority,
+    //     associated_token::mint = amulet_nft_mint_account,
+    //     associated_token::authority = authority,
+    //   )]
+    // pub amulet_nft_associated_token_account: Account<'info, TokenAccount>,
     pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub token_metadata_program: Program<'info, Metadata>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
 #[derive(Accounts)]

@@ -45,28 +45,19 @@ pub mod sol_ji {
         instructions::create_user(ctx)
     }
 
-    /// 废弃
-    pub fn nft_mint(ctx: Context<CreateBurnToken>, args: CreateNftArgs) -> Result<()> {
-        instructions::nft_mint(ctx, args)
-    }
-
     /// 购买香
-    pub fn incense_buy(
-        ctx: Context<IncenseBuy>,
-        incense_type: IncenseType,
-        number: u64,
-    ) -> Result<()> {
-        instructions::incense_buy(ctx, incense_type, number)
+    pub fn incense_buy(ctx: Context<IncenseBuy>, args: u8, number: u64) -> Result<()> {
+        instructions::incense_buy(ctx, args, number)
     }
 
     /// 烧香
-    pub fn incense_burn(ctx: Context<CreateIncense>, args: IncenseBurnArgs) -> Result<()> {
-        instructions::incense_burn(ctx, args)
+    pub fn incense_burn(ctx: Context<CreateIncense>, incense: u8, amulet: u8) -> Result<()> {
+        instructions::incense_burn(ctx, incense, amulet)
     }
 
     /// 销毁nft
-    pub fn destroy(ctx: Context<Destroy>) -> Result<()> {
-        instructions::destroy(ctx)
+    pub fn destroy(ctx: Context<Destroy>, _incense: u8) -> Result<()> {
+        instructions::destroy(ctx, _incense)
     }
 
     /// 初始化签文
@@ -80,8 +71,8 @@ pub mod sol_ji {
     }
 
     /// 抽签
-    pub fn draw_lots(ctx: Context<DrawLots>) -> Result<()> {
-        instructions::draw_lots(ctx)
+    pub fn draw_lots(ctx: Context<DrawLots>, amulet: u8) -> Result<()> {
+        instructions::draw_lots(ctx, amulet)
     }
 
     /// 许愿
@@ -89,8 +80,9 @@ pub mod sol_ji {
         ctx: Context<CreateWish>,
         content: String,
         is_anonymous: bool,
+        // amulet: u8,
     ) -> Result<()> {
-        instructions::create_wish(ctx, content, is_anonymous)
+        instructions::create_wish(ctx, content, is_anonymous /* amulet */)
     }
 
     /// 点赞
@@ -98,11 +90,27 @@ pub mod sol_ji {
         instructions::create_like(ctx)
     }
 
-    /// sbt nft
-    pub fn mint_sbt_nft(ctx: Context<MintSbtNft>, args: CreateNftArgs) -> Result<()> {
-        instructions::mint_sbt_nft(ctx, args)
+    /// 创建烧香nft
+    pub fn burn_incense_nft_mint(ctx: Context<CreateBurnToken>, args: u8) -> Result<()> {
+        instructions::burn_incense_nft_mint(ctx, args)
     }
 
+    /// sbt nft
+    pub fn mint_sbt_nft(ctx: Context<MintSbtNft>) -> Result<()> {
+        instructions::mint_sbt_nft(ctx)
+    }
+
+    pub fn draw_mint_nft(ctx: Context<DrawMintNft>) -> Result<()> {
+        instructions::draw_mint_nft(ctx)
+    }
+
+    pub fn wish_mint_nft(ctx: Context<WishMintNft>) -> Result<()> {
+        instructions::wish_mint_nft(ctx)
+    }
+
+    pub fn amulet_mint_nft(ctx: Context<AmuletMintNft>, amulet: u8) -> Result<()> {
+        instructions::amulet_mint_nft(ctx, amulet)
+    }
     /// 捐助计数器
     pub fn create_donate_count(ctx: Context<CreateDonateCount>) -> Result<()> {
         instructions::create_donate_count(ctx)

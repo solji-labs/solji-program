@@ -15,6 +15,8 @@ pub struct Temple {
     // 功德值
     pub total_merit_value: u64,
 
+    pub total_burn_count: u64,
+
     // 抽签次数
     pub total_lottery_count: u64,
 
@@ -24,8 +26,13 @@ pub struct Temple {
     // 捐助SOL
     pub total_donate_amount: u64,
 
+    // 护身符
+    pub total_amulet_count: u64,
+
     // 佛灯
     pub buddha_nft_count: u64,
+
+    pub wealth: u64,
 }
 
 impl Temple {
@@ -35,10 +42,13 @@ impl Temple {
             level: 1,
             total_incense_value: 0,
             total_merit_value: 0,
+            total_burn_count: 0,
             total_lottery_count: 0,
             total_wish_count: 0,
             total_donate_amount: 0,
+            total_amulet_count: 0,
             buddha_nft_count: 0,
+            wealth: 0,
         }
     }
 
@@ -57,6 +67,11 @@ impl Temple {
             .checked_add(merit_value)
             .ok_or(error!(GlobalError::MathOverflow))?;
 
+        self.total_burn_count = self
+            .total_burn_count
+            .checked_add(1)
+            .ok_or(GlobalError::MathOverflow)?;
+
         self.check_and_temple_upgrade()?;
         Ok(())
     }
@@ -68,6 +83,14 @@ impl Temple {
             .ok_or(GlobalError::MathOverflow)?;
 
         self.check_and_temple_upgrade()?;
+        Ok(())
+    }
+
+    pub fn amulet_increment(&mut self) -> Result<()> {
+        self.total_amulet_count = self
+            .total_amulet_count
+            .checked_add(1)
+            .ok_or(GlobalError::MathOverflow)?;
         Ok(())
     }
 
@@ -101,6 +124,14 @@ impl Temple {
         {
             self.level = self.level.checked_add(1).ok_or(GlobalError::MathOverflow)?;
         }
+        Ok(())
+    }
+
+    pub fn increase_wealth(&mut self, amount: u64) -> Result<()> {
+        self.wealth = self
+            .wealth
+            .checked_add(amount)
+            .ok_or(GlobalError::MathOverflow)?;
         Ok(())
     }
 }

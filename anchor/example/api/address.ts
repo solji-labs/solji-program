@@ -7,11 +7,16 @@ export function getIncenseRulesConfig() {
 }
 
 // 获取 nft_mint_account pda
-
-export function getNftMintAccount(wallet: anchor.Wallet, name: string) {
-  const [nftMintAccount] = anchor.web3.PublicKey.findProgramAddressSync([Buffer.from("create_burn_token"), wallet.publicKey.toBuffer(), Buffer.from(name)], program.programId);
+export function getNftMintAccount(wallet: anchor.Wallet, name: number) {
+  const [nftMintAccount] = anchor.web3.PublicKey.findProgramAddressSync([Buffer.from("create_burn_token"), Buffer.from([name])], program.programId);
   return nftMintAccount;
 }
+
+export function getAmuletNftMintAccount(wallet: anchor.Wallet, amulet: number) {
+  const [nftMintAccount] = anchor.web3.PublicKey.findProgramAddressSync([Buffer.from("create_amulet_token"), Buffer.from([amulet])], program.programId);
+  return nftMintAccount;
+}
+
 
 // 
 export function getUserBurnInfo(wallet: anchor.Wallet) {

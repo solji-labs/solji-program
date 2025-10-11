@@ -101,7 +101,7 @@ pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Re
         &[ctx.bumps.feats_nft_mint_account],
     ]];
 
-    if matches!(user_info.current_medal_level, Some(MedalLevel::None))
+    if matches!(Some(user_info.current_medal_level.clone()), Some(MedalLevel::None))
         && donate_amount > 50_000_000{
         emit!(MedalMintedEvent {
             user: ctx.accounts.authority.key(),
@@ -110,7 +110,7 @@ pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Re
             timestamp: Clock::get()?.unix_timestamp,
         });
 
-        user_info.current_medal_level = Some(level.clone());
+        user_info.current_medal_level = level.clone();
 
         mint_nft(
             ctx,
@@ -125,7 +125,7 @@ pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Re
             merit_value,
             incense_value,
         )?;
-    } else if let Some(current_medal_level) = user_info.current_medal_level.as_ref() {
+    } else if let Some(current_medal_level) = Some(user_info.current_medal_level.clone()).as_ref() {
         if level != *current_medal_level {
             msg!(
                 "Upgrade medal level:{}, existing grade:{}",
@@ -140,7 +140,7 @@ pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Re
                 timestamp: Clock::get()?.unix_timestamp,
             });
 
-            user_info.current_medal_level = Some(level.clone());
+            user_info.current_medal_level = level.clone();
 
             let data = DataV2 {
                 name: level.get_nft_name(),
@@ -186,12 +186,12 @@ pub fn mint_nft(
         token_metadata_program: ctx.accounts.token_metadata_program.to_account_info(),
         metadata_account: ctx.accounts.metadata_account.to_account_info(),
         nft_mint_account: ctx.accounts.feats_nft_mint_account.to_account_info(),
-        authority: ctx.accounts.authority.to_account_info(),
+        payer: ctx.accounts.authority.to_account_info(),
         system_program: ctx.accounts.system_program.to_account_info(),
         rent: ctx.accounts.rent.to_account_info(),
         token_program: ctx.accounts.token_program.to_account_info(),
-        nft_associated_token_account: ctx.accounts.user_receive_feats_nft_ata.to_account_info(),
-        master_edition_account: ctx.accounts.master_editon_account.to_account_info(),
+        nft_associated_token_account: Some(ctx.accounts.user_receive_feats_nft_ata.to_account_info()),
+        master_edition_account: Some(ctx.accounts.master_editon_account.to_account_info()),
     };
 
     create_nft(&accounts, args, seeds)?;

@@ -8,6 +8,219 @@
   },
   "instructions": [
     {
+      "name": "amulet_mint_nft",
+      "discriminator": [
+        224,
+        220,
+        255,
+        71,
+        162,
+        221,
+        66,
+        160
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "temple"
+          ]
+        },
+        {
+          "name": "temple",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  101,
+                  109,
+                  112,
+                  108,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "amulet_nft_mint_account",
+          "writable": true
+        },
+        {
+          "name": "metadata_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_metadata_program"
+              },
+              {
+                "kind": "account",
+                "path": "amulet_nft_mint_account"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "token_metadata_program"
+            }
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_metadata_program",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amulet",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "burn_incense_nft_mint",
+      "docs": [
+        "创建烧香nft"
+      ],
+      "discriminator": [
+        122,
+        227,
+        82,
+        148,
+        200,
+        127,
+        94,
+        50
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "temple"
+          ]
+        },
+        {
+          "name": "temple",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  101,
+                  109,
+                  112,
+                  108,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "burn_nft_mint_account",
+          "writable": true
+        },
+        {
+          "name": "metadata_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_metadata_program"
+              },
+              {
+                "kind": "account",
+                "path": "burn_nft_mint_account"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "token_metadata_program"
+            }
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_metadata_program",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "coin_flip",
       "docs": [
         "随机数前置指令"
@@ -747,80 +960,43 @@
           }
         },
         {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "content",
-          "type": "string"
-        },
-        {
-          "name": "is_anonymous",
-          "type": "bool"
-        }
-      ]
-    },
-    {
-      "name": "destroy",
-      "docs": [
-        "销毁nft"
-      ],
-      "discriminator": [
-        157,
-        40,
-        96,
-        3,
-        135,
-        203,
-        143,
-        74
-      ],
-      "accounts": [
-        {
-          "name": "authority",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "nft_mint_account",
-          "writable": true
-        },
-        {
-          "name": "user_info",
+          "name": "wish_nft_mint_account",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
                 "value": [
-                  117,
-                  115,
-                  101,
+                  99,
                   114,
+                  101,
+                  97,
+                  116,
+                  101,
                   95,
+                  119,
                   105,
-                  110,
-                  102,
-                  111
+                  115,
+                  104,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
                 ]
-              },
-              {
-                "kind": "account",
-                "path": "authority"
               }
             ]
           }
         },
         {
-          "name": "user_receive_nft_ata",
+          "name": "wish_nft_associated_token_account",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "account",
-                "path": "user_info"
+                "path": "authority"
               },
               {
                 "kind": "const",
@@ -861,7 +1037,180 @@
               },
               {
                 "kind": "account",
-                "path": "nft_mint_account"
+                "path": "wish_nft_mint_account"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_metadata_program",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "content",
+          "type": "string"
+        },
+        {
+          "name": "is_anonymous",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "destroy",
+      "docs": [
+        "销毁nft"
+      ],
+      "discriminator": [
+        157,
+        40,
+        96,
+        3,
+        135,
+        203,
+        143,
+        74
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "burn_nft_mint_account",
+          "writable": true
+        },
+        {
+          "name": "user_info",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  105,
+                  110,
+                  102,
+                  111
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "nft_associated_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "burn_nft_mint_account"
               }
             ],
             "program": {
@@ -920,7 +1269,12 @@
           "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "_incense",
+          "type": "u8"
+        }
+      ]
     },
     {
       "name": "draw_lots",
@@ -1050,8 +1404,369 @@
           "name": "randomness_account_data"
         },
         {
+          "name": "draw_nft_mint_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  114,
+                  101,
+                  97,
+                  116,
+                  101,
+                  95,
+                  100,
+                  114,
+                  97,
+                  119,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "draw_nft_associated_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "draw_nft_mint_account"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "amulet_nft_mint_account",
+          "writable": true
+        },
+        {
+          "name": "amulet_nft_associated_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "amulet_nft_mint_account"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_metadata_program",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amulet",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "draw_mint_nft",
+      "discriminator": [
+        214,
+        165,
+        117,
+        142,
+        47,
+        95,
+        154,
+        120
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "temple"
+          ]
+        },
+        {
+          "name": "temple",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  101,
+                  109,
+                  112,
+                  108,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "draw_nft_mint_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  114,
+                  101,
+                  97,
+                  116,
+                  101,
+                  95,
+                  100,
+                  114,
+                  97,
+                  119,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "metadata_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_metadata_program"
+              },
+              {
+                "kind": "account",
+                "path": "draw_nft_mint_account"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "token_metadata_program"
+            }
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_metadata_program",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
       "args": []
@@ -1137,129 +1852,17 @@
           }
         },
         {
-          "name": "master_editon_account",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  109,
-                  101,
-                  116,
-                  97,
-                  100,
-                  97,
-                  116,
-                  97
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "token_metadata_program"
-              },
-              {
-                "kind": "account",
-                "path": "nft_mint_account"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  100,
-                  105,
-                  116,
-                  105,
-                  111,
-                  110
-                ]
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "token_metadata_program"
-            }
-          }
+          "name": "burn_nft_mint_account",
+          "writable": true
         },
         {
-          "name": "metadata_account",
+          "name": "burn_nft_associated_token_account",
           "writable": true,
           "pda": {
             "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  109,
-                  101,
-                  116,
-                  97,
-                  100,
-                  97,
-                  116,
-                  97
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "token_metadata_program"
-              },
-              {
-                "kind": "account",
-                "path": "nft_mint_account"
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "token_metadata_program"
-            }
-          }
-        },
-        {
-          "name": "nft_mint_account",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  99,
-                  114,
-                  101,
-                  97,
-                  116,
-                  101,
-                  95,
-                  98,
-                  117,
-                  114,
-                  110,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110
-                ]
-              },
               {
                 "kind": "account",
                 "path": "authority"
-              },
-              {
-                "kind": "arg",
-                "path": "args.name"
-              }
-            ]
-          }
-        },
-        {
-          "name": "user_receive_nft_ata",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "user_info"
               },
               {
                 "kind": "const",
@@ -1300,7 +1903,7 @@
               },
               {
                 "kind": "account",
-                "path": "nft_mint_account"
+                "path": "burn_nft_mint_account"
               }
             ],
             "program": {
@@ -1362,6 +1965,100 @@
           }
         },
         {
+          "name": "amulet_nft_mint_account",
+          "writable": true
+        },
+        {
+          "name": "amulet_nft_associated_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "amulet_nft_mint_account"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         },
@@ -1376,20 +2073,16 @@
         {
           "name": "rent",
           "address": "SysvarRent111111111111111111111111111111111"
-        },
-        {
-          "name": "token_metadata_program",
-          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
         }
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "IncenseBurnArgs"
-            }
-          }
+          "name": "incense",
+          "type": "u8"
+        },
+        {
+          "name": "amulet",
+          "type": "u8"
         }
       ]
     },
@@ -1499,12 +2192,8 @@
       ],
       "args": [
         {
-          "name": "incense_type",
-          "type": {
-            "defined": {
-              "name": "IncenseType"
-            }
-          }
+          "name": "args",
+          "type": "u8"
         },
         {
           "name": "number",
@@ -1677,11 +2366,6 @@
           "signer": true
         },
         {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
-        {
           "name": "sbt_nft_mint_account",
           "writable": true,
           "pda": {
@@ -1710,10 +2394,6 @@
               {
                 "kind": "account",
                 "path": "authority"
-              },
-              {
-                "kind": "arg",
-                "path": "args.name"
               }
             ]
           }
@@ -1743,51 +2423,6 @@
               {
                 "kind": "account",
                 "path": "sbt_nft_mint_account"
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "token_metadata_program"
-            }
-          }
-        },
-        {
-          "name": "master_editon_account",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  109,
-                  101,
-                  116,
-                  97,
-                  100,
-                  97,
-                  116,
-                  97
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "token_metadata_program"
-              },
-              {
-                "kind": "account",
-                "path": "sbt_nft_mint_account"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  100,
-                  105,
-                  116,
-                  105,
-                  111,
-                  110
-                ]
               }
             ],
             "program": {
@@ -1959,271 +2594,7 @@
           "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
-      "args": [
-        {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "CreateNftArgs"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "nft_mint",
-      "docs": [
-        "废弃"
-      ],
-      "discriminator": [
-        114,
-        240,
-        84,
-        69,
-        251,
-        232,
-        33,
-        209
-      ],
-      "accounts": [
-        {
-          "name": "authority",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "nft_mint_account",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  99,
-                  114,
-                  101,
-                  97,
-                  116,
-                  101,
-                  95,
-                  98,
-                  117,
-                  114,
-                  110,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "args.name"
-              }
-            ]
-          }
-        },
-        {
-          "name": "master_editon_account",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  109,
-                  101,
-                  116,
-                  97,
-                  100,
-                  97,
-                  116,
-                  97
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "token_metadata_program"
-              },
-              {
-                "kind": "account",
-                "path": "nft_mint_account"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  100,
-                  105,
-                  116,
-                  105,
-                  111,
-                  110
-                ]
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "token_metadata_program"
-            }
-          }
-        },
-        {
-          "name": "metadata_account",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  109,
-                  101,
-                  116,
-                  97,
-                  100,
-                  97,
-                  116,
-                  97
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "token_metadata_program"
-              },
-              {
-                "kind": "account",
-                "path": "nft_mint_account"
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "token_metadata_program"
-            }
-          }
-        },
-        {
-          "name": "nft_associated_token_account",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "authority"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "nft_mint_account"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
-          "name": "token_metadata_program",
-          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
-        },
-        {
-          "name": "associated_token_program",
-          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
-        },
-        {
-          "name": "rent",
-          "address": "SysvarRent111111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "CreateNftArgs"
-            }
-          }
-        }
-      ]
+      "args": []
     },
     {
       "name": "update_incense",
@@ -2298,6 +2669,132 @@
           }
         }
       ]
+    },
+    {
+      "name": "wish_mint_nft",
+      "discriminator": [
+        112,
+        245,
+        147,
+        15,
+        214,
+        35,
+        182,
+        40
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "temple"
+          ]
+        },
+        {
+          "name": "temple",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  101,
+                  109,
+                  112,
+                  108,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "wish_nft_mint_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  114,
+                  101,
+                  97,
+                  116,
+                  101,
+                  95,
+                  119,
+                  105,
+                  115,
+                  104,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "metadata_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_metadata_program"
+              },
+              {
+                "kind": "account",
+                "path": "wish_nft_mint_account"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "token_metadata_program"
+            }
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_metadata_program",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": []
     },
     {
       "name": "withdraw",
@@ -2670,13 +3167,13 @@
   "errors": [
     {
       "code": 6000,
-      "name": "AmountMustBeGreaterThanZero",
-      "msg": "Withdraw amount must be greater than 0"
+      "name": "Insufficient",
+      "msg": "insufficient merit value"
     },
     {
       "code": 6001,
-      "name": "AmountMustBeLessThanTempleBalance",
-      "msg": "Withdraw amount exceeds available balance (after reserving rent-exempt minimum)."
+      "name": "InvalidValue",
+      "msg": "invalid value"
     }
   ],
   "types": [
@@ -2700,34 +3197,6 @@
           {
             "name": "timestamp",
             "type": "i64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "CreateNftArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "name": "symbol",
-            "type": "string"
-          },
-          {
-            "name": "url",
-            "type": "string"
-          },
-          {
-            "name": "is_mutable",
-            "type": "bool"
-          },
-          {
-            "name": "collection_details",
-            "type": "bool"
           }
         ]
       }
@@ -2858,6 +3327,10 @@
             }
           },
           {
+            "name": "lottery_poetry",
+            "type": "string"
+          },
+          {
             "name": "merit_change",
             "type": "u64"
           },
@@ -2900,42 +3373,6 @@
           {
             "name": "timestamp",
             "type": "i64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "IncenseBurnArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "name": "symbol",
-            "type": "string"
-          },
-          {
-            "name": "url",
-            "type": "string"
-          },
-          {
-            "name": "is_mutable",
-            "type": "bool"
-          },
-          {
-            "name": "collection_details",
-            "type": "bool"
-          },
-          {
-            "name": "incense_type",
-            "type": {
-              "defined": {
-                "name": "IncenseType"
-              }
-            }
           }
         ]
       }
@@ -3027,19 +3464,19 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "FaintScent"
+            "name": "ClearIncense"
           },
           {
-            "name": "OrangeIncense"
+            "name": "Sandalwood"
           },
           {
-            "name": "Ambergris"
+            "name": "AmbergrisIncense"
           },
           {
-            "name": "Lingxiang"
+            "name": "SupremeSpiritIncense"
           },
           {
-            "name": "SecretIncense"
+            "name": "SecretBrewIncense"
           },
           {
             "name": "CelestialIncense"
@@ -3110,6 +3547,10 @@
             }
           },
           {
+            "name": "lottery_poetry",
+            "type": "string"
+          },
+          {
             "name": "create_at",
             "type": "i64"
           },
@@ -3126,25 +3567,25 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "GreatFortune"
+            "name": "ExcellentLuck"
           },
           {
-            "name": "MiddleFortune"
+            "name": "ModerateLuck"
           },
           {
-            "name": "SmallFortune"
+            "name": "SlightLuck"
           },
           {
-            "name": "Fortune"
+            "name": "Favorable"
           },
           {
-            "name": "LateFortune"
+            "name": "FutureLuck"
           },
           {
-            "name": "Misfortune"
+            "name": "SlightBadLuck"
           },
           {
-            "name": "GreatMisfortune"
+            "name": "TerribleLuck"
           }
         ]
       }
@@ -3354,6 +3795,10 @@
             "type": "u64"
           },
           {
+            "name": "total_burn_count",
+            "type": "u64"
+          },
+          {
             "name": "total_lottery_count",
             "type": "u64"
           },
@@ -3366,7 +3811,15 @@
             "type": "u64"
           },
           {
+            "name": "total_amulet_count",
+            "type": "u64"
+          },
+          {
             "name": "buddha_nft_count",
+            "type": "u64"
+          },
+          {
+            "name": "wealth",
             "type": "u64"
           }
         ]
@@ -3415,7 +3868,20 @@
             }
           },
           {
-            "name": "incense_property_count",
+            "name": "total_burn_count",
+            "type": "u64"
+          },
+          {
+            "name": "incense_buy_count",
+            "type": {
+              "array": [
+                "u32",
+                6
+              ]
+            }
+          },
+          {
+            "name": "incense_donate_count",
             "type": {
               "array": [
                 "u32",
@@ -3450,10 +3916,8 @@
           {
             "name": "current_medal_level",
             "type": {
-              "option": {
-                "defined": {
-                  "name": "MedalLevel"
-                }
+              "defined": {
+                "name": "MedalLevel"
               }
             }
           },
@@ -3470,7 +3934,7 @@
             "type": "i64"
           },
           {
-            "name": "wish_total_count",
+            "name": "wish_count",
             "type": "u32"
           },
           {
@@ -3482,8 +3946,21 @@
             "type": "u32"
           },
           {
+            "name": "amulet_count",
+            "type": "u64"
+          },
+          {
             "name": "has_sbt_token",
             "type": "bool"
+          },
+          {
+            "name": "has_burn_token",
+            "type": {
+              "array": [
+                "bool",
+                6
+              ]
+            }
           }
         ]
       }

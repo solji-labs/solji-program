@@ -14,6 +14,219 @@ export type SolJi = {
   },
   "instructions": [
     {
+      "name": "amuletMintNft",
+      "discriminator": [
+        224,
+        220,
+        255,
+        71,
+        162,
+        221,
+        66,
+        160
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "temple"
+          ]
+        },
+        {
+          "name": "temple",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  101,
+                  109,
+                  112,
+                  108,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "amuletNftMintAccount",
+          "writable": true
+        },
+        {
+          "name": "metadataAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "tokenMetadataProgram"
+              },
+              {
+                "kind": "account",
+                "path": "amuletNftMintAccount"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "tokenMetadataProgram"
+            }
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amulet",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "burnIncenseNftMint",
+      "docs": [
+        "创建烧香nft"
+      ],
+      "discriminator": [
+        122,
+        227,
+        82,
+        148,
+        200,
+        127,
+        94,
+        50
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "temple"
+          ]
+        },
+        {
+          "name": "temple",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  101,
+                  109,
+                  112,
+                  108,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "burnNftMintAccount",
+          "writable": true
+        },
+        {
+          "name": "metadataAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "tokenMetadataProgram"
+              },
+              {
+                "kind": "account",
+                "path": "burnNftMintAccount"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "tokenMetadataProgram"
+            }
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "coinFlip",
       "docs": [
         "随机数前置指令"
@@ -753,80 +966,43 @@ export type SolJi = {
           }
         },
         {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "content",
-          "type": "string"
-        },
-        {
-          "name": "isAnonymous",
-          "type": "bool"
-        }
-      ]
-    },
-    {
-      "name": "destroy",
-      "docs": [
-        "销毁nft"
-      ],
-      "discriminator": [
-        157,
-        40,
-        96,
-        3,
-        135,
-        203,
-        143,
-        74
-      ],
-      "accounts": [
-        {
-          "name": "authority",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "nftMintAccount",
-          "writable": true
-        },
-        {
-          "name": "userInfo",
+          "name": "wishNftMintAccount",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
                 "value": [
-                  117,
-                  115,
-                  101,
+                  99,
                   114,
+                  101,
+                  97,
+                  116,
+                  101,
                   95,
+                  119,
                   105,
-                  110,
-                  102,
-                  111
+                  115,
+                  104,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
                 ]
-              },
-              {
-                "kind": "account",
-                "path": "authority"
               }
             ]
           }
         },
         {
-          "name": "userReceiveNftAta",
+          "name": "wishNftAssociatedTokenAccount",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "account",
-                "path": "userInfo"
+                "path": "authority"
               },
               {
                 "kind": "const",
@@ -867,7 +1043,180 @@ export type SolJi = {
               },
               {
                 "kind": "account",
-                "path": "nftMintAccount"
+                "path": "wishNftMintAccount"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "content",
+          "type": "string"
+        },
+        {
+          "name": "isAnonymous",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "destroy",
+      "docs": [
+        "销毁nft"
+      ],
+      "discriminator": [
+        157,
+        40,
+        96,
+        3,
+        135,
+        203,
+        143,
+        74
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "burnNftMintAccount",
+          "writable": true
+        },
+        {
+          "name": "userInfo",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  105,
+                  110,
+                  102,
+                  111
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "nftAssociatedTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "burnNftMintAccount"
               }
             ],
             "program": {
@@ -926,7 +1275,12 @@ export type SolJi = {
           "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "incense",
+          "type": "u8"
+        }
+      ]
     },
     {
       "name": "drawLots",
@@ -1056,8 +1410,369 @@ export type SolJi = {
           "name": "randomnessAccountData"
         },
         {
+          "name": "drawNftMintAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  114,
+                  101,
+                  97,
+                  116,
+                  101,
+                  95,
+                  100,
+                  114,
+                  97,
+                  119,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "drawNftAssociatedTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "drawNftMintAccount"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "amuletNftMintAccount",
+          "writable": true
+        },
+        {
+          "name": "amuletNftAssociatedTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "amuletNftMintAccount"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amulet",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "drawMintNft",
+      "discriminator": [
+        214,
+        165,
+        117,
+        142,
+        47,
+        95,
+        154,
+        120
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "temple"
+          ]
+        },
+        {
+          "name": "temple",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  101,
+                  109,
+                  112,
+                  108,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "drawNftMintAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  114,
+                  101,
+                  97,
+                  116,
+                  101,
+                  95,
+                  100,
+                  114,
+                  97,
+                  119,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "metadataAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "tokenMetadataProgram"
+              },
+              {
+                "kind": "account",
+                "path": "drawNftMintAccount"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "tokenMetadataProgram"
+            }
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
       "args": []
@@ -1143,129 +1858,17 @@ export type SolJi = {
           }
         },
         {
-          "name": "masterEditonAccount",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  109,
-                  101,
-                  116,
-                  97,
-                  100,
-                  97,
-                  116,
-                  97
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "tokenMetadataProgram"
-              },
-              {
-                "kind": "account",
-                "path": "nftMintAccount"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  100,
-                  105,
-                  116,
-                  105,
-                  111,
-                  110
-                ]
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "tokenMetadataProgram"
-            }
-          }
+          "name": "burnNftMintAccount",
+          "writable": true
         },
         {
-          "name": "metadataAccount",
+          "name": "burnNftAssociatedTokenAccount",
           "writable": true,
           "pda": {
             "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  109,
-                  101,
-                  116,
-                  97,
-                  100,
-                  97,
-                  116,
-                  97
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "tokenMetadataProgram"
-              },
-              {
-                "kind": "account",
-                "path": "nftMintAccount"
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "tokenMetadataProgram"
-            }
-          }
-        },
-        {
-          "name": "nftMintAccount",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  99,
-                  114,
-                  101,
-                  97,
-                  116,
-                  101,
-                  95,
-                  98,
-                  117,
-                  114,
-                  110,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110
-                ]
-              },
               {
                 "kind": "account",
                 "path": "authority"
-              },
-              {
-                "kind": "arg",
-                "path": "args.name"
-              }
-            ]
-          }
-        },
-        {
-          "name": "userReceiveNftAta",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "userInfo"
               },
               {
                 "kind": "const",
@@ -1306,7 +1909,7 @@ export type SolJi = {
               },
               {
                 "kind": "account",
-                "path": "nftMintAccount"
+                "path": "burnNftMintAccount"
               }
             ],
             "program": {
@@ -1368,6 +1971,100 @@ export type SolJi = {
           }
         },
         {
+          "name": "amuletNftMintAccount",
+          "writable": true
+        },
+        {
+          "name": "amuletNftAssociatedTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "amuletNftMintAccount"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         },
@@ -1382,20 +2079,16 @@ export type SolJi = {
         {
           "name": "rent",
           "address": "SysvarRent111111111111111111111111111111111"
-        },
-        {
-          "name": "tokenMetadataProgram",
-          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
         }
       ],
       "args": [
         {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "incenseBurnArgs"
-            }
-          }
+          "name": "incense",
+          "type": "u8"
+        },
+        {
+          "name": "amulet",
+          "type": "u8"
         }
       ]
     },
@@ -1505,12 +2198,8 @@ export type SolJi = {
       ],
       "args": [
         {
-          "name": "incenseType",
-          "type": {
-            "defined": {
-              "name": "incenseType"
-            }
-          }
+          "name": "args",
+          "type": "u8"
         },
         {
           "name": "number",
@@ -1683,11 +2372,6 @@ export type SolJi = {
           "signer": true
         },
         {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
-        {
           "name": "sbtNftMintAccount",
           "writable": true,
           "pda": {
@@ -1716,10 +2400,6 @@ export type SolJi = {
               {
                 "kind": "account",
                 "path": "authority"
-              },
-              {
-                "kind": "arg",
-                "path": "args.name"
               }
             ]
           }
@@ -1749,51 +2429,6 @@ export type SolJi = {
               {
                 "kind": "account",
                 "path": "sbtNftMintAccount"
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "tokenMetadataProgram"
-            }
-          }
-        },
-        {
-          "name": "masterEditonAccount",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  109,
-                  101,
-                  116,
-                  97,
-                  100,
-                  97,
-                  116,
-                  97
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "tokenMetadataProgram"
-              },
-              {
-                "kind": "account",
-                "path": "sbtNftMintAccount"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  100,
-                  105,
-                  116,
-                  105,
-                  111,
-                  110
-                ]
               }
             ],
             "program": {
@@ -1965,271 +2600,7 @@ export type SolJi = {
           "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
-      "args": [
-        {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "createNftArgs"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "nftMint",
-      "docs": [
-        "废弃"
-      ],
-      "discriminator": [
-        114,
-        240,
-        84,
-        69,
-        251,
-        232,
-        33,
-        209
-      ],
-      "accounts": [
-        {
-          "name": "authority",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "nftMintAccount",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  99,
-                  114,
-                  101,
-                  97,
-                  116,
-                  101,
-                  95,
-                  98,
-                  117,
-                  114,
-                  110,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "args.name"
-              }
-            ]
-          }
-        },
-        {
-          "name": "masterEditonAccount",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  109,
-                  101,
-                  116,
-                  97,
-                  100,
-                  97,
-                  116,
-                  97
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "tokenMetadataProgram"
-              },
-              {
-                "kind": "account",
-                "path": "nftMintAccount"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  100,
-                  105,
-                  116,
-                  105,
-                  111,
-                  110
-                ]
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "tokenMetadataProgram"
-            }
-          }
-        },
-        {
-          "name": "metadataAccount",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  109,
-                  101,
-                  116,
-                  97,
-                  100,
-                  97,
-                  116,
-                  97
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "tokenMetadataProgram"
-              },
-              {
-                "kind": "account",
-                "path": "nftMintAccount"
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "tokenMetadataProgram"
-            }
-          }
-        },
-        {
-          "name": "nftAssociatedTokenAccount",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "authority"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "nftMintAccount"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
-        },
-        {
-          "name": "tokenProgram",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
-          "name": "tokenMetadataProgram",
-          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
-        },
-        {
-          "name": "associatedTokenProgram",
-          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
-        },
-        {
-          "name": "rent",
-          "address": "SysvarRent111111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "createNftArgs"
-            }
-          }
-        }
-      ]
+      "args": []
     },
     {
       "name": "updateIncense",
@@ -2304,6 +2675,132 @@ export type SolJi = {
           }
         }
       ]
+    },
+    {
+      "name": "wishMintNft",
+      "discriminator": [
+        112,
+        245,
+        147,
+        15,
+        214,
+        35,
+        182,
+        40
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "temple"
+          ]
+        },
+        {
+          "name": "temple",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  101,
+                  109,
+                  112,
+                  108,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "wishNftMintAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  114,
+                  101,
+                  97,
+                  116,
+                  101,
+                  95,
+                  119,
+                  105,
+                  115,
+                  104,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "metadataAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "tokenMetadataProgram"
+              },
+              {
+                "kind": "account",
+                "path": "wishNftMintAccount"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "tokenMetadataProgram"
+            }
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": []
     },
     {
       "name": "withdraw",
@@ -2676,13 +3173,13 @@ export type SolJi = {
   "errors": [
     {
       "code": 6000,
-      "name": "amountMustBeGreaterThanZero",
-      "msg": "Withdraw amount must be greater than 0"
+      "name": "insufficient",
+      "msg": "insufficient merit value"
     },
     {
       "code": 6001,
-      "name": "amountMustBeLessThanTempleBalance",
-      "msg": "Withdraw amount exceeds available balance (after reserving rent-exempt minimum)."
+      "name": "invalidValue",
+      "msg": "invalid value"
     }
   ],
   "types": [
@@ -2706,34 +3203,6 @@ export type SolJi = {
           {
             "name": "timestamp",
             "type": "i64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "createNftArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "name": "symbol",
-            "type": "string"
-          },
-          {
-            "name": "url",
-            "type": "string"
-          },
-          {
-            "name": "isMutable",
-            "type": "bool"
-          },
-          {
-            "name": "collectionDetails",
-            "type": "bool"
           }
         ]
       }
@@ -2864,6 +3333,10 @@ export type SolJi = {
             }
           },
           {
+            "name": "lotteryPoetry",
+            "type": "string"
+          },
+          {
             "name": "meritChange",
             "type": "u64"
           },
@@ -2906,42 +3379,6 @@ export type SolJi = {
           {
             "name": "timestamp",
             "type": "i64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "incenseBurnArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "name": "symbol",
-            "type": "string"
-          },
-          {
-            "name": "url",
-            "type": "string"
-          },
-          {
-            "name": "isMutable",
-            "type": "bool"
-          },
-          {
-            "name": "collectionDetails",
-            "type": "bool"
-          },
-          {
-            "name": "incenseType",
-            "type": {
-              "defined": {
-                "name": "incenseType"
-              }
-            }
           }
         ]
       }
@@ -3033,19 +3470,19 @@ export type SolJi = {
         "kind": "enum",
         "variants": [
           {
-            "name": "faintScent"
+            "name": "clearIncense"
           },
           {
-            "name": "orangeIncense"
+            "name": "sandalwood"
           },
           {
-            "name": "ambergris"
+            "name": "ambergrisIncense"
           },
           {
-            "name": "lingxiang"
+            "name": "supremeSpiritIncense"
           },
           {
-            "name": "secretIncense"
+            "name": "secretBrewIncense"
           },
           {
             "name": "celestialIncense"
@@ -3116,6 +3553,10 @@ export type SolJi = {
             }
           },
           {
+            "name": "lotteryPoetry",
+            "type": "string"
+          },
+          {
             "name": "createAt",
             "type": "i64"
           },
@@ -3132,25 +3573,25 @@ export type SolJi = {
         "kind": "enum",
         "variants": [
           {
-            "name": "greatFortune"
+            "name": "excellentLuck"
           },
           {
-            "name": "middleFortune"
+            "name": "moderateLuck"
           },
           {
-            "name": "smallFortune"
+            "name": "slightLuck"
           },
           {
-            "name": "fortune"
+            "name": "favorable"
           },
           {
-            "name": "lateFortune"
+            "name": "futureLuck"
           },
           {
-            "name": "misfortune"
+            "name": "slightBadLuck"
           },
           {
-            "name": "greatMisfortune"
+            "name": "terribleLuck"
           }
         ]
       }
@@ -3360,6 +3801,10 @@ export type SolJi = {
             "type": "u64"
           },
           {
+            "name": "totalBurnCount",
+            "type": "u64"
+          },
+          {
             "name": "totalLotteryCount",
             "type": "u64"
           },
@@ -3372,7 +3817,15 @@ export type SolJi = {
             "type": "u64"
           },
           {
+            "name": "totalAmuletCount",
+            "type": "u64"
+          },
+          {
             "name": "buddhaNftCount",
+            "type": "u64"
+          },
+          {
+            "name": "wealth",
             "type": "u64"
           }
         ]
@@ -3421,7 +3874,20 @@ export type SolJi = {
             }
           },
           {
-            "name": "incensePropertyCount",
+            "name": "totalBurnCount",
+            "type": "u64"
+          },
+          {
+            "name": "incenseBuyCount",
+            "type": {
+              "array": [
+                "u32",
+                6
+              ]
+            }
+          },
+          {
+            "name": "incenseDonateCount",
             "type": {
               "array": [
                 "u32",
@@ -3456,10 +3922,8 @@ export type SolJi = {
           {
             "name": "currentMedalLevel",
             "type": {
-              "option": {
-                "defined": {
-                  "name": "medalLevel"
-                }
+              "defined": {
+                "name": "medalLevel"
               }
             }
           },
@@ -3476,7 +3940,7 @@ export type SolJi = {
             "type": "i64"
           },
           {
-            "name": "wishTotalCount",
+            "name": "wishCount",
             "type": "u32"
           },
           {
@@ -3488,8 +3952,21 @@ export type SolJi = {
             "type": "u32"
           },
           {
+            "name": "amuletCount",
+            "type": "u64"
+          },
+          {
             "name": "hasSbtToken",
             "type": "bool"
+          },
+          {
+            "name": "hasBurnToken",
+            "type": {
+              "array": [
+                "bool",
+                6
+              ]
+            }
           }
         ]
       }

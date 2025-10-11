@@ -1,4 +1,7 @@
-use crate::states::{IncenseRule, IncenseRulesConfig, IncenseType};
+use crate::{
+    global_error::GlobalError,
+    states::{IncenseRule, IncenseRulesConfig, IncenseType},
+};
 use anchor_lang::prelude::*;
 
 pub fn initialize(ctx: Context<InitializeIncense>) -> Result<()> {
@@ -10,8 +13,8 @@ pub fn initialize(ctx: Context<InitializeIncense>) -> Result<()> {
             IncenseRule::new(50_000_000, 65, 600),
             IncenseRule::new(100_000_000, 1200, 3100),
             IncenseRule::new(300_000_000, 3400, 9000),
-            IncenseRule::new(0, 5000, 15000),
-            IncenseRule::new(0, 10000, 30000),
+            IncenseRule::new(0, 12000, 10000),
+            IncenseRule::new(0, 300000, 400000),
         ],
     ));
     msg!("initialize successfully");
@@ -25,7 +28,7 @@ pub fn update_incense(
 ) -> Result<()> {
     let incense_rules_config = &mut ctx.accounts.incense_rules_config;
     if ctx.accounts.authority.key() != incense_rules_config.admin {
-        return err!(ErrorCode::NonAdministrator);
+        return err!(GlobalError::NonAdministrator);
     }
     incense_rules_config.update_rule(incense_type, incense_rule);
     msg!("update_incense successfully");
@@ -59,9 +62,4 @@ pub struct UpdateIncense<'info> {
         bump
     )]
     pub incense_rules_config: Account<'info, IncenseRulesConfig>,
-}
-#[error_code]
-pub enum ErrorCode {
-    #[msg("Not an administrator")]
-    NonAdministrator,
 }

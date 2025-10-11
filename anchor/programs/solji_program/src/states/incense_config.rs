@@ -48,25 +48,67 @@ impl IncenseRulesConfig {
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum IncenseType {
     // 清香
-    FaintScent = 0,
+    ClearIncense = 0,
     // 橙香
-    OrangeIncense = 1,
+    Sandalwood = 1,
     // 龙涎香
-    Ambergris = 2,
-    // 灵香
-    Lingxiang = 3,
+    AmbergrisIncense = 2,
+    // 太上灵香
+    SupremeSpiritIncense = 3,
     // 秘制香
-    SecretIncense = 4,
+    SecretBrewIncense = 4,
     // 天界香
     CelestialIncense = 5,
 }
 
+impl IncenseType {
+    pub fn get_incense_type(incense_type: u8) -> Option<IncenseType> {
+        match incense_type {
+            0 => Some(IncenseType::ClearIncense),
+            1 => Some(IncenseType::Sandalwood),
+            2 => Some(IncenseType::AmbergrisIncense),
+            3 => Some(IncenseType::SupremeSpiritIncense),
+            4 => Some(IncenseType::SecretBrewIncense),
+            5 => Some(IncenseType::CelestialIncense),
+            _ => None,
+        }
+    }
+
+    pub fn get_nft_name(&self) -> String {
+        match self {
+            IncenseType::ClearIncense => "Merit Incense NFT: Pure".to_string(),
+            IncenseType::Sandalwood => "Merit Incense NFT: Orange".to_string(),
+            IncenseType::SupremeSpiritIncense => "Merit Incense NFT: Lingxiang".to_string(),
+            IncenseType::AmbergrisIncense => "Merit Incense NFT: Ambergris".to_string(),
+            IncenseType::SecretBrewIncense => "Merit Incense NFT: Secret Blend".to_string(),
+            IncenseType::CelestialIncense => "Merit Incense NFT: Celestial".to_string(),
+        }
+    }
+
+    pub fn get_symbol(&self) -> String {
+        match self {
+            IncenseType::ClearIncense => "PURE".to_string(),
+            IncenseType::Sandalwood => "ORANGE".to_string(),
+            IncenseType::SupremeSpiritIncense => "LINGXIANG".to_string(),
+            IncenseType::AmbergrisIncense => "AMBERGRIS".to_string(),
+            IncenseType::SecretBrewIncense => "SECRET".to_string(),
+            IncenseType::CelestialIncense => "CELESTIAL".to_string(),
+        }
+    }
+
+    pub fn get_nft_uri(&self) -> String {
+        match self {
+            IncenseType::ClearIncense => "https://example/faintscent.json".to_string(),
+            IncenseType::Sandalwood => "https://example/orangeincense.json".to_string(),
+            IncenseType::SupremeSpiritIncense => "https://example/lingxiang.json".to_string(),
+            IncenseType::AmbergrisIncense => "https://example/ambergris.json".to_string(),
+            IncenseType::SecretBrewIncense => "https://example/secretincense.json".to_string(),
+            IncenseType::CelestialIncense => "https://example/celestialincense.json".to_string(),
+        }
+    }
+}
+
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct IncenseBurnArgs {
-    pub name: String,
-    pub symbol: String,
-    pub url: String,
-    pub is_mutable: bool,         // 元数据是否可修改
-    pub collection_details: bool, // 是否包含集合详情
-    pub incense_type: IncenseType,
+    pub incense_type: u8,
 }

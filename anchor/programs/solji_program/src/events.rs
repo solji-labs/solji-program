@@ -32,6 +32,7 @@ pub struct MedalUpgradedEvent {
 pub struct DrawLotsEvent {
     pub user: Pubkey,
     pub lottery_type: LotteryType,
+    pub lottery_poetry: String,
     pub merit_change: u64,
     pub timestamp: i64,
 }

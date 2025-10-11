@@ -1,47 +1,52 @@
 import * as anchor from "@coral-xyz/anchor";
 import { program, provider } from "./wallet";
-import { getSbtNftCountPda } from "./address";
+import { getAmuletNftMintAccount, getNftMintAccount, getSbtNftCountPda } from "./address";
 
-export async function nftMint(
-  name: string,
-  symbol: string,
-  url: string,
-  isMutable: boolean,
-  collectionDetails: boolean,
+export async function burnIncenseNftMint(wallet: anchor.Wallet, incense: number
 ) {
-  return await program.methods.nftMint(
-    {
-      name: name,
-      symbol: symbol,
-      url: url,
-      isMutable: isMutable,
-      collectionDetails: collectionDetails,
-    }
-  ).accounts({})
+
+  return await program.methods.burnIncenseNftMint(
+    incense
+  ).accounts({
+    burnNftMintAccount: getNftMintAccount(wallet, incense),
+  })
     .rpc();
 }
 
 export async function sbtNftMint(
-  name: string,
-  symbol: string,
-  url: string,
-  isMutable: boolean,
-  collectionDetails: boolean,
   wallet: anchor.Wallet,
   visitorWallet: anchor.Wallet) {
   return await program.methods.mintSbtNft(
-    {
-      name: name,
-      symbol: symbol,
-      url: url,
-      isMutable: isMutable,
-      collectionDetails: collectionDetails,
-    }
   ).accounts({
-    payer: wallet.publicKey,
-    authority: wallet.publicKey,
-  }).signers([wallet.payer, wallet.payer])
+  })
     .rpc();
+}
+
+export async function drawMintNft(
+  wallet: anchor.Wallet,
+  visitorWallet: anchor.Wallet) {
+  return await program.methods.drawMintNft(
+  ).accounts({
+  }).rpc();
+}
+
+export async function wishMintNft(
+  wallet: anchor.Wallet,
+  visitorWallet: anchor.Wallet,
+) {
+  return await program.methods.wishMintNft(
+  ).accounts({
+  }).rpc();
+}
+
+export async function amuletMintNft(
+  wallet: anchor.Wallet,
+  amulet: number) {
+  let amuletNftMintAccount = getAmuletNftMintAccount(wallet, amulet);
+  console.log("amulet:{},amuletNftMintAccount:{}", amulet, amuletNftMintAccount.toBase58());
+  return await program.methods.amuletMintNft(amulet).accounts({
+    amuletNftMintAccount
+  }).rpc();
 }
 
 export async function getSbtNftCount() {

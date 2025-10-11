@@ -17,7 +17,7 @@ export async function initialize() {
 export async function updateIncense() {
   await program.methods
     .updateIncense(
-      { faintScent: {} }, // 枚举
+      { clearIncense: {} }, // 枚举
       {
         incensePrice: new anchor.BN(2000000000),
         meritValue: new anchor.BN(20),

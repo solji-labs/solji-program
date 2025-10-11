@@ -7,4 +7,21 @@ pub enum GlobalError {
 
     #[msg("Arithmetic underflow")]
     MathUnderflow,
+
+    #[msg("Invalid account")]
+    InvalidAccount,
+
+    #[msg("Invalid incense type")]
+    InvalidIncenseType,
+
+    #[msg("Not an administrator")]
+    NonAdministrator,
+
+    #[msg("Invalid level")]
+    InvalidLevel,
+
+    #[msg("Invalid args")]
+    InvalidArgs,
+    #[msg("Invalid Amulet")]
+    InvalidAmulet,
 }
