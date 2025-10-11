@@ -24,7 +24,7 @@ describe("donation", () => {
             await ctx.airdropToUser(donator.publicKey);
         }
 
-        let randomDonationAmount = Math.floor(Math.random() * 5) + 50; // 1-5 SOL
+        let randomDonationAmount = Math.floor(Math.random() * 5) + 1; // 1-5 SOL
         console.log(`Donation amount: ${randomDonationAmount} SOL`);
 
         let tx = await ctx.donateFund(donator, randomDonationAmount);

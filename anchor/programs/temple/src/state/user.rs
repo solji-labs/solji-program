@@ -425,6 +425,8 @@ pub struct UserDonationState {
     
     pub can_mint_buddha_nft: bool,
     pub has_minted_buddha_nft: bool,
+  
+    pub has_minted_badge_nft: bool,
 }
 
 impl UserDonationState {
@@ -436,8 +438,9 @@ impl UserDonationState {
         self.has_minted_buddha_nft = false;
         self.total_donation_amount = 0;
         self.total_donation_count = 0;
-        self.donation_level = self.calculate_donation_level();
+        self.donation_level = self.get_donation_level();
         self.last_donation_at = 0;
+        self.has_minted_badge_nft = false;
         Ok(())
     }
 
@@ -456,9 +459,9 @@ impl UserDonationState {
 
     // donate fund
     pub fn donate_fund(&mut self, amount: u64, current_timestamp: i64) -> Result<u64> {
-        self.total_donation_amount = self.total_donation_amount.checked_add(amount).unwrap();
-        self.total_donation_count = self.total_donation_count.checked_add(1).unwrap();
-        self.donation_level = self.calculate_donation_level();
+        self.total_donation_amount = self.total_donation_amount.checked_add(amount).ok_or(UserError::DonationOverflow)?;
+        self.total_donation_count = self.total_donation_count.checked_add(1).ok_or(UserError::DonationOverflow)?;
+        self.donation_level = self.get_donation_level();
         self.last_donation_at = current_timestamp;
 
         // more than 0.5 SOL can mint
@@ -466,12 +469,13 @@ impl UserDonationState {
         if self.total_donation_amount >= 500_000_000 {
             self.can_mint_buddha_nft = true;
         }
+ 
 
         Ok(self.total_donation_amount)
     }
 
     // calculate donation level
-    pub fn calculate_donation_level(&mut self) -> u8 {
+    pub fn get_donation_level(&self) -> u8 {
         let donation_sol = (self.total_donation_amount as f64 / 1_000_000_000.0);
 
         if donation_sol >= 5.0 {
@@ -480,11 +484,9 @@ impl UserDonationState {
             3 // Gold Protector
         } else if donation_sol >= 0.2 {
             2 // Silver Disciple
-        } else if donation_sol >= 0.05 {
-            1 // Bronze Believer
         } else {
-            0 // No level
-        }
+            1 // Bronze Believer
+        } 
     }
      
  
