@@ -1,7 +1,13 @@
 {
   "scripts": {
     "test": "npx mocha --require tsx --recursive tests/*.test.ts",
-    "temple-init": "npx mocha --require tsx tests/temple-init.test.ts"
+    "temple-init": "npx mocha --require tsx tests/temple-init.test.ts",
+    "deploy:devnet": "./scripts/deploy-devnet.sh",
+    "test:devnet": "./scripts/test-devnet.sh",
+    "test:temple-init": "./scripts/test-devnet.sh temple-init",
+    "test:incense-init": "./scripts/test-devnet.sh incense-init",
+    "test:user-init": "./scripts/test-devnet.sh user-init",
+    "test:user-init-no-airdrop": "./scripts/test-devnet.sh user-init-no-airdrop"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.0",

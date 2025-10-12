@@ -8,10 +8,28 @@ skip-lint = false
 [programs.localnet]
 temple = "81BWs7RGtN2EEvaGWZe8EQ8nhswHTHVzYUn5iPFoRr9o"
 
+[programs.devnet]
+temple = "81BWs7RGtN2EEvaGWZe8EQ8nhswHTHVzYUn5iPFoRr9o"
+
 [registry]
-url = "https://api.apr.dev"
+#url = "https://api.apr.dev"
+url = "https://api.devnet.solana.com"
+
 [scripts]
 test = "npx mocha --require tsx --recursive tests/*.test.ts"
+
+[provider]
+#cluster = "http://localhost:8899"
+cluster = "https://api.devnet.solana.com"
+#cluster = "https://devnet.genesysgo.net"
+#cluster = "https://rpc.ankr.com/solana_devnet/YOUR_API_KEY"
+wallet = "~/.config/solana/id.json"
+
+[test]
+#validator = { url = "http://localhost:8899" }
+validator = { url = "https://api.devnet.solana.com" }
+startup_wait = 10000
+
 
 # 单独运行某些测试文件
 temple-init = "npx mocha --require tsx tests/temple-init.test.ts"
@@ -22,11 +40,3 @@ incense-burn = "npx mocha --require tsx tests/incense-burn.test.ts"
 draw-fortune = "npx mocha --require tsx tests/draw-fortune.test.ts"
 wish = "npx mocha --require tsx tests/wish.test.ts"
 donation = "npx mocha --require tsx tests/donation.test.ts"
-
-[provider]
-cluster = "http://localhost:8899"
-wallet = "~/.config/solana/id.json"
-
-[test]
-validator = { url = "http://localhost:8899" }
-startup_wait = 10000
