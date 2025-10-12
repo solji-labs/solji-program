@@ -126,7 +126,7 @@ pub fn incense_burn(ctx: Context<CreateIncense>, incense: u8, amulet: u8) -> Res
 
     {
         let temple = &mut ctx.accounts.temple;
-        temple.add_temple_incense_and_merit_attribute(
+        temple.add_temple_incense_and_merit_attribute_upgrade(
             incense_rule.incense_value,
             incense_rule.merit_value,
         )?;

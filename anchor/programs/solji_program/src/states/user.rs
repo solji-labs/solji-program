@@ -19,6 +19,7 @@ pub struct UserInfo {
     pub incense_value: u64,
     pub incense_time: i64,
     pub donate_amount: u64,
+    pub donate_count: u64,
     pub donate_merit_value: u64,
     pub donate_incense_value: u64,
     pub current_medal_level: MedalLevel,
@@ -54,6 +55,7 @@ impl UserInfo {
             incense_value: 0,
             incense_time: 0,
             donate_amount: 0,
+            donate_count: 0,
             donate_merit_value: 0,
             donate_incense_value: 0,
             current_medal_level: MedalLevel::None,
@@ -229,6 +231,10 @@ impl UserInfo {
         self.donate_amount = self
             .donate_amount
             .checked_add(amount)
+            .ok_or(GlobalError::MathOverflow)?;
+        self.donate_count = self
+            .donate_count
+            .checked_add(1)
             .ok_or(GlobalError::MathOverflow)?;
         Ok(())
     }

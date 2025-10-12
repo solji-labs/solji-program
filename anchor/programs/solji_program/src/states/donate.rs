@@ -120,6 +120,16 @@ impl MedalLevel {
             MedalLevel::Supreme => "https://xxx/supreme.json".to_string(),
         }
     }
+
+    pub fn get_badge_level_reward(&self) -> (u64, u64) {
+        match self {
+            MedalLevel::None => (0, 0),
+            MedalLevel::Bronze => (65, 1200),
+            MedalLevel::Silver => (1300, 6300),
+            MedalLevel::Gold => (14000, 30000),
+            MedalLevel::Supreme => (120000, 100000),
+        }
+    }
 }
 
 impl Space for MedalLevel {

@@ -3853,6 +3853,10 @@ export type SolJi = {
             "type": "u64"
           },
           {
+            "name": "totalDonateCount",
+            "type": "u64"
+          },
+          {
             "name": "totalAmuletCount",
             "type": "u64"
           },
@@ -3973,6 +3977,10 @@ export type SolJi = {
           },
           {
             "name": "donateAmount",
+            "type": "u64"
+          },
+          {
+            "name": "donateCount",
             "type": "u64"
           },
           {

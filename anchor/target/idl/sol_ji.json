@@ -3847,6 +3847,10 @@
             "type": "u64"
           },
           {
+            "name": "total_donate_count",
+            "type": "u64"
+          },
+          {
             "name": "total_amulet_count",
             "type": "u64"
           },
@@ -3967,6 +3971,10 @@
           },
           {
             "name": "donate_amount",
+            "type": "u64"
+          },
+          {
+            "name": "donate_count",
             "type": "u64"
           },
           {

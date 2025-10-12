@@ -5,11 +5,11 @@ import { getWallet } from "./api/wallet";
 (async () => {
   const wallet = getWallet();
 
-  const r1 = await incenseBuy(0, 10);
+  const r1 = await incenseBuy(3, 10);
   console.log("Buy Incense Result:", r1);
 
   const r2 = await incenseBurn(
-    wallet, 0, 1
+    wallet, 3, 3
   );
   console.log("Burn Result:", r2);
 

@@ -28,6 +28,7 @@ export async function getTempleInfo(
     totalLotteryCount: info.totalLotteryCount.toNumber(),
     totalBurnCount: info.totalBurnCount.toNumber(),
     totalWishCount: info.totalWishCount.toNumber(),
+    totalAmuletCount: info.totalAmuletCount.toNumber(),
     totalDonateAmount: info.totalDonateAmount.toNumber(),
     buddhaNftCount: info.buddhaNftCount.toNumber(),
     wealth: info.wealth.toNumber(),

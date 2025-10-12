@@ -34,6 +34,7 @@ import { createTemple } from "./api/temple";
   console.log("Burn Incense Nft Mint Result:", r6);
   await burnIncenseNftMint(wallet, 1);
   await burnIncenseNftMint(wallet, 2);
+  await burnIncenseNftMint(wallet, 3);
 
   // // 初始化抽签NFT
   const r7 = await drawMintNft(wallet, visitorWallet);

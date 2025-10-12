@@ -50,7 +50,6 @@ pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Re
     require!(amount > 0, DonateError::InvalidDonateAmount);
     require!(ctx.accounts.authority.to_account_info().lamports() >= amount, DonateError::InsufficientLamports);
     let authority_key = ctx.accounts.authority.key();
-    let (merit_value, incense_value) = DonateRecord::get_donation_rewards(amount);
 
     let donate_record = DonateRecord::new(ctx.accounts.authority.key(), amount);
     ctx.accounts.donate_record.set_inner(donate_record);
@@ -62,7 +61,10 @@ pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Re
 
     let level = DonateRecord::get_badge_level(user_info.donate_amount);
 
-    ctx.accounts.temple.add_temple_donate_amount(amount)?;
+    {
+        let temple =&mut  ctx.accounts.temple;
+        temple.add_temple_donate_amount(amount)?;
+    }
 
     let tx = transfer(
         &ctx.accounts.authority.key(),
@@ -79,14 +81,6 @@ pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Re
     )?;
     msg!("Successful donation:{}",amount);
     
-    emit!(DonateEvent {
-        user: ctx.accounts.authority.key(),
-        amount,
-        merit_value,
-        incense_value,
-        timestamp: Clock::get()?.unix_timestamp,
-    });
-
     let donate_amount: u64 = user_info.donate_amount;
     msg!("donate_amount: {}", donate_amount);
 
@@ -100,6 +94,8 @@ pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Re
         a.as_ref(),
         &[ctx.bumps.feats_nft_mint_account],
     ]];
+
+    let (merit_value, incense_value) = DonateRecord::get_donation_rewards(amount);
 
     if matches!(Some(user_info.current_medal_level.clone()), Some(MedalLevel::None))
         && donate_amount > 50_000_000{
@@ -172,6 +168,14 @@ pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Re
             DonateRecord::update_rewards(&mut ctx.accounts.donate_record, merit_value, incense_value);
         }
     }
+    emit!(DonateEvent {
+        user: authority_key,
+        amount,
+        merit_value,
+        incense_value,
+        timestamp: Clock::get()?.unix_timestamp,
+    });
+
     emit!(UserActivityEvent {
         user: authority_key,
         activity_type: ActivityEnum::Donate,
