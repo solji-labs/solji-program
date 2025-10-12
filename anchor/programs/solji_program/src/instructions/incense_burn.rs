@@ -8,9 +8,9 @@ use anchor_spl::{
 };
 
 use crate::{
-    events::{DestroyEvent, IncenseBoughtEvent, IncenseBurnedEvent},
+    events::{DestroyEvent, IncenseBoughtEvent, IncenseBurnedEvent, UserActivityEvent},
     global_error::GlobalError,
-    states::{hit, IncenseRulesConfig, IncenseType, Temple, UserInfo},
+    states::{hit, ActivityEnum, IncenseRulesConfig, IncenseType, Temple, UserInfo},
 };
 
 pub fn incense_buy(ctx: Context<IncenseBuy>, incense: u8, number: u64) -> Result<()> {
@@ -58,6 +58,13 @@ pub fn incense_buy(ctx: Context<IncenseBuy>, incense: u8, number: u64) -> Result
         number,
         unit_price: amount,
         total_amount,
+        timestamp: Clock::get()?.unix_timestamp,
+    });
+
+    emit!(UserActivityEvent {
+        user: ctx.accounts.authority.key(),
+        activity_type: ActivityEnum::Burn,
+        content: IncenseType::get_incense_type_to_string(incense),
         timestamp: Clock::get()?.unix_timestamp,
     });
 

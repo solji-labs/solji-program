@@ -62,6 +62,18 @@ pub enum IncenseType {
 }
 
 impl IncenseType {
+    pub fn get_incense_type_to_string(incense_type: u8) -> String {
+        match incense_type {
+            0 => "ClearIncense".to_string(),
+            1 => "Sandalwood".to_string(),
+            2 => "AmbergrisIncense".to_string(),
+            3 => "SupremeSpiritIncense".to_string(),
+            4 => "SecretBrewIncense".to_string(),
+            5 => "CelestialIncense".to_string(),
+            _ => "Unknown".to_string(),
+        }
+    }
+
     pub fn get_incense_type(incense_type: u8) -> Option<IncenseType> {
         match incense_type {
             0 => Some(IncenseType::ClearIncense),

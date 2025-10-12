@@ -221,7 +221,7 @@ export type SolJi = {
       ],
       "args": [
         {
-          "name": "args",
+          "name": "incense",
           "type": "u8"
         }
       ]
@@ -2198,7 +2198,7 @@ export type SolJi = {
       ],
       "args": [
         {
-          "name": "args",
+          "name": "incense",
           "type": "u8"
         },
         {
@@ -3157,6 +3157,19 @@ export type SolJi = {
       ]
     },
     {
+      "name": "userActivityEvent",
+      "discriminator": [
+        103,
+        75,
+        227,
+        96,
+        222,
+        150,
+        104,
+        203
+      ]
+    },
+    {
       "name": "wishCreatedEvent",
       "discriminator": [
         102,
@@ -3183,6 +3196,29 @@ export type SolJi = {
     }
   ],
   "types": [
+    {
+      "name": "activityEnum",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "burn"
+          },
+          {
+            "name": "donate"
+          },
+          {
+            "name": "lottery"
+          },
+          {
+            "name": "wish"
+          },
+          {
+            "name": "like"
+          }
+        ]
+      }
+    },
     {
       "name": "coinFlipEvent",
       "type": {
@@ -3847,6 +3883,34 @@ export type SolJi = {
           {
             "name": "remainingBalance",
             "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "userActivityEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "activityType",
+            "type": {
+              "defined": {
+                "name": "activityEnum"
+              }
+            }
+          },
+          {
+            "name": "content",
+            "type": "string"
           },
           {
             "name": "timestamp",

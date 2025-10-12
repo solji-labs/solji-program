@@ -7,9 +7,11 @@ use anchor_spl::{
 use switchboard_on_demand::accounts::RandomnessAccountData;
 
 use crate::{
-    events::{CoinFlipEvent, DrawLotsEvent},
+    events::{CoinFlipEvent, DrawLotsEvent, UserActivityEvent},
     global_error::GlobalError,
-    states::{hit, LotteryConfig, LotteryRecord, LotteryType, PlayerState, Temple, UserInfo},
+    states::{
+        hit, ActivityEnum, LotteryConfig, LotteryRecord, LotteryType, PlayerState, Temple, UserInfo,
+    },
 };
 pub fn initialize_lottery_poetry(ctx: Context<InitializeLotteryPoetry>) -> Result<()> {
     let config = LotteryConfig::new();
@@ -260,6 +262,18 @@ pub fn draw_lots(ctx: Context<DrawLots>, amulet: u8) -> Result<()> {
         lottery_poetry: lottery_type.get_lottery_poety().to_string(),
         merit_change: reward,
         timestamp: now_ts,
+    });
+
+    let content = format!(
+        "{}-{}",
+        lottery_type.get_lottery_to_string(),
+        lottery_type.get_lottery_poety()
+    );
+    emit!(UserActivityEvent {
+        user: ctx.accounts.authority.key(),
+        activity_type: ActivityEnum::Lottery,
+        content,
+        timestamp: Clock::get()?.unix_timestamp,
     });
 
     Ok(())

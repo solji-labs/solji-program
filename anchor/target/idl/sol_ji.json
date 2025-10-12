@@ -215,7 +215,7 @@
       ],
       "args": [
         {
-          "name": "args",
+          "name": "incense",
           "type": "u8"
         }
       ]
@@ -2192,7 +2192,7 @@
       ],
       "args": [
         {
-          "name": "args",
+          "name": "incense",
           "type": "u8"
         },
         {
@@ -3151,6 +3151,19 @@
       ]
     },
     {
+      "name": "UserActivityEvent",
+      "discriminator": [
+        103,
+        75,
+        227,
+        96,
+        222,
+        150,
+        104,
+        203
+      ]
+    },
+    {
       "name": "WishCreatedEvent",
       "discriminator": [
         102,
@@ -3177,6 +3190,29 @@
     }
   ],
   "types": [
+    {
+      "name": "ActivityEnum",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Burn"
+          },
+          {
+            "name": "Donate"
+          },
+          {
+            "name": "Lottery"
+          },
+          {
+            "name": "Wish"
+          },
+          {
+            "name": "Like"
+          }
+        ]
+      }
+    },
     {
       "name": "CoinFlipEvent",
       "type": {
@@ -3841,6 +3877,34 @@
           {
             "name": "remaining_balance",
             "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserActivityEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "activity_type",
+            "type": {
+              "defined": {
+                "name": "ActivityEnum"
+              }
+            }
+          },
+          {
+            "name": "content",
+            "type": "string"
           },
           {
             "name": "timestamp",

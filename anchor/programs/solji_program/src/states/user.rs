@@ -33,6 +33,15 @@ pub struct UserInfo {
     pub has_burn_token: [bool; 6],
 }
 
+#[derive(AnchorSerialize, AnchorDeserialize)]
+pub enum ActivityEnum {
+    Burn,
+    Donate,
+    Lottery,
+    Wish,
+    Like,
+}
+
 impl UserInfo {
     pub fn new(user: Pubkey) -> Self {
         Self {

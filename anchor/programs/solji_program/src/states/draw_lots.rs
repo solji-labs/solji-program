@@ -72,6 +72,17 @@ impl LotteryType {
             LotteryType::TerribleLuck => "市场风浪急，三思为上计",
         }
     }
+    pub fn get_lottery_to_string(&self) -> &str {
+        match self {
+            LotteryType::ExcellentLuck => "大吉",
+            LotteryType::ModerateLuck => "中吉",
+            LotteryType::SlightLuck => "小吉",
+            LotteryType::Favorable => "吉",
+            LotteryType::FutureLuck => "末吉",
+            LotteryType::SlightBadLuck => "凶",
+            LotteryType::TerribleLuck => "大凶",
+        }
+    }
 }
 
 // 初始化签文

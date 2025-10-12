@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::states::{IncenseType, LotteryType};
+use crate::states::{ActivityEnum, IncenseType, LotteryType};
 
 #[event]
 pub struct DonateEvent {
@@ -112,5 +112,13 @@ pub struct SbtMintedEvent {
     pub symbol: String,
     pub url: String,
     pub donate_amount: u64,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct UserActivityEvent {
+    pub user: Pubkey,
+    pub activity_type: ActivityEnum,
+    pub content: String,
     pub timestamp: i64,
 }

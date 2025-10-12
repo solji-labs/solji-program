@@ -3,7 +3,7 @@ use anchor_lang::{
     solana_program::{program::invoke, system_instruction::transfer},
 };
 use anchor_spl::{associated_token::AssociatedToken, metadata::{mpl_token_metadata::types::DataV2, update_metadata_accounts_v2, Metadata, UpdateMetadataAccountsV2}, token::{Mint, Token, TokenAccount}};
-use crate::{ events::{DonateCountCreatedEvent, DonateEvent, MedalMintedEvent, MedalUpgradedEvent}, states::{create_nft, donate, CreateNftArgs, DonateCounter, DonateRecord, MedalLevel, NftAccounts, Temple, UserInfo}};
+use crate::{ events::{DonateCountCreatedEvent, DonateEvent, MedalMintedEvent, MedalUpgradedEvent, UserActivityEvent}, states::{create_nft, donate, ActivityEnum, CreateNftArgs, DonateCounter, DonateRecord, MedalLevel, NftAccounts, Temple, UserInfo}};
 pub fn create_donate_count(ctx: Context<CreateDonateCount>) -> Result<()> {
     let donate_count =  DonateCounter::new(ctx.accounts.authority.key());
     ctx.accounts.donate_count.set_inner(donate_count);
@@ -49,7 +49,7 @@ pub struct CreateDonateCount<'info> {
 pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Result<()> {
     require!(amount > 0, DonateError::InvalidDonateAmount);
     require!(ctx.accounts.authority.to_account_info().lamports() >= amount, DonateError::InsufficientLamports);
-
+    let authority_key = ctx.accounts.authority.key();
     let (merit_value, incense_value) = DonateRecord::get_donation_rewards(amount);
 
     let donate_record = DonateRecord::new(ctx.accounts.authority.key(), amount);
@@ -104,7 +104,7 @@ pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Re
     if matches!(Some(user_info.current_medal_level.clone()), Some(MedalLevel::None))
         && donate_amount > 50_000_000{
         emit!(MedalMintedEvent {
-            user: ctx.accounts.authority.key(),
+            user: authority_key,
             level: level.get_symbol(),
             nft_mint: ctx.accounts.feats_nft_mint_account.key(),
             timestamp: Clock::get()?.unix_timestamp,
@@ -133,7 +133,7 @@ pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Re
                 current_medal_level.get_nft_name()
             );
             emit!(MedalUpgradedEvent {
-                user: ctx.accounts.authority.key(),
+                user: authority_key,
                 old_level: current_medal_level.get_symbol(),
                 new_level: level.get_symbol(),
                 nft_mint: ctx.accounts.feats_nft_mint_account.key(),
@@ -172,7 +172,12 @@ pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Re
             DonateRecord::update_rewards(&mut ctx.accounts.donate_record, merit_value, incense_value);
         }
     }
-
+    emit!(UserActivityEvent {
+        user: authority_key,
+        activity_type: ActivityEnum::Donate,
+        content: amount.to_string(),
+        timestamp: Clock::get()?.unix_timestamp,
+    });
     Ok(())
 }
 pub fn mint_nft(

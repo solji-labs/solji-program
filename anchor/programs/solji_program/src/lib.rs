@@ -46,8 +46,8 @@ pub mod sol_ji {
     }
 
     /// 购买香
-    pub fn incense_buy(ctx: Context<IncenseBuy>, args: u8, number: u64) -> Result<()> {
-        instructions::incense_buy(ctx, args, number)
+    pub fn incense_buy(ctx: Context<IncenseBuy>, incense: u8, number: u64) -> Result<()> {
+        instructions::incense_buy(ctx, incense, number)
     }
 
     /// 烧香
@@ -91,8 +91,8 @@ pub mod sol_ji {
     }
 
     /// 创建烧香nft
-    pub fn burn_incense_nft_mint(ctx: Context<CreateBurnToken>, args: u8) -> Result<()> {
-        instructions::burn_incense_nft_mint(ctx, args)
+    pub fn burn_incense_nft_mint(ctx: Context<CreateBurnToken>, incense: u8) -> Result<()> {
+        instructions::burn_incense_nft_mint(ctx, incense)
     }
 
     /// sbt nft

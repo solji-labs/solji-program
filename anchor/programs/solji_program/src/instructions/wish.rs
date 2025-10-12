@@ -6,8 +6,8 @@ use anchor_spl::{
 };
 
 use crate::{
-    events::{LikeCreatedEvent, WishCreatedEvent},
-    states::{PublishWish, Temple, UserInfo, WishLike, WishUser},
+    events::{LikeCreatedEvent, UserActivityEvent, WishCreatedEvent},
+    states::{ActivityEnum, PublishWish, Temple, UserInfo, WishLike, WishUser},
 };
 pub fn create_wish(
     ctx: Context<CreateWish>,
@@ -113,11 +113,19 @@ pub fn create_wish(
     //     }
     // }
 
+    let c = content.clone();
     emit!(WishCreatedEvent {
         user: ctx.accounts.authority.key(),
-        content,
+        content: c,
         value: WishUser::WISH_FEE,
         is_anonymous,
+        timestamp: Clock::get()?.unix_timestamp,
+    });
+
+    emit!(UserActivityEvent {
+        user: ctx.accounts.authority.key(),
+        activity_type: ActivityEnum::Wish,
+        content: content.clone(),
         timestamp: Clock::get()?.unix_timestamp,
     });
 
@@ -137,6 +145,13 @@ pub fn create_like(ctx: Context<CreateLike>) -> Result<()> {
         liker: ctx.accounts.authority.key(),
         wish: wish_key,
         new_like_count: publish_wish.like_count,
+        timestamp: Clock::get()?.unix_timestamp,
+    });
+
+    emit!(UserActivityEvent {
+        user: ctx.accounts.authority.key(),
+        activity_type: ActivityEnum::Like,
+        content: wish_key.to_string(),
         timestamp: Clock::get()?.unix_timestamp,
     });
 
