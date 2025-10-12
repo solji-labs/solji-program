@@ -57,7 +57,6 @@ pub fn init_user(ctx: Context<InitUser>) -> Result<()> {
     user_state.user = user.key();
     user_state.has_buddha_nft = false;
     user_state.has_medal_nft = false;
-    user_state.pending_amulets = 0; // Initialize amulet balance to 0
     user_state.bump = ctx.bumps.user_state;
 
     // Initialize incense state

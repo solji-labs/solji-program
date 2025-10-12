@@ -15,8 +15,8 @@ use anchor_spl::token::MintTo;
 use anchor_spl::token::Token;
 use anchor_spl::token::TokenAccount;
 
-// TODO Draw fortune/make wish - can be obtained probabilistically? Handle probability on frontend?
-pub fn mint_amulet_nft(ctx: Context<MintAmuletNFT>, source: u8) -> Result<()> {
+// Mint amulet NFT for user (called by frontend after detecting drop event)
+pub fn mint_amulet_nft(ctx: Context<MintAmuletNFT>, amulet_type: u8, source: u8) -> Result<()> {
     let clock = Clock::get()?;
     let current_time = clock.unix_timestamp as u64;
 
@@ -26,23 +26,25 @@ pub fn mint_amulet_nft(ctx: Context<MintAmuletNFT>, source: u8) -> Result<()> {
         current_time,
     )?;
 
-    // Check if user has sufficient pending_amulets balance
-    require!(
-        ctx.accounts.user_state.pending_amulets > 0,
-        crate::error::ErrorCode::InsufficientPendingAmulets
-    );
-
-    // Consume one pending_amulet
-    ctx.accounts.user_state.pending_amulets -= 1;
-
     // Get serial number
-    ctx.accounts.user_state.total_amulets += 1;
-    let serial_number: u32 = ctx.accounts.user_state.total_amulets;
+    ctx.accounts.temple_config.total_amulets += 1;
+    let serial_number: u32 = ctx.accounts.temple_config.total_amulets;
 
-    let nft_name_str = format!("Amulet #{}", serial_number);
+    let (nft_name_str, amulet_type_str) = match amulet_type {
+        0 => (format!("Fortune Amulet #{}", serial_number), "Fortune"),
+        1 => (
+            format!("Protection Amulet #{}", serial_number),
+            "Protection",
+        ),
+        2 => (format!("Merit Amulet #{}", serial_number), "Merit"),
+        _ => (format!("Amulet #{}", serial_number), "Unknown"),
+    };
+
     let source_str = match source {
-        0 => "fortune",
-        1 => "wish",
+        0 => "burn_incense",
+        1 => "draw_fortune",
+        2 => "create_wish",
+        3 => "purchase",
         _ => "unknown",
     };
 
@@ -155,7 +157,7 @@ pub struct MintAmuletNFT<'info> {
         seeds = [
             AmuletNFT::SEED_PREFIX.as_bytes(),
             authority.key().as_ref(),
-            &format!("{}", user_state.total_amulets).as_bytes(), 
+            &format!("{}", temple_config.total_amulets).as_bytes(),
         ],
         bump,
         mint::decimals = AmuletNFT::TOKEN_DECIMALS,

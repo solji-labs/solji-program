@@ -136,12 +136,16 @@ pub fn draw_fortune(ctx: Context<DrawFortune>, use_merit: bool) -> Result<DrawRe
     };
 
     // Get probability settings from dynamic config
-    let fortune_config = ctx
+    let mut fortune_config = ctx
         .accounts
         .temple_config
-        .get_fortune_config(user_state.has_buddha_nft);
+        .get_fortune_config(user_state.has_buddha_nft)
+        .clone();
 
-    // Allocate fortune based on dynamic config probabilities
+    // TODO: Apply amulet effects - need to check user's amulet NFT holdings
+    // This requires checking if user owns Fortune/Protection amulet NFTs
+    // For now, skip amulet effects
+
     if user_state.has_buddha_nft {
         msg!("Buddha NFT holder gets probability bonus");
     }
@@ -205,17 +209,12 @@ pub fn draw_fortune(ctx: Context<DrawFortune>, use_merit: bool) -> Result<DrawRe
         amulet_drop_random < 10
     };
     if amulet_dropped {
-        // Increase user's mintable amulet balance
-        ctx.accounts.user_state.pending_amulets += 1;
-        msg!(
-            "Congratulations! Got 1 amulet minting opportunity from drawing fortune! Current balance: {}",
-            ctx.accounts.user_state.pending_amulets
-        );
-
-        // Emit amulet dropped event
+        // Emit amulet dropped event with type information
+        msg!("Congratulations! Got 1 Fortune Amulet NFT from drawing fortune!");
         emit!(crate::state::event::AmuletDropped {
             user: ctx.accounts.user.key(),
-            source: "fortune".to_string(),
+            amulet_type: 0, // Fortune Amulet
+            source: "draw_fortune".to_string(),
             timestamp: now,
         });
     }

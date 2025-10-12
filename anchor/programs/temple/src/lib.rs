@@ -228,7 +228,7 @@ pub mod temple {
     }
 
     /// Mint amulet NFT
-    pub fn mint_amulet_nft(ctx: Context<MintAmuletNFT>, source: u8) -> Result<()> {
-        instructions::mint_amulet_nft(ctx, source)
+    pub fn mint_amulet_nft(ctx: Context<MintAmuletNFT>, amulet_type: u8, source: u8) -> Result<()> {
+        instructions::mint_amulet_nft(ctx, amulet_type, source)
     }
 }

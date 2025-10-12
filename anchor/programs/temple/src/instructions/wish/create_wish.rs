@@ -120,17 +120,12 @@ pub fn create_wish(
         amulet_drop_random < 10
     };
     if amulet_dropped {
-        // Increase user's mintable amulet balance
-        ctx.accounts.user_state.pending_amulets += 1;
-        msg!(
-            "Congratulations! Got 1 amulet minting opportunity from making a wish! Current balance: {}",
-            ctx.accounts.user_state.pending_amulets
-        );
-
-        // Emit amulet dropped event
+        // Emit amulet dropped event with type information
+        msg!("Congratulations! Got 1 Protection Amulet NFT from making a wish!");
         emit!(crate::state::event::AmuletDropped {
             user: ctx.accounts.user.key(),
-            source: "wish".to_string(),
+            amulet_type: 1, // Protection Amulet
+            source: "create_wish".to_string(),
             timestamp: clock.unix_timestamp,
         });
     }

@@ -121,6 +121,46 @@ pub fn burn_incense(ctx: Context<BurnIncense>, incense_id: u8, amount: u64) -> R
         .global_stats
         .add_incense_value_and_merit(incense_points * amount, merit * amount);
 
+    // Amulet drop logic - auto mint NFT
+    let mut amulet_dropped = false;
+    let mut amulet_type = String::new();
+
+    // Generate random number for amulet drop
+    let random_seed = current_time + ctx.accounts.authority.key().as_ref()[0] as u64;
+    let random_value = (random_seed % 100) as u8;
+
+    let mut dropped_amulet_type: u8 = 0;
+
+    match incense_id {
+        1 => {
+            // 清香 (Clear Incense) - 5% chance for Fortune Amulet
+            if random_value < 5 {
+                amulet_dropped = true;
+                dropped_amulet_type = 0; // Fortune Amulet
+                msg!("Congratulations! Obtained Fortune Amulet from burning Clear Incense!");
+            }
+        }
+        5 => {
+            // 太上灵香 (Supreme Spirit Incense) - 10% chance for Merit Amulet
+            if random_value < 10 {
+                amulet_dropped = true;
+                dropped_amulet_type = 2; // Merit Amulet
+                msg!("Congratulations! Obtained Merit Amulet from burning Supreme Spirit Incense!");
+            }
+        }
+        _ => {}
+    }
+
+    if amulet_dropped {
+        // Emit amulet dropped event with type information
+        emit!(crate::state::event::AmuletDropped {
+            user: ctx.accounts.authority.key(),
+            amulet_type: dropped_amulet_type,
+            source: format!("burn_incense_{}", incense_id),
+            timestamp: clock.unix_timestamp,
+        });
+    }
+
     // event
     emit!(IncenseBurned {
         user: ctx.accounts.authority.key(),

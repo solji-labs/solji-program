@@ -54,10 +54,6 @@ pub struct UserState {
 
     // Random request related
     pub pending_random_request_id: Option<[u8; 32]>, // Pending random request ID
-
-    // Amulet related
-    pub pending_amulets: u32, // Amulet balance: for minting
-    pub total_amulets: u32,
 }
 
 impl UserState {

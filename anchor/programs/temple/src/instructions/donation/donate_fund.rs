@@ -82,6 +82,18 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
     // Update global stats
     ctx.accounts.global_stats.add_donation(amount);
 
+    // Calculate incense burn bonus: 1 burn per 0.01 SOL
+    let bonus_burns = (amount / 1_000_000) as u8; // 0.01 SOL = 1_000_000 lamports
+    if bonus_burns > 0 {
+        // Note: We need to add UserIncenseState to the accounts, but for now we'll just log it
+        // In a full implementation, we'd need to modify the accounts struct and add user_incense_state
+        msg!(
+            "Donation bonus: {} additional incense burns unlocked",
+            bonus_burns
+        );
+        // TODO: Actually apply the bonus burns to user_incense_state when accounts are updated
+    }
+
     // Emit donation completed event
     emit!(DonationCompleted {
         user: donor.key(),

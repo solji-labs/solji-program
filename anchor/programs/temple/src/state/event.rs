@@ -43,7 +43,8 @@ pub struct FortuneDrawn {
 #[event]
 pub struct AmuletDropped {
     pub user: Pubkey,
-    pub source: String, // "fortune" or "wish"
+    pub amulet_type: u8, // 0: Fortune, 1: Protection, 2: Merit
+    pub source: String,  // "burn_incense", "draw_fortune", "create_wish", "purchase"
     pub timestamp: i64,
 }
 

@@ -55,6 +55,19 @@ pub struct DonationRewardConfig {
     pub burn_bonus_per_001_sol: u64, // Burn bonus per 0.01 SOL
 }
 
+// 5. Special incense types (obtained through donations)
+#[derive(Clone, AnchorSerialize, AnchorDeserialize, Debug, InitSpace)]
+pub struct SpecialIncenseType {
+    pub id: u8, // Incense type ID
+    #[max_len(20)]
+    pub name: String, // Name
+    pub required_donation_sol: f64, // Required donation amount (SOL)
+    pub amount_per_donation: u64, // Amount received per donation milestone
+    pub merit: u64, // Merit value
+    pub incense_points: u64, // Incense points
+    pub is_donation_only: bool, // Whether only obtainable through donation
+}
+
 // 5. Temple level configuration
 #[derive(Clone, AnchorSerialize, AnchorDeserialize, Debug, InitSpace)]
 pub struct TempleLevelConfig {

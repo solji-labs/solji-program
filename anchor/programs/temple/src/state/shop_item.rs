@@ -3,8 +3,9 @@ use anchor_lang::prelude::*;
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq, Debug, InitSpace)]
 pub enum ShopItemType {
     Incense = 0, // 香火
-    Prop = 1,    // 道具
-    Special = 2, // 特殊物品
+    Amulet = 1,  // 护身符
+    Prop = 2,    // 道具
+    Special = 3, // 特殊物品
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
