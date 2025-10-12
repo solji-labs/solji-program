@@ -7,16 +7,17 @@ use anchor_spl::{
 
 use crate::{
     events::{LikeCreatedEvent, UserActivityEvent, WishCreatedEvent},
-    states::{ActivityEnum, PublishWish, Temple, UserInfo, WishLike, WishUser},
+    global_error::GlobalError,
+    states::{hit, ActivityEnum, PublishWish, Temple, UserInfo, WishLike, WishUser},
 };
 pub fn create_wish(
     ctx: Context<CreateWish>,
     content: String,
     is_anonymous: bool,
-    // amulet: u8,
+    amulet: u8,
 ) -> Result<()> {
     // Protection Omikuji
-    // require!(amulet == 2, GlobalError::InvalidAmulet);
+    require!(amulet == 2, GlobalError::InvalidAmulet);
 
     {
         let user_info = &mut ctx.accounts.user_info;
@@ -65,53 +66,51 @@ pub fn create_wish(
         );
     }
 
-    // {
-    //     // amulet nft
-    //     {
-    //         {
-    //             let clock = Clock::get()?;
-    //             let slot_le = clock.slot.to_le_bytes();
-    //             let total_wish_count = ctx.accounts.temple.total_wish_count;
-    //             let t = ctx.accounts.temple.key();
-    //             let seeds = &[
-    //                 ctx.accounts.authority.key.as_ref(),
-    //                 t.as_ref(),
-    //                 &total_wish_count.to_le_bytes(),
-    //                 &slot_le,
-    //             ];
+    {
+        // amulet nft
+        {
+            {
+                let clock = Clock::get()?;
+                let slot_le = clock.slot.to_le_bytes();
+                let total_wish_count = ctx.accounts.temple.total_wish_count;
+                let t = ctx.accounts.temple.key();
+                let seeds = &[
+                    ctx.accounts.authority.key.as_ref(),
+                    t.as_ref(),
+                    &total_wish_count.to_le_bytes(),
+                    &slot_le,
+                ];
 
-    //             let signer_seeds: &[&[&[u8]]] = &[&[
-    //                 b"create_amulet_token",
-    //                 &[amulet],
-    //                 &[ctx.bumps.amulet_nft_mint_account],
-    //             ]];
+                let amulet_seeds: &[&[u8]] = &[b"create_amulet_token", &[amulet]];
+                let (_pda, bump) = Pubkey::find_program_address(amulet_seeds, ctx.program_id);
+                let signer_seeds: &[&[&[u8]]] = &[&[b"create_amulet_token", &[amulet], &[bump]]];
 
-    //             if hit(10, seeds) {
-    //                 ctx.accounts.user_info.amulet_increment()?;
-    //                 ctx.accounts.temple.amulet_increment()?;
-    //                 mint_to(
-    //                     CpiContext::new_with_signer(
-    //                         ctx.accounts.token_program.to_account_info(),
-    //                         MintTo {
-    //                             mint: ctx.accounts.amulet_nft_mint_account.to_account_info(),
-    //                             to: ctx
-    //                                 .accounts
-    //                                 .amulet_nft_associated_token_account
-    //                                 .to_account_info(),
-    //                             authority: ctx.accounts.amulet_nft_mint_account.to_account_info(),
-    //                         },
-    //                         signer_seeds,
-    //                     ),
-    //                     1,
-    //                 )?;
-    //                 msg!(
-    //                     "wish mint amulet_nft success ata:{}",
-    //                     ctx.accounts.amulet_nft_associated_token_account.key()
-    //                 )
-    //             }
-    //         }
-    //     }
-    // }
+                if hit(10, seeds) {
+                    ctx.accounts.user_info.amulet_increment()?;
+                    ctx.accounts.temple.amulet_increment()?;
+                    mint_to(
+                        CpiContext::new_with_signer(
+                            ctx.accounts.token_program.to_account_info(),
+                            MintTo {
+                                mint: ctx.accounts.amulet_nft_mint_account.to_account_info(),
+                                to: ctx
+                                    .accounts
+                                    .amulet_nft_associated_token_account
+                                    .to_account_info(),
+                                authority: ctx.accounts.amulet_nft_mint_account.to_account_info(),
+                            },
+                            signer_seeds,
+                        ),
+                        1,
+                    )?;
+                    msg!(
+                        "wish mint amulet_nft success ata:{}",
+                        ctx.accounts.amulet_nft_associated_token_account.key()
+                    )
+                }
+            }
+        }
+    }
 
     let c = content.clone();
     emit!(WishCreatedEvent {
@@ -217,20 +216,16 @@ pub struct CreateWish<'info> {
      )]
     pub wish_nft_associated_token_account: Account<'info, TokenAccount>,
 
-    // #[account(
-    //     mut,
-    //     seeds = [b"create_amulet_token",&[amulet]],
-    //     bump,
-    //  )]
-    // pub amulet_nft_mint_account: Account<'info, Mint>,
+    #[account(mut)]
+    pub amulet_nft_mint_account: Account<'info, Mint>,
 
-    // #[account(
-    //     init_if_needed,
-    //     payer = authority,
-    //     associated_token::mint = amulet_nft_mint_account,
-    //     associated_token::authority = authority,
-    //   )]
-    // pub amulet_nft_associated_token_account: Account<'info, TokenAccount>,
+    #[account(
+        init_if_needed,
+        payer = authority,
+        associated_token::mint = amulet_nft_mint_account,
+        associated_token::authority = authority,
+      )]
+    pub amulet_nft_associated_token_account: Account<'info, TokenAccount>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub token_metadata_program: Program<'info, Metadata>,

@@ -80,9 +80,9 @@ pub mod sol_ji {
         ctx: Context<CreateWish>,
         content: String,
         is_anonymous: bool,
-        // amulet: u8,
+        amulet: u8,
     ) -> Result<()> {
-        instructions::create_wish(ctx, content, is_anonymous /* amulet */)
+        instructions::create_wish(ctx, content, is_anonymous, amulet)
     }
 
     /// 点赞

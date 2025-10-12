@@ -48,6 +48,7 @@ export async function getInfo(wallet: anchor.Wallet) {
     wishCount: info.wishCount,
     wishUpdateTime: new Date(info.wishUpdateTime.toNumber() * 1000).toLocaleString(),
     wishDailyCount: info.wishDailyCount,
+    amuletCount: info.amuletCount.toNumber(),
     hasSbtToken: info.hasSbtToken,
     hasBurnToken: info.hasBurnToken
   }

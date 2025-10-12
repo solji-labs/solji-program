@@ -7,13 +7,13 @@ export async function createWish(content: string, is_anonymous: boolean, amulet:
   let userPda = getUserBurnInfo(wallet);
   let userInfo = await program.account.userInfo.fetch(userPda);
   let publishWishPda = getPublishWishPda(userInfo.wishCount, wallet);
-  // let amuletNftMintAccount = getAmuletNftMintAccount(wallet, amulet);
+  let amuletNftMintAccount = getAmuletNftMintAccount(wallet, amulet);
 
   let createWishResult = await program.methods
-    .createWish(content, is_anonymous)
+    .createWish(content, is_anonymous, amulet)
     .accounts({
       publishWish: publishWishPda,
-      // amuletNftMintAccount: amuletNftMintAccount,
+      amuletNftMintAccount: amuletNftMintAccount,
     })
     .rpc();
   return [createWishResult, publishWishPda];
