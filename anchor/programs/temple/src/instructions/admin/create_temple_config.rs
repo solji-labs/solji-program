@@ -93,18 +93,18 @@ pub fn create_temple_config(
             },
             IncenseType {
                 id: 5,
-                name: "Secret".to_string(),
-                price_lamports: 10000000000, // 10 SOL
-                merit: 5000,
-                incense_points: 15000,
+                name: "Secret Brew Incense".to_string(),
+                price_lamports: 5000000000, // 5 SOL (placeholder, not used for purchase)
+                merit: 12000,
+                incense_points: 10000,
                 is_donation: true,
             },
             IncenseType {
                 id: 6,
-                name: "Heavenly".to_string(),
-                price_lamports: 50000000000, // 50 SOL
-                merit: 10000,
-                incense_points: 30000,
+                name: "Celestial Incense".to_string(),
+                price_lamports: 50000000000, // 50 SOL (placeholder, not used for purchase)
+                merit: 300000,
+                incense_points: 400000,
                 is_donation: true,
             },
         ],
@@ -113,6 +113,26 @@ pub fn create_temple_config(
         donation_levels: donation_levels.clone(),
         donation_rewards: donation_rewards.clone(),
         temple_levels: temple_levels.clone(),
+        special_incense_types: vec![
+            SpecialIncenseType {
+                id: 5,
+                name: "Secret Brew Incense".to_string(),
+                required_donation_sol: 5.0,
+                amount_per_donation: 10,
+                merit: 12000,
+                incense_points: 10000,
+                is_donation_only: true,
+            },
+            SpecialIncenseType {
+                id: 6,
+                name: "Celestial Incense".to_string(),
+                required_donation_sol: 50.0,
+                amount_per_donation: 5,
+                merit: 300000,
+                incense_points: 400000,
+                is_donation_only: true,
+            },
+        ],
     };
 
     // Global State

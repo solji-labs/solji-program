@@ -16,7 +16,12 @@ use anchor_spl::token::Mint;
 use anchor_spl::token::MintTo;
 use anchor_spl::token::Token;
 use anchor_spl::token::TokenAccount;
-pub fn burn_incense(ctx: Context<BurnIncense>, incense_id: u8, amount: u64) -> Result<()> {
+pub fn burn_incense(
+    ctx: Context<BurnIncense>,
+    incense_id: u8,
+    amount: u64,
+    has_merit_amulet: bool,
+) -> Result<()> {
     let clock = Clock::get()?;
     let current_time = clock.unix_timestamp as u64;
 
@@ -111,10 +116,19 @@ pub fn burn_incense(ctx: Context<BurnIncense>, incense_id: u8, amount: u64) -> R
 
     ctx.accounts.user_incense_state.incense_number += amount as u8;
 
+    // Calculate merit with amulet bonus
+    let mut final_merit = merit * amount;
+    if has_merit_amulet {
+        // Merit Amulet: +10% karma value
+        let bonus_merit = (merit * amount) / 10; // 10% bonus
+        final_merit = final_merit.saturating_add(bonus_merit);
+        msg!("Merit Amulet activated: +10% merit bonus ({})", bonus_merit);
+    }
+
     // Update user's incense points and merit
     ctx.accounts
         .user_incense_state
-        .add_incense_value_and_merit(incense_points * amount, merit * amount);
+        .add_incense_value_and_merit(incense_points * amount, final_merit);
 
     // Update global stats with merit and incense points
     ctx.accounts

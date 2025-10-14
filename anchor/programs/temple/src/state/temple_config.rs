@@ -100,6 +100,10 @@ pub struct DynamicConfig {
     // 5. Temple level configuration
     #[max_len(4)]
     pub temple_levels: Vec<TempleLevelConfig>,
+
+    // 6. Special incense types
+    #[max_len(2)]
+    pub special_incense_types: Vec<SpecialIncenseType>,
 }
 
 // Temple config - main account, responsible for configuration and core status
@@ -129,10 +133,18 @@ pub struct TempleConfig {
 impl TempleConfig {
     pub const SEED_PREFIX: &str = "temple_v1";
 
-    // Get incense type (
+    // Get incense type
     pub fn find_incense_type(&self, id: u8) -> Option<&IncenseType> {
         self.dynamic_config
             .incense_types
+            .iter()
+            .find(|t| t.id == id)
+    }
+
+    // Get special incense type
+    pub fn find_special_incense_type(&self, id: u8) -> Option<&SpecialIncenseType> {
+        self.dynamic_config
+            .special_incense_types
             .iter()
             .find(|t| t.id == id)
     }
