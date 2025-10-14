@@ -1,19 +1,19 @@
 use crate::error::ErrorCode;
 use crate::state::event::FortuneDrawn;
-// use crate::state::global_stats::GlobalStats;
+use crate::state::fortune_nft::{FortuneNFT, FortuneResult};
 use crate::state::temple_config::TempleConfig;
 use crate::state::user_state::{UserIncenseState, UserState};
 use anchor_lang::prelude::*;
-
-// Define fortune result enum
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
-pub enum FortuneResult {
-    GreatLuck,    // Great luck
-    GoodLuck,     // Good luck
-    Neutral,      // Neutral
-    BadLuck,      // Bad luck
-    GreatBadLuck, // Great bad luck
-}
+use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::metadata::create_metadata_accounts_v3;
+use anchor_spl::metadata::mpl_token_metadata::types::DataV2;
+use anchor_spl::metadata::CreateMetadataAccountsV3;
+use anchor_spl::metadata::Metadata;
+use anchor_spl::token::mint_to;
+use anchor_spl::token::Mint;
+use anchor_spl::token::MintTo;
+use anchor_spl::token::Token;
+use anchor_spl::token::TokenAccount;
 
 impl FortuneResult {
     pub fn as_str(&self) -> &str {
@@ -71,11 +71,68 @@ pub struct DrawFortune<'info> {
     )]
     pub temple_config: Box<Account<'info, TempleConfig>>,
 
+    // Fortune NFT accounts
+    #[account(
+        init_if_needed,
+        payer = user,
+        seeds = [
+            b"fortune_nft",
+            temple_config.key().as_ref(),
+            user.key().as_ref(),
+            &user_incense_state.total_draws.to_string().as_bytes(),
+        ],
+        bump,
+        space = 8 + FortuneNFT::INIT_SPACE,
+    )]
+    pub fortune_nft_account: Box<Account<'info, FortuneNFT>>,
+
+    #[account(
+        init_if_needed,
+        payer = user,
+        seeds = [
+            b"fortune_nft_mint",
+            temple_config.key().as_ref(),
+            user.key().as_ref(),
+            &user_incense_state.total_draws.to_string().as_bytes(),
+        ],
+        bump,
+        mint::decimals = 0,
+        mint::authority = temple_config.key(),
+        mint::freeze_authority = temple_config.key(),
+    )]
+    pub fortune_nft_mint: Box<Account<'info, Mint>>,
+
+    /// User's fortune NFT associated account
+    #[account(
+        init_if_needed,
+        payer = user,
+        associated_token::mint = fortune_nft_mint,
+        associated_token::authority = user,
+    )]
+    pub fortune_nft_token_account: Box<Account<'info, TokenAccount>>,
+
+    /// CHECK: Fortune NFT metadata account
+    #[account(
+        mut,
+        seeds = [
+            b"metadata",
+            token_metadata_program.key().as_ref(),
+            fortune_nft_mint.key().as_ref(),
+        ],
+        bump,
+        seeds::program = token_metadata_program.key(),
+    )]
+    pub fortune_nft_metadata: UncheckedAccount<'info>,
+
     /// CHECK: Randomness account (only needed in non-local environment)
     #[cfg(not(feature = "localnet"))]
     pub randomness_account: AccountInfo<'info>,
 
+    pub token_program: Program<'info, Token>,
+    pub token_metadata_program: Program<'info, Metadata>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
 pub fn draw_fortune(
@@ -197,13 +254,67 @@ pub fn draw_fortune(
     // Update user draw count
     ctx.accounts.user_incense_state.update_draw_count();
 
-    // // Update global stats
-    // ctx.accounts.global_stats.increment_draw_fortune();
+    // Mint fortune NFT
+    let temple_signer_seeds: &[&[&[u8]]] = &[&[
+        TempleConfig::SEED_PREFIX.as_bytes(),
+        &[ctx.bumps.temple_config],
+    ]];
 
-    // // Update temple level
-    // ctx.accounts
-    //     .temple_config
-    //     .update_level(&ctx.accounts.global_stats);
+    let fortune_str = fortune.as_str();
+
+    // Create metadata account
+    create_metadata_accounts_v3(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_metadata_program.to_account_info(),
+            CreateMetadataAccountsV3 {
+                metadata: ctx.accounts.fortune_nft_metadata.to_account_info(),
+                mint: ctx.accounts.fortune_nft_mint.to_account_info(),
+                mint_authority: ctx.accounts.temple_config.to_account_info(),
+                update_authority: ctx.accounts.user.to_account_info(),
+                payer: ctx.accounts.user.to_account_info(),
+                system_program: ctx.accounts.system_program.to_account_info(),
+                rent: ctx.accounts.rent.to_account_info(),
+            },
+            temple_signer_seeds,
+        ),
+        DataV2 {
+            name: format!("Fortune NFT - {}", fortune_str),
+            symbol: "TFN".to_string(),
+            uri: format!(
+                "https://api.foxverse.co/temple/fortune/{}/metadata.json",
+                fortune_str.to_lowercase().replace(" ", "_")
+            ),
+            seller_fee_basis_points: 0,
+            creators: None,
+            collection: None,
+            uses: None,
+        },
+        true, // Allow metadata to be mutable for future upgrades
+        true,
+        None,
+    )?;
+
+    // Mint fortune NFT
+    mint_to(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            MintTo {
+                mint: ctx.accounts.fortune_nft_mint.to_account_info(),
+                to: ctx.accounts.fortune_nft_token_account.to_account_info(),
+                authority: ctx.accounts.temple_config.to_account_info(),
+            },
+            temple_signer_seeds,
+        ),
+        1,
+    )?;
+
+    // Initialize FortuneNFT account data
+    ctx.accounts.fortune_nft_account.owner = ctx.accounts.user.key();
+    ctx.accounts.fortune_nft_account.mint = ctx.accounts.fortune_nft_mint.key();
+    ctx.accounts.fortune_nft_account.fortune_result = fortune.clone();
+    ctx.accounts.fortune_nft_account.minted_at = now;
+    ctx.accounts.fortune_nft_account.merit_cost = if use_merit { 5 } else { 0 };
+    ctx.accounts.fortune_nft_account.serial_number = ctx.accounts.user_incense_state.total_draws;
 
     // Give merit reward
     if !use_merit {
@@ -217,6 +328,7 @@ pub fn draw_fortune(
 
     msg!("Draw result: {}", fortune_str);
     msg!("Fortune explanation: {}", fortune_desc);
+    msg!("Fortune NFT minted successfully!");
 
     // TODO Amulet drop probability logic: 10% chance
     #[cfg(feature = "localnet")]

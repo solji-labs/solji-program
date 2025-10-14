@@ -442,7 +442,7 @@ export class TestContext {
 
 
         const tx = await this.program.methods
-            .burnIncense(incenseId, new BN(amount))
+            .burnIncense(incenseId, new BN(amount), false)
             .accounts(accounts)
             .signers([user])
             .rpc();
@@ -451,7 +451,7 @@ export class TestContext {
         return tx;
     }
 
-    public async drawFortune(user: Keypair, useMerit: boolean = false): Promise<any> {
+    public async drawFortune(user: Keypair, useMerit: boolean = false, hasFortuneAmulet: boolean = false, hasProtectionAmulet: boolean = false): Promise<any> {
         console.log(`User drawing fortune, use merit: ${useMerit}`);
 
         const [userStatePda] = PublicKey.findProgramAddressSync(
@@ -470,15 +470,44 @@ export class TestContext {
             this.program.programId
         );
 
+        // Get current total_draws for fortune NFT PDA
+        const userIncenseState = await this.program.account.userIncenseState.fetch(userIncenseStatePda);
+        const totalDraws = userIncenseState.totalDraws; // Use current value, will be incremented in the instruction
+
+        const fortuneNftPda = this.getFortuneNftPda(user.publicKey, totalDraws);
+        const fortuneNftMintPda = PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("fortune_nft_mint"),
+                this.templeConfigPda.toBuffer(),
+                user.publicKey.toBuffer(),
+                Buffer.from(totalDraws.toString())
+            ],
+            this.program.programId
+        )[0];
+
+        const fortuneNftTokenAccount = await anchor.utils.token.associatedAddress({
+            mint: fortuneNftMintPda,
+            owner: user.publicKey,
+        });
+
+        const metaAccount = this.getMetadataPda(fortuneNftMintPda);
 
         const tx = await this.program.methods
-            .drawFortune(useMerit)
+            .drawFortune(useMerit, hasFortuneAmulet, hasProtectionAmulet)
             .accounts({
                 user: user.publicKey,
                 userState: userStatePda,
                 userIncenseState: userIncenseStatePda,
                 templeConfig: this.templeConfigPda,
-                // randomnessAccount: mockRandomnessAccount.publicKey,
+                fortuneNftAccount: fortuneNftPda,
+                fortuneNftMint: fortuneNftMintPda,
+                fortuneNftTokenAccount,
+                fortuneNftMetadata: metaAccount,
+                tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+                tokenMetadataProgram: this.TOKEN_METADATA_PROGRAM_ID,
+                associatedTokenProgram: this.ASSOCIATED_TOKEN_PROGRAM_ID,
+                systemProgram: anchor.web3.SystemProgram.programId,
+                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
             })
             .signers([user])
             .rpc();
@@ -904,20 +933,28 @@ export class TestContext {
         return pda;
     }
 
-    public async mintAmuletNft(user: Keypair, source: number): Promise<string> {
-        console.log(`User minting amulet NFT with source: ${source}`);
-        const user_state = await this.program.account.userState.fetch(this.getUserStatePda(user.publicKey));
-        const serialNumber = user_state.totalAmulets;
-        const serialNumberString = serialNumber.toString();
+    public getFortuneNftPda(userPubkey: PublicKey, totalDraws: number): PublicKey {
+        const [pda] = PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("fortune_nft"),
+                this.templeConfigPda.toBuffer(),
+                userPubkey.toBuffer(),
+                Buffer.from(totalDraws.toString())
+            ],
+            this.program.programId
+        );
+        return pda;
+    }
 
-        console.log(`Serial number: ${serialNumber}`);
+    public async mintAmuletNft(user: Keypair, amuletType: number, source: number): Promise<string> {
+        console.log(`User minting amulet NFT with type: ${amuletType}, source: ${source}`);
 
-        // Calculate PDAs
+        const templeConfig = await this.getTempleConfig();
         const [nftMintPda] = PublicKey.findProgramAddressSync(
             [
                 Buffer.from("amulet_nft"),
                 user.publicKey.toBuffer(),
-                Buffer.from(serialNumberString, 'utf8'), // 👈 将字符串转为 UTF-8 字节
+                Buffer.from(templeConfig.totalAmulets.toString(), 'utf8'),
             ],
             this.program.programId
         );
@@ -930,7 +967,7 @@ export class TestContext {
         const metaAccount = this.getMetadataPda(nftMintPda);
 
         const tx = await this.program.methods
-            .mintAmuletNft(source)
+            .mintAmuletNft(amuletType, source)
             .accounts({
                 authority: user.publicKey,
                 templeConfig: this.templeConfigPda,
@@ -950,6 +987,10 @@ export class TestContext {
 
         console.log(`Amulet NFT minted: ${tx}`);
         return tx;
+    }
+
+    private async getTempleConfig() {
+        return await this.program.account.templeConfig.fetch(this.templeConfigPda);
     }
 
     public async getAssociatedTokenAddress(mint: PublicKey, owner: PublicKey): Promise<PublicKey> {

@@ -1,6 +1,7 @@
 pub mod amulet;
 pub mod buddha_nft;
 pub mod event;
+pub mod fortune_nft;
 pub mod global_stats;
 pub mod incense_nft;
 pub mod medal_nft;

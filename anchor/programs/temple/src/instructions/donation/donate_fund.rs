@@ -157,64 +157,50 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
     // Update global stats
     ctx.accounts.global_stats.add_donation(amount);
 
-    // ===== PROCESS ALL DONATION REWARDS =====
-
-    // 1. Get donation level rewards (merit points)
+    // Process donation rewards
     let (merit_reward, incense_points_reward) =
         ctx.accounts.user_donation_state.get_donation_rewards();
 
-    // 2. Apply merit and incense points rewards
     if merit_reward > 0 || incense_points_reward > 0 {
         ctx.accounts
             .user_incense_state
             .add_incense_value_and_merit(incense_points_reward, merit_reward);
-
         msg!(
-            "Donation reward earned - Merit: {}, Incense points: {}",
+            "Rewards applied - Merit: {}, Points: {}",
             merit_reward,
             incense_points_reward
         );
     }
 
-    // 3. Process incense unlock rewards (Secret Brew Incense, Celestial Incense)
+    // Process incense unlock rewards
     let total_donation_sol =
         ctx.accounts.user_donation_state.donation_amount as f64 / 1_000_000_000.0;
 
-    // Iterate through all donation reward configurations
+    // Process donation reward configurations
     for reward_config in &ctx.accounts.temple_config.dynamic_config.donation_rewards {
-        // Check if minimum donation amount threshold is reached
         if total_donation_sol >= reward_config.min_donation_sol {
-            // Calculate the total reward that should be obtained currently
             let current_reward = if reward_config.burn_bonus_per_001_sol > 0 {
-                // Burn incense bonus: increase burn count per 0.01 SOL
                 ((total_donation_sol * 100.0) as u64)
                     .saturating_mul(reward_config.burn_bonus_per_001_sol)
             } else {
-                // Incense reward: cumulative reward based on threshold
                 let current_tier = (total_donation_sol / reward_config.min_donation_sol) as u64;
                 current_tier.saturating_mul(reward_config.incense_amount)
             };
 
-            // Apply the reward
             if current_reward > 0 {
                 if reward_config.burn_bonus_per_001_sol > 0 {
-                    // Burn incense bonus
                     ctx.accounts.user_incense_state.incense_number = ctx
                         .accounts
                         .user_incense_state
                         .incense_number
                         .saturating_add(current_reward as u8);
-                    msg!(
-                        "Donation earned extra burn incense count: {}",
-                        current_reward
-                    );
+                    msg!("Extra burn count: {}", current_reward);
                 } else {
-                    // Incense reward
                     ctx.accounts
                         .user_incense_state
                         .add_incense_balance(reward_config.incense_id, current_reward);
                     msg!(
-                        "Donation unlocked incense type {}: {} sticks",
+                        "Unlocked incense {}: {} sticks",
                         reward_config.incense_id,
                         current_reward
                     );
@@ -223,7 +209,7 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
         }
     }
 
-    // 4. Process special incense types (Secret Brew Incense, Celestial Incense)
+    // Process special incense types
     for special_incense in &ctx
         .accounts
         .temple_config
@@ -231,7 +217,6 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
         .special_incense_types
     {
         if total_donation_sol >= special_incense.required_donation_sol {
-            // Calculate how many times this donation milestone has been reached
             let milestone_count =
                 (total_donation_sol / special_incense.required_donation_sol) as u64;
             let total_reward = milestone_count.saturating_mul(special_incense.amount_per_donation);
@@ -240,9 +225,8 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
                 ctx.accounts
                     .user_incense_state
                     .add_incense_balance(special_incense.id, total_reward);
-
                 msg!(
-                    "Donation unlocked special incense {}: {} sticks",
+                    "Special incense {}: {} sticks",
                     special_incense.name,
                     total_reward
                 );
