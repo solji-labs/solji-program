@@ -89,19 +89,19 @@ export const TEST_CONFIG = {
     ],
 
     defaultRegularFortune: {
-        greatLuckProb: 5,
-        goodLuckProb: 15,
-        neutralProb: 30,
-        badLuckProb: 30,
-        greatBadLuckProb: 20,
+        greatLuckProb: 10,    // 大吉: 10%
+        goodLuckProb: 15,     // 中吉: 15%
+        neutralProb: 20,      // 小吉: 20%
+        badLuckProb: 25,      // 吉: 25%
+        greatBadLuckProb: 30, // 末吉: 15% + 小凶: 10% + 大凶: 5% = 30%
     },
 
     defaultBuddhaFortune: {
-        greatLuckProb: 10,
-        goodLuckProb: 20,
-        neutralProb: 30,
-        badLuckProb: 25,
-        greatBadLuckProb: 15,
+        greatLuckProb: 15,    // 大吉: 15% (佛像持有者概率更高)
+        goodLuckProb: 20,     // 中吉: 20%
+        neutralProb: 20,      // 小吉: 20%
+        badLuckProb: 20,      // 吉: 20%
+        greatBadLuckProb: 25, // 末吉: 10% + 小凶: 10% + 大凶: 5% = 25%
     },
 
     defaultDonationRewards: [
