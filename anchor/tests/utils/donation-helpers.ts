@@ -19,11 +19,13 @@ export class DonationTestHelpers {
         this.program = ctx.program;
     }
 
+    // Legacy methods removed - all functionality now integrated into donateComplete()
+
     /**
-     * 捐助资金（第一步）
+     * 一步到位的完整捐助流程（新版本）
      */
-    public async donateFund(user: Keypair, amount: number): Promise<string> {
-        console.log(`User donating ${amount / 1000000000} SOL (fund only)`);
+    public async donateComplete(user: Keypair, amount: number): Promise<string> {
+        console.log(`Starting one-transaction complete donation for ${amount / 1000000000} SOL`);
 
         const tx = await this.program.methods
             .donateFund(new BN(amount))
@@ -31,61 +33,17 @@ export class DonationTestHelpers {
                 donor: user.publicKey,
                 templeConfig: this.ctx.templeConfigPda,
                 globalStats: this.ctx.getGlobalStatsPda(),
-                userDonationState: this.ctx.getUserDonationStatePda(user.publicKey),
-                templeTreasury: this.ctx.treasury,
-                systemProgram: anchor.web3.SystemProgram.programId,
-            })
-            .signers([user])
-            .rpc();
-
-        console.log(`Donation fund completed: ${tx}`);
-        return tx;
-    }
-
-    /**
-     * 处理捐助奖励（第二步）
-     */
-    public async processDonationRewards(user: Keypair): Promise<string> {
-        console.log(`Processing donation rewards for user: ${user.publicKey.toString()}`);
-
-        const tx = await this.program.methods
-            .processDonationRewards()
-            .accounts({
-                user: user.publicKey,
-                templeConfig: this.ctx.templeConfigPda,
-                globalStats: this.ctx.getGlobalStatsPda(),
-                userDonationState: this.ctx.getUserDonationStatePda(user.publicKey),
-                userIncenseState: this.ctx.getUserIncenseStatePda(user.publicKey),
-            })
-            .signers([user])
-            .rpc();
-
-        console.log(`Donation rewards processed: ${tx}`);
-        return tx;
-    }
-
-    /**
-     * 铸造/升级捐助NFT（第三步）
-     */
-    public async mintMedalNft(user: Keypair): Promise<string> {
-        console.log(`Minting/upgrading donation NFT for user: ${user.publicKey.toString()}`);
-
-        const tx = await this.program.methods
-            .mintMedalNft()
-            .accounts({
-                authority: user.publicKey,
-                templeConfig: this.ctx.templeConfigPda,
-                globalStats: this.ctx.getGlobalStatsPda(),
                 userState: this.ctx.getUserStatePda(user.publicKey),
                 userDonationState: this.ctx.getUserDonationStatePda(user.publicKey),
                 userIncenseState: this.ctx.getUserIncenseStatePda(user.publicKey),
+                templeTreasury: this.ctx.treasury,
                 medalNftAccount: this.ctx.getMedalNftPda(user.publicKey),
-                nftMintAccount: this.ctx.getNftMintPda(user.publicKey),
-                nftAssociatedTokenAccount: await this.getAssociatedTokenAddress(
+                medalNftMint: this.ctx.getNftMintPda(user.publicKey),
+                medalNftTokenAccount: await this.getAssociatedTokenAddress(
                     this.ctx.getNftMintPda(user.publicKey),
                     user.publicKey
                 ),
-                metaAccount: this.getMetadataPda(this.ctx.getNftMintPda(user.publicKey)),
+                medalNftMetadata: this.getMetadataPda(this.ctx.getNftMintPda(user.publicKey)),
                 tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
                 systemProgram: anchor.web3.SystemProgram.programId,
                 tokenMetadataProgram: this.ctx.TOKEN_METADATA_PROGRAM_ID,
@@ -95,32 +53,11 @@ export class DonationTestHelpers {
             .signers([user])
             .rpc();
 
-        console.log(`Donation NFT minted/upgraded: ${tx}`);
+        console.log(`One-transaction complete donation finished: ${tx}`);
         return tx;
     }
 
-    /**
-     * 完整的捐助流程（依次调用三步）
-     */
-    public async donateComplete(user: Keypair, amount: number): Promise<{
-        fundTx: string;
-        rewardsTx: string;
-        nftTx: string;
-    }> {
-        console.log(`Starting complete donation flow for ${amount / 1000000000} SOL`);
-
-        // 步骤1: 捐助资金
-        const fundTx = await this.donateFund(user, amount);
-
-        // 步骤2: 处理奖励
-        const rewardsTx = await this.processDonationRewards(user);
-
-        // 步骤3: 铸造/升级NFT
-        const nftTx = await this.mintMedalNft(user);
-
-        console.log(`Complete donation flow finished`);
-        return { fundTx, rewardsTx, nftTx };
-    }
+    // Legacy methods removed - all functionality now integrated into donateComplete()
 
     /**
      * 监听捐助相关事件

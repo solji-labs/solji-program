@@ -123,15 +123,14 @@ pub mod temple {
         instructions::donate_fund(ctx, amount)
     }
 
-    /// Process donation rewards
-    pub fn process_donation_rewards(ctx: Context<ProcessDonationRewards>) -> Result<()> {
-        instructions::process_donation_rewards(ctx)
-    }
+    // Legacy donation functions (deprecated - use donate_fund instead)
+    // pub fn process_donation_rewards(ctx: Context<ProcessDonationRewards>) -> Result<()> {
+    //     instructions::process_donation_rewards(ctx)
+    // }
 
-    /// Mint temple medal NFT
-    pub fn mint_medal_nft(ctx: Context<MintMedalNFT>) -> Result<()> {
-        instructions::mint_medal_nft(ctx)
-    }
+    // pub fn mint_medal_nft(ctx: Context<MintMedalNFT>) -> Result<()> {
+    //     instructions::mint_medal_nft(ctx)
+    // }
 
     /// Claim free Buddha NFT (limited to top 10000)
     // pub fn claim_buddha_nft(ctx: Context<ClaimBuddhaNft>) -> Result<()> {
