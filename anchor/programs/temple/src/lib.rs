@@ -75,8 +75,13 @@ pub mod temple {
     }
 
     /// Draw fortune
-    pub fn draw_fortune(ctx: Context<DrawFortune>, use_merit: bool) -> Result<DrawResult> {
-        instructions::draw_fortune(ctx, use_merit)
+    pub fn draw_fortune(
+        ctx: Context<DrawFortune>,
+        use_merit: bool,
+        has_fortune_amulet: bool,
+        has_protection_amulet: bool,
+    ) -> Result<DrawResult> {
+        instructions::draw_fortune(ctx, use_merit, has_fortune_amulet, has_protection_amulet)
     }
 
     /// Share fortune to get rewards

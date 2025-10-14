@@ -78,7 +78,12 @@ pub struct DrawFortune<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn draw_fortune(ctx: Context<DrawFortune>, use_merit: bool) -> Result<DrawResult> {
+pub fn draw_fortune(
+    ctx: Context<DrawFortune>,
+    use_merit: bool,
+    has_fortune_amulet: bool,
+    has_protection_amulet: bool,
+) -> Result<DrawResult> {
     let clock = Clock::get()?;
     let current_time = clock.unix_timestamp as u64;
     let now = clock.unix_timestamp;
@@ -142,9 +147,23 @@ pub fn draw_fortune(ctx: Context<DrawFortune>, use_merit: bool) -> Result<DrawRe
         .get_fortune_config(user_state.has_buddha_nft)
         .clone();
 
-    // TODO: Apply amulet effects - need to check user's amulet NFT holdings
-    // This requires checking if user owns Fortune/Protection amulet NFTs
-    // For now, skip amulet effects
+    // Apply amulet effects to fortune probabilities
+    if has_fortune_amulet {
+        // Good Luck Amulet: +20% to Great Luck and Good Luck probabilities
+        let bonus = 20;
+        fortune_config.great_luck_prob = fortune_config.great_luck_prob.saturating_add(bonus);
+        fortune_config.good_luck_prob = fortune_config.good_luck_prob.saturating_add(bonus);
+        msg!("Fortune Amulet activated: +20% to Great Luck and Good Luck probabilities");
+    }
+
+    if has_protection_amulet {
+        // Protection Amulet: -20% to Bad Luck and Great Bad Luck probabilities
+        let reduction = 20;
+        fortune_config.bad_luck_prob = fortune_config.bad_luck_prob.saturating_sub(reduction);
+        fortune_config.great_bad_luck_prob =
+            fortune_config.great_bad_luck_prob.saturating_sub(reduction);
+        msg!("Protection Amulet activated: -20% to Bad Luck and Great Bad Luck probabilities");
+    }
 
     if user_state.has_buddha_nft {
         msg!("Buddha NFT holder gets probability bonus");
