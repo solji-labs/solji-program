@@ -145,10 +145,18 @@ impl Temple {
         Ok(())
     }
 
-    pub fn increase_wealth(&mut self, amount: u64) -> Result<()> {
+    pub fn increment_wealth(&mut self, amount: u64) -> Result<()> {
         self.wealth = self
             .wealth
             .checked_add(amount)
+            .ok_or(GlobalError::MathOverflow)?;
+        Ok(())
+    }
+
+    pub fn increment_stake_merit(&mut self, merit: u64) -> Result<()> {
+        self.total_merit_value = self
+            .total_merit_value
+            .checked_add(merit)
             .ok_or(GlobalError::MathOverflow)?;
         Ok(())
     }

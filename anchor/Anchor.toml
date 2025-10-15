@@ -13,8 +13,8 @@ url = "https://api.apr.dev"
 
 [provider]
 cluster = "localnet"
-# wallet = "~/.config/solana/id.json"
-wallet = "~/.config/solana/wallet2.json"
+wallet = "~/.config/solana/id.json"
+# wallet = "~/.config/solana/wallet2.json"
 
 [scripts]
 api = "yarn run ts-node example/index.ts"
@@ -26,3 +26,4 @@ test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 wish = "yarn run ts-node example/wish.ts"
 info = "yarn run ts-node example/info.ts"
 incense = "yarn run ts-node example/incense.ts"
+stake = "yarn run ts-node example/stake.ts"

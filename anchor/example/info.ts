@@ -1,5 +1,6 @@
 import { getInfo } from "./api/incense_burn";
 import { getTempleInfo } from "./api/temple";
+import { getUserStake } from "./api/user";
 import { getWallet } from "./api/wallet";
 
 (async () => {
@@ -9,4 +10,7 @@ import { getWallet } from "./api/wallet";
 
   const r2 = await getTempleInfo();
   console.log("temple:", r2);
+
+  // const r3 = await getUserStake(wallet);
+  // console.log("UserStake:", r3);
 })()

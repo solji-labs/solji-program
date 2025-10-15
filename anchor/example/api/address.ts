@@ -41,6 +41,24 @@ export function getLotteryRecordPda(count: number, wallet: anchor.Wallet) {
   return pda;
 }
 
+export function getFeatsNftMintAccount(wallet: anchor.Wallet) {
+  let [pda] = anchor.web3.PublicKey.findProgramAddressSync([Buffer.from("create_feats_nft"), wallet.publicKey.toBuffer()], program.programId);
+  return pda;
+}
+
+export function getUserStakePda(count: number, wallet: anchor.Wallet) {
+  let featsNftMintPda = getFeatsNftMintAccount(wallet);
+  let [pda] = anchor.web3.PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("user_stake"),
+      featsNftMintPda.toBuffer(),
+      Buffer.from(`${count}`),
+    ],
+    program.programId
+  );
+  return pda;
+}
+
 
 // publish_wish PDA
 export function getPublishWishPda(count: number, wallet: anchor.Wallet) {

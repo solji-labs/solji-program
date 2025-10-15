@@ -122,3 +122,20 @@ pub struct UserActivityEvent {
     pub content: String,
     pub timestamp: i64,
 }
+#[event]
+pub struct StakeEvent {
+    pub user: Pubkey,
+    pub mint: Pubkey,
+    pub stake_account: Pubkey,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct UnstakeEvent {
+    pub user: Pubkey,
+    pub mint: Pubkey,
+    pub stake_account: Pubkey,
+    pub timestamp: i64,
+    pub days_staked: i64,
+    pub reward: u64,
+}

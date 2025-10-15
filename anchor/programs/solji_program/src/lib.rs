@@ -120,4 +120,17 @@ pub mod sol_ji {
     pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Result<()> {
         instructions::create_donate_record(ctx, amount)
     }
+
+    /// 质押
+    pub fn stake(ctx: Context<Stake>) -> Result<()> {
+        instructions::stake(ctx)
+    }
+
+    pub fn unstake_request(ctx: Context<UnstakeRequest>) -> Result<()> {
+        instructions::unstake_request(ctx)
+    }
+
+    pub fn unstake_confirm(ctx: Context<UnstakeConfirm>) -> Result<()> {
+        instructions::unstake_confirm(ctx)
+    }
 }

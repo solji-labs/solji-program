@@ -97,8 +97,7 @@ pub fn create_donate_record(ctx: Context<CreateDonateRecord>, amount: u64) -> Re
 
     let (merit_value, incense_value) = DonateRecord::get_donation_rewards(amount);
 
-    if matches!(Some(user_info.current_medal_level.clone()), Some(MedalLevel::None))
-        && donate_amount > 50_000_000{
+    if user_info.current_medal_level == MedalLevel::None && donate_amount >= 50_000_000{
         emit!(MedalMintedEvent {
             user: authority_key,
             level: level.get_symbol(),
@@ -282,7 +281,7 @@ pub struct CreateDonateRecord<'info> {
         init_if_needed,
         payer = authority,
         associated_token::mint = feats_nft_mint_account,
-        associated_token::authority = user_info,
+        associated_token::authority = authority,
     )]
     pub user_receive_feats_nft_ata: Account<'info, TokenAccount>,
 

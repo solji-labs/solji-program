@@ -31,6 +31,7 @@ export async function getInfo(wallet: anchor.Wallet) {
   let info = await program.account.userInfo.fetch(pda);
   return {
     user: info.user.toBase58(),
+    level: info.level,
     burnCount: info.burnCount, // 是数组，保持原样
     totalBurnCount: info.totalBurnCount.toNumber(),
     incenseBuyCount: info.incenseBuyCount,
@@ -50,7 +51,8 @@ export async function getInfo(wallet: anchor.Wallet) {
     wishDailyCount: info.wishDailyCount,
     amuletCount: info.amuletCount.toNumber(),
     hasSbtToken: info.hasSbtToken,
-    hasBurnToken: info.hasBurnToken
+    hasBurnToken: info.hasBurnToken,
+    stakeCount: info.stakeCount.toNumber(),
   }
 }
 

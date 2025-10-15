@@ -41,7 +41,7 @@ pub fn withdraw(ctx: Context<Withdraw>, lamports: u64) -> Result<()> {
         .to_account_info()
         .try_borrow_mut_lamports()? += lamports;
 
-    ctx.accounts.temple.increase_wealth(lamports)?;
+    ctx.accounts.temple.increment_wealth(lamports)?;
 
     let remaining = ctx.accounts.temple.to_account_info().lamports();
     emit!(TempleWithdrawalEvent {
