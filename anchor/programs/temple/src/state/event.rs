@@ -124,3 +124,14 @@ pub struct ShopConfigUpdated {
     pub shop_items: Vec<crate::state::shop_item::ShopItem>,
     pub timestamp: i64,
 }
+
+// FortuneNFTMinted Events
+#[event]
+pub struct FortuneNFTMinted {
+    pub user: Pubkey,
+    pub fortune_nft_mint: Pubkey,
+    pub fortune_result: String,
+    pub merit_cost: u32,
+    pub serial_number: u32,
+    pub timestamp: i64,
+}

@@ -359,6 +359,16 @@ pub fn draw_fortune(
         timestamp: now,
     });
 
+    // Emit fortune NFT minted event
+    emit!(crate::state::event::FortuneNFTMinted {
+        user: ctx.accounts.user.key(),
+        fortune_nft_mint: ctx.accounts.fortune_nft_mint.key(),
+        fortune_result: fortune.as_str().to_string(),
+        merit_cost: if use_merit { 5 } else { 0 },
+        serial_number: ctx.accounts.user_incense_state.total_draws,
+        timestamp: now,
+    });
+
     let result = DrawResult {
         fortune,
         timestamp: now,

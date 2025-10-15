@@ -77,6 +77,7 @@ pub struct TempleLevelConfig {
     pub required_wishes: u64,         // Required wishes
     pub required_donations_sol: f64,  // Required donation amount (SOL)
     pub required_fortune_nfts: u64,   // Required fortune NFTs
+    pub required_amulets: u64,        // Required amulets
 }
 
 #[derive(Clone, AnchorSerialize, AnchorDeserialize, Debug, InitSpace)]
@@ -190,6 +191,7 @@ impl TempleConfig {
                 && global_stats.total_wishes >= level_config.required_wishes
                 && donations_sol >= level_config.required_donations_sol
                 && global_stats.total_fortune_nfts >= level_config.required_fortune_nfts
+                && global_stats.total_amulets >= level_config.required_amulets
             {
                 return level_config.level;
             }
