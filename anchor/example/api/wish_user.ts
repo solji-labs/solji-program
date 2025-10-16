@@ -19,6 +19,11 @@ export async function createWish(content: string, is_anonymous: boolean, amulet:
   return [createWishResult, publishWishPda];
 }
 
+export async function mintTowerNft() {
+  return await program.methods.mintTowerNft().accounts({}).rpc();
+}
+
+
 export async function createLike(publishWishPda: anchor.web3.PublicKey) {
   return await program.methods
     .createLike()

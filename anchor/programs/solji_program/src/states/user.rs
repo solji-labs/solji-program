@@ -34,6 +34,7 @@ pub struct UserInfo {
     pub has_sbt_token: bool,
     pub has_burn_token: [bool; 6],
     pub stake_count: u64,
+    pub tower_level: i8,
 }
 
 #[account]
@@ -141,6 +142,7 @@ impl UserInfo {
             has_sbt_token: false,
             has_burn_token: [false; 6],
             stake_count: 0,
+            tower_level: -1,
         }
     }
 
@@ -181,7 +183,9 @@ impl UserInfo {
         let now_ts = Clock::get().unwrap().unix_timestamp;
         self.user = user;
 
-        if self.burn_count[incense_type as usize] >= 10 {
+        if self.burn_count[incense_type as usize] >= 10
+            || self.incense_buy_count[incense_type as usize] < 1
+        {
             self.incense_donate_count[incense_type as usize] = self.incense_donate_count
                 [incense_type as usize]
                 .checked_sub(1)

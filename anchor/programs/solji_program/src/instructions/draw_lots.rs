@@ -127,37 +127,44 @@ pub fn draw_lots(ctx: Context<DrawLots>, amulet: u8) -> Result<()> {
                 .get_value(&clock)
                 .map_err(|_| DrawLotsCode::RandomnessNotResolved)?;
             let r = u64::from_le_bytes(revealed_random_value[..8].try_into().unwrap());
-            #[inline]
-            fn unbiased_u64(x: u64, n: u64) -> u64 {
-                ((x as u128 * n as u128) >> 64) as u64
-            }
-            let idx = unbiased_u64(r, 7);
+            let scaled = (r % 100) as u8;
 
-            let lottery_type = ctx.accounts.lottery_array.get_lottery_type(idx);
-            msg!("Random Numbers: {},Result:{:?}", idx, lottery_type);
-            lottery_type
+            let result = match scaled {
+                0..=9 => LotteryType::ExcellentLuck,
+                10..=34 => LotteryType::ModerateLuck,
+                35..=54 => LotteryType::SlightLuck,
+                55..=79 => LotteryType::Favorable,
+                80..=94 => LotteryType::FutureLuck,
+                95..=99 => LotteryType::SlightBadLuck,
+                _ => LotteryType::TerribleLuck,
+            };
+
+            msg!("Random scaled: {},Result:{:?}", scaled, result);
+            result
         }
         #[cfg(not(feature = "mainnet"))]
         {
             let seed =
                 clock.unix_timestamp as u64 ^ ctx.accounts.authority.key().to_bytes()[0] as u64;
-            let idx = seed % 7;
+            let scaled = (seed % 100) as u8;
 
-            let lottery_type = ctx.accounts.lottery_array.get_lottery_type(idx);
-            msg!("Testnet Random Numbers: {}, Result:{:?}", idx, lottery_type);
-            lottery_type
+            let result = match scaled {
+                0..=9 => LotteryType::ExcellentLuck,
+                10..=34 => LotteryType::ModerateLuck,
+                35..=54 => LotteryType::SlightLuck,
+                55..=79 => LotteryType::Favorable,
+                80..=94 => LotteryType::FutureLuck,
+                95..=99 => LotteryType::SlightBadLuck,
+                _ => LotteryType::TerribleLuck,
+            };
+            msg!("Testnet Random scaled: {}, Result:{:?}", scaled, result);
+            result
         }
-    };
-
-    let reward: u64 = if lottery_type == LotteryType::ExcellentLuck {
-        3
-    } else {
-        2
     };
 
     {
         let user_info = &mut ctx.accounts.user_info;
-        user_info.update_lottery_count(now_ts, reward)?;
+        user_info.update_lottery_count(now_ts, LotteryRecord::LOTTERY_MERIT)?;
     }
 
     {
@@ -260,7 +267,7 @@ pub fn draw_lots(ctx: Context<DrawLots>, amulet: u8) -> Result<()> {
         user: ctx.accounts.authority.key(),
         lottery_type,
         lottery_poetry: lottery_type.get_lottery_poety().to_string(),
-        merit_change: reward,
+        merit_change: LotteryRecord::LOTTERY_MERIT,
         timestamp: now_ts,
     });
 

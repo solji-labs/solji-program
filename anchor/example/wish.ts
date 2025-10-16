@@ -1,5 +1,5 @@
 import { getWallet } from "./api/wallet";
-import { createWish, createLike, queryWish } from "./api/wish_user";
+import { createWish, createLike, queryWish, mintTowerNft } from "./api/wish_user";
 
 (async () => {
   const wallet = getWallet();
@@ -7,6 +7,9 @@ import { createWish, createLike, queryWish } from "./api/wish_user";
   const [createWishResult, publishWishPda] = await createWish("Test Wish 02", true, 2, wallet);
   console.log("Create Wish Result:", createWishResult);
   console.log("Publish Wish PDA:", publishWishPda.toBase58());
+
+  const r7 = await mintTowerNft();
+  console.log("mint tower nft result: ", r7);
 
   const r8 = await createLike(publishWishPda);
   console.log("Create Like Result:", r8);

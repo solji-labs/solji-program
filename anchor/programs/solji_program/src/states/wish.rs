@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::global_error::GlobalError;
+use crate::{global_error::GlobalError, states::CreateNftArgs};
 
 #[account]
 #[derive(InitSpace)]
@@ -84,6 +84,75 @@ impl WishLike {
         Self {
             like_pubkey,
             with_pubkey,
+        }
+    }
+}
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Tower {
+    SeedTower,
+    BasicTower,
+    AdvancedTower,
+    GrandWishTower,
+    PerfectionTower,
+}
+
+impl Tower {
+    pub fn get_tower(wish_count: &u32) -> Self {
+        match wish_count {
+            0..=9 => Tower::SeedTower,
+            10..=49 => Tower::BasicTower,
+            50..=199 => Tower::AdvancedTower,
+            200..=499 => Tower::GrandWishTower,
+            _ => Tower::PerfectionTower,
+        }
+    }
+
+    pub fn get_level(&self) -> i8 {
+        match self {
+            Tower::SeedTower => 0,
+            Tower::BasicTower => 1,
+            Tower::AdvancedTower => 2,
+            Tower::GrandWishTower => 3,
+            _ => 4,
+        }
+    }
+    pub fn get_nft_args(&self) -> CreateNftArgs {
+        match self {
+            Tower::SeedTower => CreateNftArgs {
+                name: "Seed Tower".to_string(),
+                symbol: "Seed".to_string(),
+                url: "https://solji.io/".to_string(),
+                is_mutable: true,
+                collection_details: true,
+            },
+            Tower::BasicTower => CreateNftArgs {
+                name: "Basic Tower".to_string(),
+                symbol: "Basic".to_string(),
+                url: "https://solji.io/".to_string(),
+                is_mutable: true,
+                collection_details: true,
+            },
+            Tower::AdvancedTower => CreateNftArgs {
+                name: "Advanced Tower".to_string(),
+                symbol: "Advanced".to_string(),
+                url: "https://solji.io/".to_string(),
+                is_mutable: true,
+                collection_details: true,
+            },
+            Tower::GrandWishTower => CreateNftArgs {
+                name: "Grand Wish Tower".to_string(),
+                symbol: "Grand".to_string(),
+                url: "https://solji.io/".to_string(),
+                is_mutable: true,
+                collection_details: true,
+            },
+            Tower::PerfectionTower => CreateNftArgs {
+                name: "Perfection Tower".to_string(),
+                symbol: "Perfection".to_string(),
+                url: "https://solji.io/".to_string(),
+                is_mutable: true,
+                collection_details: true,
+            },
         }
     }
 }

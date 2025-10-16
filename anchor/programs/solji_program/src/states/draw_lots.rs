@@ -20,6 +20,7 @@ pub struct LotteryRecord {
 
 impl LotteryRecord {
     pub const LOTTERY_FEE_MERIT: u64 = 5;
+    pub const LOTTERY_MERIT: u64 = 2;
 
     pub const NAME: &str = "Omikuji NFT";
     pub const SYMBOL: &str = "Omikuji";

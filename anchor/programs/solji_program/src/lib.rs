@@ -85,6 +85,10 @@ pub mod sol_ji {
         instructions::create_wish(ctx, content, is_anonymous, amulet)
     }
 
+    pub fn mint_tower_nft(ctx: Context<MintTowerNft>) -> Result<()> {
+        instructions::mint_tower_nft(ctx)
+    }
+
     /// 点赞
     pub fn create_like(ctx: Context<CreateLike>) -> Result<()> {
         instructions::create_like(ctx)

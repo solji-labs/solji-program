@@ -139,3 +139,13 @@ pub struct UnstakeEvent {
     pub days_staked: i64,
     pub reward: u64,
 }
+
+#[event]
+pub struct TowerNftEvent {
+    pub user: Pubkey,
+    pub mint: Pubkey,
+    pub ata: Pubkey,
+    pub previous_level: i8,
+    pub new_level: i8,
+    pub timestamp: i64,
+}

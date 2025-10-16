@@ -24,6 +24,19 @@ pub struct CreateUser<'info> {
     )]
     pub user_info: Account<'info, UserInfo>,
 
+    #[account(
+        init_if_needed,
+        payer = authority,
+        seeds = [b"create_tower_token",authority.key().as_ref()],
+        bump,
+        mint::decimals = 0,
+        mint::authority = tower_nft_mint_account,
+        mint::freeze_authority = tower_nft_mint_account,
+     )]
+    pub tower_nft_mint_account: Account<'info, Mint>,
+
+    pub token_program: Program<'info, Token>,
+
     pub system_program: Program<'info, System>,
 }
 

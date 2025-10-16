@@ -260,19 +260,20 @@ pub fn check_daily_reset_and_limit(
 
     if current_day > last_day {
         user_info.burn_count = [0; 6];
-        user_info.incense_donate_count = [0; 6];
         user_info.incense_time = now_ts;
     }
 
-    if user_info.incense_buy_count[incense_type as usize] < 1 {
-        return err!(BurnCode::BurnNotBuy);
+    if user_info.incense_buy_count[incense_type as usize] < 1
+        && user_info.incense_donate_count[incense_type as usize] < 1
+    {
+        return err!(BurnCode::BurnNotBuyOrDonated);
     }
-
-    if user_info.get_burn_count(incense_type) >= 10
+    if user_info.burn_count[incense_type as usize] >= 10
         && user_info.incense_donate_count[incense_type as usize] < 1
     {
         return err!(BurnCode::TooManyBurns);
     }
+
     Ok(())
 }
 
@@ -384,7 +385,7 @@ pub enum BurnCode {
     #[msg("Purchase incense burner")]
     BurningIncenseFailed,
 
-    #[msg("Too many burns")]
+    #[msg("Too many incenses have been burned. Please increase the number of incenses by making a donation")]
     TooManyBurns,
 
     #[msg("Invalid incense type")]
@@ -395,6 +396,6 @@ pub enum BurnCode {
 
     #[msg("Invalid number")]
     InvalidNumber,
-    #[msg("Cannot burn this type of incense: you haven't purchased it yet")]
-    BurnNotBuy,
+    #[msg("Unable to burn this incense: You have not purchased or donated yet")]
+    BurnNotBuyOrDonated,
 }

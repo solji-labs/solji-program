@@ -170,7 +170,7 @@ pub fn mint_nft<'info>(accounts: &NftAccounts<'info>, signer_seeds: &[&[&[u8]]])
             },
             signer_seeds,
         ),
-        1, // 固定铸造 1 个 NFT
+        1,
     )
 }
 
