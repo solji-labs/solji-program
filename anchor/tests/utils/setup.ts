@@ -307,6 +307,32 @@ export class TestContext {
         return tx;
     }
 
+    public async burnIncenseSimplied(
+        user: Keypair,
+        incenseTypeId: number,
+        amount: number,
+        paymentAmount: number
+    ): Promise<string> {
+        console.log(`Burning ${amount} incense of type ${incenseTypeId} (simplified version)...`);
+
+        const incenseTypeConfigPda = this.getIncenseTypeConfigPda(incenseTypeId);
+        const incenseNftMintPda = this.getIncenseNftMintPda(incenseTypeId);
+
+        const tx = await this.program.methods
+            .burnIncenseSimplied(incenseTypeId, amount, new anchor.BN(paymentAmount))
+            .accounts({
+                user: user.publicKey,
+                incenseTypeConfig: incenseTypeConfigPda,
+                templeAuthority: this.authority.publicKey,
+                nftMintAccount: incenseNftMintPda,
+            })
+            .signers([user])
+            .rpc();
+
+        console.log(`Incense burned (simplified): ${tx}`);
+        return tx;
+    }
+
 
 
     public getUserIncenseNftAssociatedTokenAccount(incenseNftMintPda: PublicKey, user: PublicKey): PublicKey {

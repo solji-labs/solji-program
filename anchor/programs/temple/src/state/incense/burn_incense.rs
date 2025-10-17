@@ -13,6 +13,12 @@ use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum BurnIncenseError {
+    #[msg("Invalid payment amount")]
+    InvalidPaymentAmount,
+    #[msg("Not enough SOL")]
+    NotEnoughSol,
+    #[msg("Inactive incense type")]
+    InactiveIncenseType,
     #[msg("Invalid owner")]
     InvalidOwner,
     #[msg("Daily burn limit exceeded")]

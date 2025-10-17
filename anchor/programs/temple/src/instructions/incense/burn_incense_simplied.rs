@@ -1,41 +1,66 @@
 use anchor_lang::prelude::*;
-use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::metadata::Metadata;
-use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    metadata::Metadata,
+    token::{mint_to, Mint, MintTo, Token, TokenAccount},
+};
 
-use crate::state::BurnIncenseError;
-use crate::state::IncenseNFT;
-use crate::state::IncenseTypeConfig;
-use crate::state::TempleConfig;
-use crate::state::UserIncenseState;
-use crate::state::UserState;
+use crate::state::{BurnIncenseError, IncenseNFT, IncenseTypeConfig, TempleConfig, UserState};
+use anchor_lang::system_program::transfer;
+use anchor_lang::system_program::Transfer;
 
-pub fn burn_incense(ctx: Context<BurnIncense>, incense_type_id: u8, amount: u8) -> Result<()> {
-    let user_state = &mut ctx.accounts.user_state;
-    let user_incense_state = &mut ctx.accounts.user_incense_state;
-    let temple_config = &mut ctx.accounts.temple_config;
-    let incense_type_config = &mut ctx.accounts.incense_type_config;
-
-    // 检查香型配置是否激活
-    require!(
-        incense_type_config.is_active,
-        BurnIncenseError::IncenseTypeNotActive
-    );
-
-    // 检查烧香数量是否合法
+pub fn burn_incense_simplied(
+    ctx: Context<BurnIncenseSimplied>,
+    incense_type_id: u8,
+    amount: u8,
+    payment_amount: u64,
+) -> Result<()> {
     require!(amount > 0 && amount <= 10, BurnIncenseError::InvalidAmount);
-
-    // 检查用户香型余额是否足够
     require!(
-        user_incense_state.get_incense_having_balance(incense_type_id) >= amount.into(),
-        BurnIncenseError::NotEnoughIncense
+        ctx.accounts.incense_type_config.is_active,
+        BurnIncenseError::InactiveIncenseType
     );
 
-    // 检查用户今日烧香次数是否已用完
+    let total_paid = ctx.accounts.incense_type_config.price_per_unit * amount as u64;
+
+    require!(
+        payment_amount == total_paid,
+        BurnIncenseError::InvalidPaymentAmount
+    );
+
+    require!(
+        ctx.accounts.user.lamports() >= total_paid,
+        BurnIncenseError::NotEnoughSol
+    );
+
+    let current_timestamp = Clock::get().unwrap().unix_timestamp;
+
+    let user_state = &mut ctx.accounts.user_state;
+    let temple_config = &mut ctx.accounts.temple_config;
+
+    if user_state.user == Pubkey::default() {
+        user_state.initialize(ctx.accounts.user.key(), current_timestamp)?;
+    }
+
+    user_state.check_and_reset_daily_limits()?;
+
+    // 检查每日烧香次数是否超过限制
     require!(
         user_state.get_available_burn_operations() > 0,
         BurnIncenseError::DailyBurnLimitExceeded
     );
+
+    // 转账
+    transfer(
+        CpiContext::new(
+            ctx.accounts.system_program.to_account_info(),
+            Transfer {
+                from: ctx.accounts.user.to_account_info(),
+                to: ctx.accounts.temple_authority.to_account_info(),
+            },
+        ),
+        total_paid,
+    )?;
 
     let temple_config_key = temple_config.key();
 
@@ -65,27 +90,26 @@ pub fn burn_incense(ctx: Context<BurnIncense>, incense_type_id: u8, amount: u8) 
         ),
         mint_amount,
     )?;
- 
 
     // 烧香
-    // into()表示将u8转换为u32
     user_state.burn_incense(
-        incense_type_config.karma_reward.into(),
-        incense_type_config.incense_value.into(),
+        ctx.accounts.incense_type_config.karma_reward.into(),
+        ctx.accounts.incense_type_config.incense_value.into(),
         amount.into(),
     )?;
 
-    // 消耗香
-    user_incense_state.sub_incense_balance(incense_type_id, amount.into())?;
+    temple_config.add_incense_value(ctx.accounts.incense_type_config.incense_value.into())?;
 
-    temple_config.add_incense_value(incense_type_config.incense_value.into())?;
+    ctx.accounts
+        .incense_type_config
+        .increment_minted_count(amount.into())?;
 
     Ok(())
 }
 
 #[derive(Accounts)]
 #[instruction(incense_type_id: u8)]
-pub struct BurnIncense<'info> {
+pub struct BurnIncenseSimplied<'info> {
     /// 香型配置账户
     #[account(
         mut,
@@ -110,17 +134,11 @@ pub struct BurnIncense<'info> {
     )]
     pub temple_config: Account<'info, TempleConfig>,
 
-    /// 用户香型状态账户
-    #[account(
-        mut,
-        seeds = [UserIncenseState::SEED_PREFIX.as_bytes(), user.key().as_ref()],
-        bump,
-    )]
-    pub user_incense_state: Account<'info, UserIncenseState>,
-
     /// 用户状态账户
     #[account(
-        mut,
+        init_if_needed,
+        payer = user,
+        space = 8 + UserState::INIT_SPACE,
         seeds = [UserState::SEED_PREFIX.as_bytes(), user.key().as_ref()],
         bump,
     )]
