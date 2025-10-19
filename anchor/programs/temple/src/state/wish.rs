@@ -29,6 +29,9 @@ pub struct Wish {
 
     /// 是否掉落御守
     pub is_amulet_dropped: bool,
+
+    /// 是否是免费愿望
+    pub is_free_wish: bool,
      
 }
 
@@ -39,7 +42,7 @@ impl Wish {
 
     pub const KARMA_COST_PER_WISH: u64 = 5;
 
-    pub fn initialize(&mut self, wish_id: u64, creator: Pubkey, content_hash: [u8; 32], is_amulet_dropped: bool,is_anonymous: bool,created_at: i64) -> Result<()> {
+    pub fn initialize(&mut self, wish_id: u64, creator: Pubkey, content_hash: [u8; 32], is_amulet_dropped: bool,is_anonymous: bool,created_at: i64,is_free_wish: bool) -> Result<()> {
         self.wish_id = wish_id;
         self.creator = creator;
         self.content_hash = content_hash;
@@ -47,6 +50,7 @@ impl Wish {
         self.created_at = created_at; 
         self.total_likes = 0;
         self.is_amulet_dropped = is_amulet_dropped;
+        self.is_free_wish = is_free_wish;
         Ok(())
     }
 

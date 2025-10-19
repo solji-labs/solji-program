@@ -13,7 +13,7 @@ pub fn create_wish(
     wish_id: u64,
     content_hash: [u8; 32],
     is_anonymous: bool,
-) -> Result<()> {
+) -> Result<CreateWishResult> {
     let wish = &mut ctx.accounts.wish;
     let user_state = &mut ctx.accounts.user_state;
     let user = &ctx.accounts.user;
@@ -56,6 +56,7 @@ pub fn create_wish(
         is_amulet_dropped,
         is_anonymous,
         timestamp,
+        is_free_wish,
     )?;
 
     // 更新用户状态：扣除功德值，增加许愿计数
@@ -64,18 +65,16 @@ pub fn create_wish(
     // 更新寺庙全局状态：增加总许愿次数
     temple_config.create_wish()?;
 
-    // 发出事件
-    emit!(CreateWishEvent {
+    Ok(CreateWishResult {
         wish_id,
         creator: user.key(),
         content_hash,
         is_anonymous,
         karma_cost: karma_points_cost,
         is_free: is_free_wish,
+        is_amulet_dropped,
         timestamp,
-    });
-
-    Ok(())
+    })
 }
 
 #[derive(Accounts)]
@@ -119,9 +118,8 @@ pub struct CreateWish<'info> {
     pub system_program: Program<'info, System>,
 }
 
-/// 创建许愿事件
-#[event]
-pub struct CreateWishEvent {
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace, PartialEq)]
+pub struct CreateWishResult {
     /// 许愿ID
     pub wish_id: u64,
     /// 创建者公钥
@@ -134,6 +132,8 @@ pub struct CreateWishEvent {
     pub karma_cost: u64,
     /// 是否为免费许愿
     pub is_free: bool,
+    /// 是否掉落御守
+    pub is_amulet_dropped: bool,
     /// 创建时间戳
     pub timestamp: i64,
 }

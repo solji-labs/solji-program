@@ -38,6 +38,8 @@ pub fn burn_incense_simplied(
     let user_state = &mut ctx.accounts.user_state;
     let temple_config = &mut ctx.accounts.temple_config;
 
+    let incense_type_config = &ctx.accounts.incense_type_config;
+
     if user_state.user == Pubkey::default() {
         user_state.initialize(ctx.accounts.user.key(), current_timestamp)?;
     }
@@ -91,14 +93,18 @@ pub fn burn_incense_simplied(
         mint_amount,
     )?;
 
+let total_karma_reward =amount as u64 *  incense_type_config.karma_reward as u64;
+let total_incense_value = incense_type_config.incense_value as u64 * amount as u64;
+
+
     // 烧香
     user_state.burn_incense(
-        ctx.accounts.incense_type_config.karma_reward.into(),
-        ctx.accounts.incense_type_config.incense_value.into(),
+        total_karma_reward,
+        total_incense_value,
         amount.into(),
     )?;
 
-    temple_config.add_incense_value(ctx.accounts.incense_type_config.incense_value.into())?;
+    temple_config.add_incense_value(total_incense_value)?;
 
     ctx.accounts
         .incense_type_config

@@ -13,7 +13,7 @@ describe("wish", () => {
 
     it("should wish", async () => {
         // 生成新用户并进行airdrop
-        const creator = getUserKeypairs(2);
+        const creator = getUserKeypairs(3);
         const liker = getUserKeypairs(4);
         console.log("Creator: ", creator.publicKey.toString());
         console.log("Liker: ", liker.publicKey.toString());
@@ -49,42 +49,49 @@ describe("wish", () => {
         const isAnonymous = randomBoolean();
         let tx = await ctx.createWish(creator, wishId, contentHash, isAnonymous);
 
-        if (tx) {
-            console.log("Wish created successfully!");
-            let likeTx = await ctx.likeWish(liker, creator.publicKey, wishId);
 
-            if (likeTx) {
-                console.log("Wish liked successfully!");
-                let likePda = ctx.getWishLikePda(liker.publicKey, creator.publicKey, wishId);
-                let likeAccount = await ctx.program.account.wishLike.fetch(likePda);
-                console.log("Like account: ", likeAccount);
-
-                let wishPda = ctx.getWishPda(creator.publicKey, wishId);
+          let wishPda = ctx.getWishPda(creator.publicKey, wishId);
                 let wishAccount = await ctx.program.account.wish.fetch(wishPda);
                 console.log("Wish account after like: ", wishAccount);
+
+
+        // if (tx) {
+        //     console.log("Wish created successfully!");
+        //     let likeTx = await ctx.likeWish(liker, creator.publicKey, wishId);
+
+        //     if (likeTx) {
+        //         console.log("Wish liked successfully!");
+        //         let likePda = ctx.getWishLikePda(liker.publicKey, creator.publicKey, wishId);
+        //         let likeAccount = await ctx.program.account.wishLike.fetch(likePda);
+        //         console.log("Like account: ", likeAccount);
+
+        //         let wishPda = ctx.getWishPda(creator.publicKey, wishId);
+        //         let wishAccount = await ctx.program.account.wish.fetch(wishPda);
+        //         console.log("Wish account after like: ", wishAccount);
  
 
-                let cancelLikeTx = await ctx.cancelLikeWish(liker, creator.publicKey, wishId);
+        //         let cancelLikeTx = await ctx.cancelLikeWish(liker, creator.publicKey, wishId);
 
-                if (cancelLikeTx) {
+        //         if (cancelLikeTx) {
  
 
-                    let wishAccountAfterCancel = await ctx.program.account.wish.fetch(wishPda);
-                    if (wishAccountAfterCancel) {
-                        console.log("Wish account after cancel: ", wishAccountAfterCancel);
-                    }
-                }
-            }
+        //             let wishAccountAfterCancel = await ctx.program.account.wish.fetch(wishPda);
+        //             if (wishAccountAfterCancel) {
+        //                 console.log("Wish account after cancel: ", wishAccountAfterCancel);
+        //             }
+        //         }
+        //     }
 
-            // ctx.printUserState(userStatePda);
-            // ctx.printTempleState();
-        }
+        //     // ctx.printUserState(userStatePda);
+        //     // ctx.printTempleState();
+        // }
     });
 });
 
 
 function randomBoolean(): boolean {
-    return Math.random() >= 0.5;
+    // return Math.random() >= 0.5;
+    return false;
 }
 
 

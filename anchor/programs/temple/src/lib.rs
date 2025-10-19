@@ -57,7 +57,7 @@ pub mod temple {
         instructions::fortune::draw_fortune(ctx)
     }
 
-    pub fn create_wish(ctx: Context< CreateWish>, wish_id: u64, content_hash: [u8; 32], is_anonymous: bool) -> Result<()> {
+    pub fn create_wish(ctx: Context< CreateWish>, wish_id: u64, content_hash: [u8; 32], is_anonymous: bool) -> Result<CreateWishResult> {
         instructions::wish::create_wish(ctx, wish_id, content_hash, is_anonymous)
     }
 
