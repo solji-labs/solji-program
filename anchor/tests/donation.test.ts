@@ -11,9 +11,12 @@ describe("donation", () => {
     console.log("========================");
     console.log("Program ID: ", ctx.program.programId.toString());
 
+    const donationAmounts = [0.05, 0.2, 0.5, 1, 5];
+
     it("should donate", async () => {
+        let randomUserIndex = Math.floor(Math.random() * 8);
         // 生成新用户并进行airdrop
-        const donator = getUserKeypairs(5);
+        const donator = getUserKeypairs(randomUserIndex);
         console.log("Donator: ", donator.publicKey.toString());
 
         // 检查用户SOL余额，如果不足则进行airdrop
@@ -24,7 +27,7 @@ describe("donation", () => {
             await ctx.airdropToUser(donator.publicKey);
         }
 
-        let randomDonationAmount = Math.floor(Math.random() * 5) + 1; // 1-5 SOL
+        let randomDonationAmount = donationAmounts[Math.floor(Math.random() * donationAmounts.length)]; // 1-5 SOL
         console.log(`Donation amount: ${randomDonationAmount} SOL`);
 
         let tx = await ctx.donateFund(donator, randomDonationAmount);

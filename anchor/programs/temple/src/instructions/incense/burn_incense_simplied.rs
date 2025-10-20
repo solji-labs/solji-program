@@ -109,13 +109,15 @@ pub fn burn_incense_simplied(
         current_timestamp,
     };
 
+    msg!("burn_incense_result: {:?}", burn_incense_result);
+
     Ok(burn_incense_result)
 }
 
 
 
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
+#[derive(Debug, AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
 pub struct BurnIncenseResult {
     /// 奖励的香火值
     pub reward_incense_value: u64,

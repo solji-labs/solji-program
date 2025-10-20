@@ -68,7 +68,7 @@ pub fn create_wish(
     // 更新寺庙全局状态：增加总许愿次数
     temple_config.create_wish()?;
 
-    Ok(CreateWishResult {
+    let create_wish_result = CreateWishResult {
         wish_id,
         content_hash,
         is_anonymous, 
@@ -77,7 +77,11 @@ pub fn create_wish(
         current_timestamp,
         reduce_karma_points,
         reward_karma_points,
-    })
+    };
+
+    msg!("create_wish_result: {:?}", create_wish_result);
+
+    Ok(create_wish_result)
 }
 
 #[derive(Accounts)]
@@ -121,7 +125,7 @@ pub struct CreateWish<'info> {
     pub system_program: Program<'info, System>,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace, PartialEq)]
+#[derive(Debug, AnchorSerialize, AnchorDeserialize, Clone, InitSpace, PartialEq)]
 pub struct CreateWishResult {
     /// 许愿ID
     pub wish_id: u64,

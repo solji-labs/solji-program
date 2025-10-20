@@ -4,14 +4,7 @@ pub struct Donation {}
 
 impl Donation {
     pub fn calculate_donation(donate_amount_lamports: u64) -> Result<(u64, u64)> {
-        let donate_amount_sol = (donate_amount_lamports / 100_000_000) as f64;
-
-        //floor: 向下取整 - 0.011 -> 0.01； 0.009 -> 0.00
-        let donate_burns = if donate_amount_sol >= 1.0 {
-            donate_amount_sol.floor() as u8
-        } else {
-            0
-        };
+       let donate_amount_sol = donate_amount_lamports as f64 / 100_000_000.0;  // ✅ 先转换为浮点数再除法
 
         //增加功德值
         let reward_karma_points = if donate_amount_sol >= 5.0 {

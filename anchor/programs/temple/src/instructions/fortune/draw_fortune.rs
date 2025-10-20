@@ -10,51 +10,50 @@ pub fn draw_fortune(ctx: Context<DrawFortune>) -> Result<DrawFortuneResult> {
     let is_free_draw = ctx.accounts.user_state.get_daily_draw_count() == 0;
 
     // 首次抽签不消耗功德值，否则消耗5功德值
-    let reduce_karma_points = if is_free_draw {
-        0
-    } else {
-        5
-    };
-    
+    let reduce_karma_points = if is_free_draw { 0 } else { 5 };
+
     // 检查功德值是否足够
     require!(
-        ctx.accounts.user_state.get_karma_points() >= reduce_karma_points, 
+        ctx.accounts.user_state.get_karma_points() >= reduce_karma_points,
         UserError::NotEnoughKarmaPoints
     );
 
     // 生成随机运势结果（在可变借用之前完成）
     let fortune = generate_fortune_result(&ctx, clock.unix_timestamp)?;
-    
-
 
     let reward_karma_points = 2u64;
 
     // 更新用户状态（可变借用）
-    ctx.accounts.user_state.draw_fortune(reduce_karma_points, reward_karma_points, current_timestamp)?;
+    ctx.accounts.user_state.draw_fortune(
+        reduce_karma_points,
+        reward_karma_points,
+        current_timestamp,
+    )?;
 
     // 更新寺庙状态（可变借用）
     ctx.accounts.temple_config.draw_fortune()?;
- 
 
-    Ok(DrawFortuneResult {
+    let draw_fortune_result = DrawFortuneResult {
         fortune,
         reduce_karma_points,
         reward_karma_points,
         current_timestamp,
         is_free_draw,
-    })
+    };
+
+    msg!("draw_fortune_result: {:?}", draw_fortune_result);
+
+    Ok(draw_fortune_result)
 }
 
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
+#[derive(Debug, AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
 pub struct DrawFortuneResult {
-    pub fortune: FortuneResult,
     pub reduce_karma_points: u64,
     pub reward_karma_points: u64,
     pub current_timestamp: i64,
     pub is_free_draw: bool,
+    pub fortune: FortuneResult,
 }
-
 
 // 生成运势结果的辅助函数
 fn generate_fortune_result(ctx: &Context<DrawFortune>, timestamp: i64) -> Result<FortuneResult> {
@@ -65,22 +64,25 @@ fn generate_fortune_result(ctx: &Context<DrawFortune>, timestamp: i64) -> Result
         let seed = timestamp
             .wrapping_add(user_key.to_bytes()[0] as i64)
             .wrapping_add(user_key.to_bytes()[31] as i64);
-        
+
         let random_value = (seed.abs() % 100) as u8;
         Ok(fortune_from_random(random_value))
     }
-    
+
     #[cfg(not(feature = "localnet"))]
     {
         // 生产环境：使用链上随机数账户
         let randomness_data = ctx.accounts.randomness_account.try_borrow_data()?;
-        require!(randomness_data.len() >= 8, UserError::InvalidRandomnessAccount);
-        
+        require!(
+            randomness_data.len() >= 8,
+            UserError::InvalidRandomnessAccount
+        );
+
         // 从随机数账户读取数据（具体实现取决于你使用的随机数预言机）
         let random_bytes: [u8; 8] = randomness_data[0..8].try_into().unwrap();
         let random_u64 = u64::from_le_bytes(random_bytes);
         let random_value = (random_u64 % 100) as u8;
-        
+
         Ok(fortune_from_random(random_value))
     }
 }
@@ -88,14 +90,14 @@ fn generate_fortune_result(ctx: &Context<DrawFortune>, timestamp: i64) -> Result
 // 根据随机数值映射到运势结果
 fn fortune_from_random(value: u8) -> FortuneResult {
     match value {
-        0..=4 => FortuneResult::GreatLuck,      // 5%: 0-4
-        5..=14 => FortuneResult::Lucky,         // 10%: 5-14
-        15..=34 => FortuneResult::Good,         // 20%: 15-34
-        35..=64 => FortuneResult::Normal,       // 30%: 35-64
-        65..=84 => FortuneResult::Nobad,        // 20%: 65-84
-        85..=94 => FortuneResult::Bad,          // 10%: 85-94
-        95..=99 => FortuneResult::VeryBad,      // 5%: 95-99
-        _ => FortuneResult::Normal,             // 兜底
+        0..=4 => FortuneResult::GreatLuck, // 5%: 0-4
+        5..=14 => FortuneResult::Lucky,    // 10%: 5-14
+        15..=34 => FortuneResult::Good,    // 20%: 15-34
+        35..=64 => FortuneResult::Normal,  // 30%: 35-64
+        65..=84 => FortuneResult::Nobad,   // 20%: 65-84
+        85..=94 => FortuneResult::Bad,     // 10%: 85-94
+        95..=99 => FortuneResult::VeryBad, // 5%: 95-99
+        _ => FortuneResult::Normal,        // 兜底
     }
 }
 
@@ -111,7 +113,7 @@ pub struct DrawFortune<'info> {
 
     /// 用户账户
     #[account(mut)]
-    pub user: Signer<'info>,    
+    pub user: Signer<'info>,
 
     /// 寺庙状态账户
     #[account(
@@ -123,22 +125,20 @@ pub struct DrawFortune<'info> {
 
     /// CHECK: 随机数账户（仅在非本地环境需要）
     #[cfg(not(feature = "localnet"))]
-    pub randomness_account: AccountInfo<'info>, 
+    pub randomness_account: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,
 }
 
-
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace, PartialEq)]
+#[derive(Debug, AnchorSerialize, AnchorDeserialize, Clone, InitSpace, PartialEq)]
 pub enum FortuneResult {
-    GreatLuck,          // 大吉 5%
-    Lucky,              // 吉 10%
-    Good,               // 小吉 20%
-    Normal,             // 正常 30%
-    Nobad,              // 小凶 20%
-    Bad,                // 凶 10%
-    VeryBad,            // 大凶 5%
+    GreatLuck, // 大吉 5%
+    Lucky,     // 吉 10%
+    Good,      // 小吉 20%
+    Normal,    // 正常 30%
+    Nobad,     // 小凶 20%
+    Bad,       // 凶 10%
+    VeryBad,   // 大凶 5%
 }
 
 impl FortuneResult {
@@ -166,5 +166,3 @@ impl FortuneResult {
         }
     }
 }
-
- 

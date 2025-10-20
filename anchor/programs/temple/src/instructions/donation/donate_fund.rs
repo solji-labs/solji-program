@@ -2,11 +2,14 @@ use anchor_lang::prelude::*;
 use anchor_lang::system_program::{transfer, Transfer};
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::metadata::mpl_token_metadata::types::DataV2;
-use anchor_spl::metadata::{create_metadata_accounts_v3, update_metadata_accounts_v2, CreateMetadataAccountsV3, Metadata, UpdateMetadataAccountsV2};
+use anchor_spl::metadata::{
+    create_metadata_accounts_v3, update_metadata_accounts_v2, CreateMetadataAccountsV3, Metadata,
+    UpdateMetadataAccountsV2,
+};
 use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 
 use crate::state::{
-    BadgeNFT, Donation, TempleConfig, UserDonationState, UserError, UserIncenseState, UserState
+    BadgeNFT, Donation, TempleConfig, UserDonationState, UserError, UserIncenseState, UserState,
 };
 use crate::DonationError;
 use crate::TempleError;
@@ -14,7 +17,7 @@ use crate::TempleError;
 pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<DonateFundResult> {
     require!(amount > 0, DonationError::InvalidDonationAmount);
 
-     // 检查支付金额是否足够
+    // 检查支付金额是否足够
     let payment_amount = ctx.accounts.user.lamports();
     require!(payment_amount >= amount, DonationError::InsufficientPayment);
 
@@ -35,8 +38,6 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<DonateFundRe
         );
     }
 
-   
-
     // 转账
     transfer(
         CpiContext::new(
@@ -51,12 +52,14 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<DonateFundRe
 
     let old_donation_level = user_donation_state.get_donation_level();
 
-    let new_donation_level = BadgeNFT::calculate_donation_level(
-        user_donation_state.total_donation_amount + amount,
+    let new_donation_level =
+        BadgeNFT::calculate_donation_level(user_donation_state.total_donation_amount + amount);
+
+    msg!(
+        "old_donation_level: {}, new_donation_level: {}",
+        old_donation_level,
+        new_donation_level
     );
-
-    msg!("old_donation_level: {}, new_donation_level: {}", old_donation_level, new_donation_level);
-
 
     let nft_name = BadgeNFT::get_nft_name(new_donation_level);
     let uri = format!(
@@ -85,7 +88,11 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<DonateFundRe
                     uses: None,
                 }),
                 None,
-                if new_donation_level == 4 { Some(true) } else { None },
+                if new_donation_level == 4 {
+                    Some(true)
+                } else {
+                    None
+                },
             )?;
         }
     } else {
@@ -123,13 +130,15 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<DonateFundRe
             None,
         )?;
 
-
         mint_to(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 MintTo {
                     mint: ctx.accounts.nft_mint_account.to_account_info(),
-                    to: ctx.accounts.user_nft_associated_token_account.to_account_info(),
+                    to: ctx
+                        .accounts
+                        .user_nft_associated_token_account
+                        .to_account_info(),
                     authority: ctx.accounts.temple_config.to_account_info(),
                 },
                 temple_signer_seeds,
@@ -140,18 +149,21 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<DonateFundRe
         user_donation_state.has_minted_badge_nft = true;
     }
 
-
-
     let (reward_karma_points, reward_incense_value) = Donation::calculate_donation(amount)?;
 
     //捐助
     let _total_donation_amount = user_donation_state.donate_fund(amount, current_timestamp)?;
     //增加用户功德值
-    user_state.donate_fund(amount, reward_karma_points, reward_incense_value, current_timestamp)?;
+    user_state.donate_fund(
+        amount,
+        reward_karma_points,
+        reward_incense_value,
+        current_timestamp,
+    )?;
     //增加寺庙功德值
     ctx.accounts
         .temple_config
-        .donate_fund(amount,reward_incense_value, current_timestamp)?;
+        .donate_fund(amount, reward_incense_value, current_timestamp)?;
 
     // 如果捐助金额大于等于5sol，空投高级香型
     if amount >= 5_000_000_000 {
@@ -163,7 +175,6 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<DonateFundRe
         user_incense_state.airdrop_incense_by_donation(amount)?;
     }
 
-
     let donate_fund_result = DonateFundResult {
         reward_incense_value,
         reward_karma_points,
@@ -171,19 +182,18 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<DonateFundRe
         current_timestamp: current_timestamp,
     };
 
+    msg!("donate_fund_result: {:?}", donate_fund_result);
+
     Ok(donate_fund_result)
 }
 
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
+#[derive(Debug, AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
 pub struct DonateFundResult {
     pub reward_incense_value: u64,
     pub reward_karma_points: u64,
     pub donation_amount: u64,
     pub current_timestamp: i64,
 }
-
-
 
 #[derive(Accounts)]
 pub struct DonateFund<'info> {
