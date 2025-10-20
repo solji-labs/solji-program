@@ -3,14 +3,14 @@ use anchor_lang::solana_program::clock::Clock;
 
 use crate::state::{TempleConfig, UserError, UserState};
 
-pub fn draw_fortune(ctx: Context<DrawFortune>) -> Result<DrawResult> {
+pub fn draw_fortune(ctx: Context<DrawFortune>) -> Result<DrawFortuneResult> {
     let clock = Clock::get()?;
-    
+    let current_timestamp = clock.unix_timestamp;
     // 判断是否为首次抽签-首次抽签不消耗功德值
-    let free_draw = ctx.accounts.user_state.get_daily_draw_count() == 0;
+    let is_free_draw = ctx.accounts.user_state.get_daily_draw_count() == 0;
 
     // 首次抽签不消耗功德值，否则消耗5功德值
-    let karma_points_per_draw = if free_draw {
+    let reduce_karma_points = if is_free_draw {
         0
     } else {
         5
@@ -18,35 +18,43 @@ pub fn draw_fortune(ctx: Context<DrawFortune>) -> Result<DrawResult> {
     
     // 检查功德值是否足够
     require!(
-        ctx.accounts.user_state.get_karma_points() >= karma_points_per_draw, 
+        ctx.accounts.user_state.get_karma_points() >= reduce_karma_points, 
         UserError::NotEnoughKarmaPoints
     );
 
     // 生成随机运势结果（在可变借用之前完成）
     let fortune = generate_fortune_result(&ctx, clock.unix_timestamp)?;
     
-    let draw_result = DrawResult {
-        fortune,
-        timestamp: clock.unix_timestamp,
-        free_draw,
-    };
+
+
+    let reward_karma_points = 2u64;
 
     // 更新用户状态（可变借用）
-    ctx.accounts.user_state.draw_fortune(karma_points_per_draw)?;
+    ctx.accounts.user_state.draw_fortune(reduce_karma_points, reward_karma_points, current_timestamp)?;
 
     // 更新寺庙状态（可变借用）
     ctx.accounts.temple_config.draw_fortune()?;
+ 
 
-    // 发射抽签事件
-    emit!(DrawFortuneEvent {
-        user: ctx.accounts.user.key(),
-        fortune: draw_result.fortune.clone(),
-        timestamp: draw_result.timestamp,
-        free_draw: draw_result.free_draw,
-    });
-
-    Ok(draw_result)
+    Ok(DrawFortuneResult {
+        fortune,
+        reduce_karma_points,
+        reward_karma_points,
+        current_timestamp,
+        is_free_draw,
+    })
 }
+
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
+pub struct DrawFortuneResult {
+    pub fortune: FortuneResult,
+    pub reduce_karma_points: u64,
+    pub reward_karma_points: u64,
+    pub current_timestamp: i64,
+    pub is_free_draw: bool,
+}
+
 
 // 生成运势结果的辅助函数
 fn generate_fortune_result(ctx: &Context<DrawFortune>, timestamp: i64) -> Result<FortuneResult> {
@@ -120,12 +128,7 @@ pub struct DrawFortune<'info> {
     pub system_program: Program<'info, System>,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
-pub struct DrawResult {
-    pub fortune: FortuneResult,
-    pub timestamp: i64,
-    pub free_draw: bool,
-}
+
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace, PartialEq)]
 pub enum FortuneResult {
@@ -164,10 +167,4 @@ impl FortuneResult {
     }
 }
 
-#[event]
-pub struct DrawFortuneEvent {
-    pub user: Pubkey,
-    pub fortune: FortuneResult,
-    pub timestamp: i64,
-    pub free_draw: bool,
-}
+ 

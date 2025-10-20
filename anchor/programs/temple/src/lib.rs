@@ -49,11 +49,11 @@ pub mod temple {
         instructions::burn_incense::burn_incense(ctx, incense_type_id, amount)
     }
 
-    pub fn burn_incense_simplied<'info>(ctx: Context< BurnIncenseSimplied>,incense_type_id: u8, amount: u8, payment_amount: u64) -> Result<()> {
+    pub fn burn_incense_simplied<'info>(ctx: Context< BurnIncenseSimplied>,incense_type_id: u8, amount: u8, payment_amount: u64) -> Result<BurnIncenseResult> {
         instructions::burn_incense_simplied::burn_incense_simplied(ctx, incense_type_id, amount, payment_amount)
     }
 
-    pub fn draw_fortune(ctx: Context< DrawFortune>) -> Result<DrawResult> {
+    pub fn draw_fortune(ctx: Context< DrawFortune>) -> Result<DrawFortuneResult> {
         instructions::fortune::draw_fortune(ctx)
     }
 
@@ -73,7 +73,7 @@ pub mod temple {
         instructions::mint_buddha_nft::mint_buddha_nft(ctx)
     }
 
-    pub fn donate_fund(ctx: Context<DonateFund>,amount: u64) -> Result<()> {
+    pub fn donate_fund(ctx: Context<DonateFund>,amount: u64) -> Result<DonateFundResult> {
         instructions::donation::donate_fund(ctx,amount)
     }
 }

@@ -79,24 +79,13 @@ impl TempleConfig {
     }
 
     /// 增加捐助金额
-    pub fn donate_fund(&mut self, amount: u64, current_timestamp: i64) -> Result<()> {
+    pub fn donate_fund(&mut self, amount: u64, add_incense_value: u64, current_timestamp: i64) -> Result<()> {
 
         // 每次捐助增加1
         self.total_donations = self.total_donations
         .checked_add(1)
         .ok_or(TempleError::DonationOverflow)?;
 
-        let donate_sol = (amount / 100_000_000) as f64;
-        let add_incense_value  = if donate_sol >=5.0 {
-            100000
-        } else if donate_sol >=1.0 {
-            30000
-        } else if donate_sol >=0.2 {
-            6300
-        } else {
-            1200
-        };
- 
         //增加香火值
         self.total_incense_value = self.total_incense_value
         .checked_add(add_incense_value)

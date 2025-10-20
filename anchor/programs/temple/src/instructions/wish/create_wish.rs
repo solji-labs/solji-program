@@ -26,7 +26,7 @@ pub fn create_wish(
     let is_free_wish = user_state.get_daily_wish_count() < UserState::DAILY_FREE_WISH_LIMIT;
 
     // 计算需要扣除的功德值
-    let karma_points_cost = if is_free_wish {
+    let reduce_karma_points = if is_free_wish {
         0
     } else {
         Wish::KARMA_COST_PER_WISH
@@ -34,13 +34,13 @@ pub fn create_wish(
 
     // 判断功德值是否足够
     require!(
-        user_state.get_karma_points() >= karma_points_cost,
+        user_state.get_karma_points() >= reduce_karma_points,
         UserError::NotEnoughKarmaPoints
     );
 
-    let timestamp = Clock::get()?.unix_timestamp;
+    let current_timestamp = Clock::get()?.unix_timestamp;
     // 御守概率掉落逻辑：10%概率
-    let random_seed = (timestamp as u64).wrapping_add(wish_id);
+    let random_seed = (current_timestamp as u64).wrapping_add(wish_id);
     let amulet_drop_random = (random_seed % 100) as u8;
     let is_amulet_dropped = amulet_drop_random < 10;
 
@@ -55,25 +55,28 @@ pub fn create_wish(
         content_hash,
         is_amulet_dropped,
         is_anonymous,
-        timestamp,
+        current_timestamp,
         is_free_wish,
+
     )?;
 
+    let reward_karma_points = 1u64;
+
     // 更新用户状态：扣除功德值，增加许愿计数
-    user_state.create_wish(karma_points_cost)?;
+    user_state.create_wish(reduce_karma_points, reward_karma_points, current_timestamp)?;
 
     // 更新寺庙全局状态：增加总许愿次数
     temple_config.create_wish()?;
 
     Ok(CreateWishResult {
         wish_id,
-        creator: user.key(),
         content_hash,
-        is_anonymous,
-        karma_cost: karma_points_cost,
-        is_free: is_free_wish,
-        is_amulet_dropped,
-        timestamp,
+        is_anonymous, 
+        is_free_wish,
+        is_amulet_dropped, 
+        current_timestamp,
+        reduce_karma_points,
+        reward_karma_points,
     })
 }
 
@@ -122,18 +125,18 @@ pub struct CreateWish<'info> {
 pub struct CreateWishResult {
     /// 许愿ID
     pub wish_id: u64,
-    /// 创建者公钥
-    pub creator: Pubkey,
     /// 内容哈希
     pub content_hash: [u8; 32],
     /// 是否匿名
     pub is_anonymous: bool,
-    /// 消耗的功德值
-    pub karma_cost: u64,
     /// 是否为免费许愿
-    pub is_free: bool,
+    pub is_free_wish: bool,
     /// 是否掉落御守
     pub is_amulet_dropped: bool,
-    /// 创建时间戳
-    pub timestamp: i64,
+    /// 奖励功德值
+    pub reward_karma_points: u64,
+    /// 消耗的功德值
+    pub reduce_karma_points: u64, 
+    /// 当前时间戳
+    pub current_timestamp: i64,
 }

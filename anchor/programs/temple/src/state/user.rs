@@ -83,7 +83,7 @@ impl UserState {
         Ok(())
     }
 
-    pub fn donate_fund(&mut self, amount: u64, current_timestamp: i64) -> Result<()> {
+    pub fn donate_fund(&mut self, amount: u64, add_karma_points: u64, add_incense_value: u64, current_timestamp: i64) -> Result<()> {
         self.check_and_reset_daily_limits()?;
         // 每捐助0.01sol ，可以增加烧香的1次
         // 如果捐助 0.011sol，可以增加烧香的1次, 0.009sol 不增加
@@ -100,16 +100,10 @@ impl UserState {
         self.donation_unlocked_burns = self.donation_unlocked_burns.saturating_add(donate_burns);
         
         //增加功德值
-        let add_karma_points  = if donate_sol >=5.0 {
-            1200000
-        } else if donate_sol >=1.0 {
-            140000
-        } else if donate_sol >=0.2 {
-            1300
-        } else {
-            65
-        };
         self.karma_points = self.karma_points.saturating_add(add_karma_points);
+        
+        //增加香火值
+        self.total_incense_value = self.total_incense_value.saturating_add(add_incense_value);
         
         self.last_active_at = current_timestamp;
         Ok(())
@@ -237,32 +231,38 @@ impl UserState {
     }
 
     /// 抽签
-    pub fn draw_fortune(&mut self, karma_points: u64) -> Result<()> {
+    pub fn draw_fortune(&mut self, reduce_karma_points: u64, reward_karma_points: u64, current_timestamp: i64) -> Result<()> {
         self.daily_draw_count = self.daily_draw_count.saturating_add(1);
         self.total_draw_count = self.total_draw_count.saturating_add(1);
         require!(
-            self.karma_points >= karma_points,
+            self.karma_points >= reduce_karma_points,
             UserError::NotEnoughKarmaPoints
         );
-        if karma_points > 0 {
-            self.karma_points = self.karma_points.saturating_sub(karma_points);
+        if reduce_karma_points > 0 {
+            self.karma_points = self.karma_points.saturating_sub(reduce_karma_points);
         }
-        self.last_active_at = Clock::get()?.unix_timestamp;
+        if reward_karma_points > 0 {
+            self.karma_points = self.karma_points.saturating_add(reward_karma_points);
+        }
+        self.last_active_at = current_timestamp;
         Ok(())
     }
 
     /// 许愿
-    pub fn create_wish(&mut self, karma_points: u64) -> Result<()> {
-        if karma_points > 0 {
+    pub fn create_wish(&mut self, reduce_karma_points: u64, reward_karma_points: u64, current_timestamp: i64) -> Result<()> {
+        if reduce_karma_points > 0 {
             require!(
-                self.karma_points >= karma_points,
+                self.karma_points >= reduce_karma_points,
                 UserError::NotEnoughKarmaPoints
             );
-            self.karma_points = self.karma_points.saturating_sub(karma_points);
+            self.karma_points = self.karma_points.saturating_sub(reduce_karma_points);
+        }
+        if reward_karma_points > 0 {
+            self.karma_points = self.karma_points.saturating_add(reward_karma_points);
         }
         self.daily_wish_count = self.daily_wish_count.saturating_add(1);
         self.total_wish_count = self.total_wish_count.saturating_add(1);
-        self.last_active_at = Clock::get()?.unix_timestamp;
+        self.last_active_at = current_timestamp;
         Ok(())
     }
 
@@ -491,6 +491,10 @@ impl UserDonationState {
      
  
 }
+
+
+
+ 
 
 
 /// 用户相关错误定义

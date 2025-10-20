@@ -6,13 +6,17 @@ use anchor_spl::metadata::{create_metadata_accounts_v3, update_metadata_accounts
 use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 
 use crate::state::{
-    BadgeNFT, TempleConfig, UserDonationState, UserError, UserIncenseState, UserState,
+    BadgeNFT, Donation, TempleConfig, UserDonationState, UserError, UserIncenseState, UserState
 };
 use crate::DonationError;
 use crate::TempleError;
 
-pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
+pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<DonateFundResult> {
     require!(amount > 0, DonationError::InvalidDonationAmount);
+
+     // 检查支付金额是否足够
+    let payment_amount = ctx.accounts.user.lamports();
+    require!(payment_amount >= amount, DonationError::InsufficientPayment);
 
     let current_timestamp = Clock::get()?.unix_timestamp;
 
@@ -31,9 +35,7 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
         );
     }
 
-    // 检查支付金额是否足够
-    let payment_amount = ctx.accounts.user.lamports();
-    require!(payment_amount >= amount, DonationError::InsufficientPayment);
+   
 
     // 转账
     transfer(
@@ -138,14 +140,18 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
         user_donation_state.has_minted_badge_nft = true;
     }
 
+
+
+    let (reward_karma_points, reward_incense_value) = Donation::calculate_donation(amount)?;
+
     //捐助
     let _total_donation_amount = user_donation_state.donate_fund(amount, current_timestamp)?;
     //增加用户功德值
-    user_state.donate_fund(amount, current_timestamp)?;
+    user_state.donate_fund(amount, reward_karma_points, reward_incense_value, current_timestamp)?;
     //增加寺庙功德值
     ctx.accounts
         .temple_config
-        .donate_fund(amount, current_timestamp)?;
+        .donate_fund(amount,reward_incense_value, current_timestamp)?;
 
     // 如果捐助金额大于等于5sol，空投高级香型
     if amount >= 5_000_000_000 {
@@ -157,8 +163,27 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
         user_incense_state.airdrop_incense_by_donation(amount)?;
     }
 
-    Ok(())
+
+    let donate_fund_result = DonateFundResult {
+        reward_incense_value,
+        reward_karma_points,
+        donation_amount: amount,
+        current_timestamp: current_timestamp,
+    };
+
+    Ok(donate_fund_result)
 }
+
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
+pub struct DonateFundResult {
+    pub reward_incense_value: u64,
+    pub reward_karma_points: u64,
+    pub donation_amount: u64,
+    pub current_timestamp: i64,
+}
+
+
 
 #[derive(Accounts)]
 pub struct DonateFund<'info> {

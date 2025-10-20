@@ -14,7 +14,7 @@ pub fn burn_incense_simplied(
     incense_type_id: u8,
     amount: u8,
     payment_amount: u64,
-) -> Result<()> {
+) -> Result<BurnIncenseResult> {
     require!(amount > 0 && amount <= 10, BurnIncenseError::InvalidAmount);
     require!(
         ctx.accounts.incense_type_config.is_active,
@@ -72,11 +72,6 @@ pub fn burn_incense_simplied(
         &[incense_type_id],
         &[ctx.bumps.nft_mint_account],
     ]];
-
-    // Mint 一个功德香NFT给用户作为烧香的证明
-
-    // 1. 铸造NFT token到用户关联账户
-    let mint_amount = 1u64; // NFT数量为1
     mint_to(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
@@ -90,28 +85,56 @@ pub fn burn_incense_simplied(
             },
             signer_seeds,
         ),
-        mint_amount,
-    )?;
-
-let total_karma_reward =amount as u64 *  incense_type_config.karma_reward as u64;
-let total_incense_value = incense_type_config.incense_value as u64 * amount as u64;
-
-
-    // 烧香
-    user_state.burn_incense(
-        total_karma_reward,
-        total_incense_value,
         amount.into(),
     )?;
 
-    temple_config.add_incense_value(total_incense_value)?;
+    let reward_karma_points = amount as u64 * incense_type_config.karma_reward as u64;
+    let reward_incense_value = incense_type_config.incense_value as u64 * amount as u64;
+
+    // 烧香
+    user_state.burn_incense(reward_karma_points, reward_incense_value, amount.into())?;
+
+    temple_config.add_incense_value(reward_incense_value)?;
 
     ctx.accounts
         .incense_type_config
         .increment_minted_count(amount.into())?;
 
-    Ok(())
+    let burn_incense_result = BurnIncenseResult {
+        reward_incense_value, 
+        reward_karma_points, 
+        incense_type_id,
+        amount,
+        payment_amount: total_paid,
+        current_timestamp,
+    };
+
+    Ok(burn_incense_result)
 }
+
+
+
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
+pub struct BurnIncenseResult {
+    /// 奖励的香火值
+    pub reward_incense_value: u64,
+    /// 奖励的功德值
+    pub reward_karma_points: u64,
+    /// 香型ID
+    pub incense_type_id: u8,
+    /// 烧香数量
+    pub amount: u8,
+    /// 支付金额
+    pub payment_amount: u64,
+    /// 当前时间戳
+    pub current_timestamp: i64,
+}
+
+
+
+
+
 
 #[derive(Accounts)]
 #[instruction(incense_type_id: u8)]
