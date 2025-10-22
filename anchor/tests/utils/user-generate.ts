@@ -1,7 +1,7 @@
 import { Keypair } from "@solana/web3.js";
 import * as crypto from "crypto";
 
-const USER_COUNT = 10;
+const USER_COUNT = 1000;
 const USER_KEYPAIRS: Keypair[] = [];
 
 /**

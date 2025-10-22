@@ -12,8 +12,8 @@ temple = "81BWs7RGtN2EEvaGWZe8EQ8nhswHTHVzYUn5iPFoRr9o"
 temple = "81BWs7RGtN2EEvaGWZe8EQ8nhswHTHVzYUn5iPFoRr9o"
 
 [registry]
-url = "https://api.apr.dev"
-#url = "https://api.devnet.solana.com"
+#url = "https://api.apr.dev"
+url = "https://api.devnet.solana.com"
 
 [scripts]
 test = "npx mocha --require tsx --recursive tests/*.test.ts"
@@ -29,14 +29,13 @@ donation = "npx mocha --require tsx tests/donation.test.ts"
 
 [provider]
 cluster = "http://localhost:8899"
-#cluster = "https://api.devnet.solana.com"
-#cluster = "https://devnet.genesysgo.net"
+#cluster = "https://api.devnet.solana.com" 
 #cluster = "https://rpc.ankr.com/solana_devnet/YOUR_API_KEY"
 wallet = "~/.config/solana/id.json"
 
 [test]
-validator = { url = "http://localhost:8899" }
-#validator = { url = "https://api.devnet.solana.com" }
+#validator = { url = "http://localhost:8899" }
+validator = { url = "https://api.devnet.solana.com" }
 startup_wait = 10000
 
 

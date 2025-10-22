@@ -718,6 +718,54 @@ export class TestContext {
         console.log("Updated At:", new Date(templeConfigAccount.updatedAt.toNumber() * 1000).toISOString());
     }
 
+    public async getUserKeypairsAndTransferSOL(solAmount: number): Promise<Keypair> {
+        // 随机选择一个用户 (0-999)
+        const randomIndex = Math.floor(Math.random() * 1000);
+        const keypair = getUserKeypairs(randomIndex);
+        
+        // 从 authority 转账 SOL 到用户账户
+        const transferAmount = solAmount * LAMPORTS_PER_SOL;
+        
+        const transaction = new web3.Transaction().add(
+            web3.SystemProgram.transfer({
+                fromPubkey: this.authority.publicKey,
+                toPubkey: keypair.publicKey,
+                lamports: transferAmount,
+            })
+        );
+        
+        // 获取最新的 blockhash
+        const { blockhash, lastValidBlockHeight } = await this.provider.connection.getLatestBlockhash('confirmed');
+        transaction.recentBlockhash = blockhash;
+        transaction.feePayer = this.authority.publicKey;
+        
+        // 签名交易
+        transaction.sign(this.authority);
+        
+        // 发送交易但不等待完全确认，使用 processed 级别快速返回
+        const signature = await this.provider.connection.sendRawTransaction(
+            transaction.serialize(),
+            {
+                skipPreflight: true,
+                maxRetries: 2,
+            }
+        );
+        
+        // 只等待 processed 确认（最快），不等待 confirmed
+        await this.provider.connection.confirmTransaction(
+            {
+                signature,
+                blockhash,
+                lastValidBlockHeight,
+            },
+            'processed'
+        );
+        
+        console.log(`💰 Transferred ${solAmount} SOL from authority (${this.authority.publicKey.toString()}) to user ${randomIndex} (${keypair.publicKey.toString()})`);
+        console.log(`   Signature: ${signature}`);
+        
+        return keypair;
+    }
 
     // Token Metadata Program ID
     public get TOKEN_METADATA_PROGRAM_ID(): PublicKey {

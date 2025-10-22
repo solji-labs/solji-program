@@ -12,26 +12,34 @@ describe("wish", () => {
     console.log("Program ID: ", ctx.program.programId.toString());
 
     it("should wish", async () => {
-        // 生成新用户并进行airdrop
-        const creator = getUserKeypairs(3);
-        const liker = getUserKeypairs(4);
-        console.log("Creator: ", creator.publicKey.toString());
-        console.log("Liker: ", liker.publicKey.toString());
+        // // 生成新用户并进行airdrop
+        // let randomUserIndex = Math.floor(Math.random() * 7)+1;
+        // const creator = getUserKeypairs(randomUserIndex);
+        // const liker = getUserKeypairs(randomUserIndex + 1);
+        // console.log("Creator: ", creator.publicKey.toString());
+        // console.log("Liker: ", liker.publicKey.toString());
 
-        // 检查用户SOL余额，如果不足则进行airdrop
-        const balance = await ctx.provider.connection.getBalance(creator.publicKey);
-        const likerBalance = await ctx.provider.connection.getBalance(liker.publicKey);
-        console.log(`Creator balance: ${balance / 1e9} SOL`);
-        console.log(`Liker balance: ${likerBalance / 1e9} SOL`);
-        if (balance < 1e9) { // 如果余额小于1 SOL
-            console.log("Insufficient balance, airdropping...");
-            await ctx.airdropToUser(creator.publicKey);
-        }
+        // // 检查用户SOL余额，如果不足则进行airdrop
+        // const balance = await ctx.provider.connection.getBalance(creator.publicKey);
+        // const likerBalance = await ctx.provider.connection.getBalance(liker.publicKey);
+        // console.log(`Creator balance: ${balance / 1e9} SOL`);
+        // console.log(`Liker balance: ${likerBalance / 1e9} SOL`);
+        // if (balance < 1e9) { // 如果余额小于1 SOL
+        //     console.log("Insufficient balance, airdropping...");
+        //     await ctx.airdropToUser(creator.publicKey);
+        // }
 
-        if (likerBalance < 1e9) { // 如果余额小于1 SOL
-            console.log("Insufficient balance, airdropping...");
-            await ctx.airdropToUser(liker.publicKey);
-        }
+        // if (likerBalance < 1e9) { // 如果余额小于1 SOL
+        //     console.log("Insufficient balance, airdropping...");
+        //     await ctx.airdropToUser(liker.publicKey);
+        // }
+
+
+        // let creator = await ctx.getUserKeypairsAndTransferSOL(0.01);
+        // let liker = await ctx.getUserKeypairsAndTransferSOL(0.01);
+
+        let creator = ctx.authority;
+
 
         // 检查用户状态是否已存在，如果不存在则初始化
         const userStatePda = ctx.getUserStatePda(creator.publicKey);

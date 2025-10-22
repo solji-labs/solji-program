@@ -53,7 +53,8 @@ describe("draw fortune", () => {
 
     it("should draw fortune", async () => {
         // 生成新用户并进行airdrop
-        const user = getUserKeypairs(3);
+        let randomUserIndex = Math.floor(Math.random() * 8);
+        const user = getUserKeypairs(randomUserIndex);
         console.log("User: ", user.publicKey.toString());
 
         // 检查用户SOL余额，如果不足则进行airdrop

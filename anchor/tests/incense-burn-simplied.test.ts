@@ -13,7 +13,8 @@ describe("incense burn simplified", () => {
 
     it("should burn incense with SOL payment and mint NFT", async () => {
         // 使用新用户进行测试
-        const user = getUserKeypairs(3);
+        let randomUserIndex = Math.floor(Math.random() * 8);
+        const user = getUserKeypairs(randomUserIndex);
         console.log("User: ", user.publicKey.toString());
 
         // 检查用户SOL余额，如果不足则进行airdrop
@@ -25,8 +26,8 @@ describe("incense burn simplified", () => {
         }
 
         // 选择香型和数量
-        const incenseTypeId = 1; // 清香
-        const burnAmount = 3;
+        const incenseTypeId = Math.floor(Math.random() * 2) + 1; // 清香
+        const burnAmount = Math.floor(Math.random() * 5) + 1;
 
         // 获取香型配置
         const incenseTypeConfigPda = ctx.getIncenseTypeConfigPda(incenseTypeId);
