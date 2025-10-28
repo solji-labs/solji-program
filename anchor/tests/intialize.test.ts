@@ -88,5 +88,31 @@ describe("Temple Initialize Tests", () => {
         });
     });
 
+    describe("NFT URI Updates", () => {
+        it("should update NFT URIs for incense types", async () => {
+            logTestStart("Update NFT URIs");
+
+            // NFT URI URLs for incense types
+            const nftUris = [
+                "https://solji.mypinata.cloud/ipfs/QmfE3pH44ef4iHHS7Vv81aDomY7yTzUtPnKxcBtZXyMkh4", // Incense type 1 - 清香
+                "https://solji.mypinata.cloud/ipfs/QmYBz666XhqdQtizZYgg4C6EH3cKKKDPRdNDZZ4SEcAxDD", // Incense type 2 - 檀香
+                "https://solji.mypinata.cloud/ipfs/QmUxi64HN4JZh11nztj7mQ3mnwKnadmuoStWR9cfkEqKNo", // Incense type 3 - 龙涎香
+                "https://solji.mypinata.cloud/ipfs/QmPieVQDrCXs2hCB8SxpKGc3Rnh32M1eGCrjY4EbqguXQM", // Incense type 4 - 太上灵香
+            ];
+
+            // Update URIs for incense types 1-6
+            for (let incenseId = 1; incenseId <= 4; incenseId++) {
+                const newUri = nftUris[incenseId - 1];
+                const tx = await ctx.updateNftUri(incenseId, newUri);
+                expect(tx).to.be.a('string');
+                expect(tx.length).to.be.greaterThan(0);
+
+                console.log(`Updated NFT URI for incense type ${incenseId}: ${newUri}`);
+            }
+
+            logTestEnd("Update NFT URIs");
+        });
+    });
+
 
 });

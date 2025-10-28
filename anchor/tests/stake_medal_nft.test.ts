@@ -26,7 +26,7 @@ describe("Stake Medal NFT Tests", () => {
 
         [medalNftPda] = anchor.web3.PublicKey.findProgramAddressSync(
             [
-                Buffer.from("medal_nft"),
+                Buffer.from("medal_nft_v1"),
                 Buffer.from("account"),
                 ctx.templeConfigPda.toBuffer(),
                 user.publicKey.toBuffer()

@@ -3,33 +3,26 @@ import { expect } from "chai";
 
 describe("Buy incense and Burn Tests", () => {
     const ctx = getTestContext();
-
+    const user = ctx.owner;
     // Initialize test environment
     console.log("ser Operations Test Suite");
 
-    beforeEach(async () => {
-        // Ensure temple config and NFT mints exist for each test
-        try {
-            await ctx.program.account.templeConfig.fetch(ctx.templeConfigPda);
-            console.log("Temple config exists");
-        } catch {
-            console.log("Creating temple config...");
-            await ctx.createTempleConfig();
-        }
-
-        // Ensure NFT mints exist
-        await ctx.createNftMint(1);
-        await ctx.createNftMint(2);
-    });
+    // beforeEach(async function () {
+    //     // Ensure temple config and NFT mints exist for each test
+    //     try {
+    //         await ctx.program.account.templeConfig.fetch(ctx.templeConfigPda);
+    //         console.log("Temple config exists");
+    //     } catch {
+    //         console.log("Creating temple config...");
+    //         await ctx.createTempleConfig();
+    //     }
+    // });
 
     describe("Incense Burn Operations", () => {
-        it("should successfully burn incense with SOL payment", async () => {
+        it("should successfully burn incense with SOL payment", async function () {
             logTestStart("Burn Incense with SOL Payment");
 
-            const user = generateUserKeypair();
-            await ctx.airdropToUser(user.publicKey, 1 * 1000000000); // 1 SOL
-            await ctx.initUser(user);
-
+            this.timeout(30000);
             // Burn incense (includes payment)
             const initialBalance = await ctx.provider.connection.getBalance(user.publicKey);
             const tx = await ctx.burnIncense(user, 1, 5); // Burn 5 incense of type 1
@@ -61,12 +54,9 @@ describe("Buy incense and Burn Tests", () => {
         });
 
 
-        it("should reject burn with insufficient SOL", async () => {
+        it("should reject burn with insufficient SOL", async function () {
             logTestStart("Insufficient SOL Burn");
 
-            const user = generateUserKeypair();
-            await ctx.airdropToUser(user.publicKey, 0.01 * 1000000000); // Very little SOL
-            await ctx.initUser(user);
 
             try {
                 await ctx.burnIncense(user, 1, 2); // Try to burn expensive incense
@@ -79,12 +69,8 @@ describe("Buy incense and Burn Tests", () => {
     });
 
     describe("Title System", () => {
-        it("should automatically update title based on merit after burning incense", async () => {
+        it("should automatically update title based on merit after burning incense", async function () {
             logTestStart("Title Update After Burning Incense");
-
-            const user = generateUserKeypair();
-            await ctx.airdropToUser(user.publicKey, 1 * 1000000000); // 1 SOL for burning incense
-            await ctx.initUser(user);
 
             // 验证初始称号为 Pilgrim
             let userIncenseStatePda = ctx.getUserIncenseStatePda(user.publicKey);

@@ -71,11 +71,9 @@ pub fn mint_amulet_nft(ctx: Context<MintAmuletNFT>, amulet_type: u8, source: u8)
         DataV2 {
             name: nft_name_str.clone(),
             symbol: "AMULET".to_string(),
-            uri: format!(
-                "https://api.foxverse.co/temple/amulet/{}/metadata.json",
-                serial_number
-            ),
-            seller_fee_basis_points: 500, // 5% royalty
+            uri: "https://solji.mypinata.cloud/ipfs/QmYhnX7HCKQEPuq5mtTApaL4ccqxCrL1Pcawyvv2ReYc8Q"
+                .to_string(),
+            seller_fee_basis_points: 500,
             creators: None,
             collection: None,
             uses: None,

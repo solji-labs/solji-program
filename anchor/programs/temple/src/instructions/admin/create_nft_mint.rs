@@ -17,6 +17,17 @@ pub fn create_nft_mint(ctx: Context<CreateNftMint>, incense_id: u8) -> Result<()
 
     let nft_name = format!("{} NFT", incense_type.name);
 
+    // 为每个香型设置不同的元数据URL
+    let metadata_uri = match incense_id {
+        1 => "https://solji.mypinata.cloud/ipfs/QmfE3pH44ef4iHHS7Vv81aDomY7yTzUtPnKxcBtZXyMkh4", 
+        2 => "https://solji.mypinata.cloud/ipfs/QmYBz666XhqdQtizZYgg4C6EH3cKKKDPRdNDZZ4SEcAxDD",
+        3 => "https://solji.mypinata.cloud/ipfs/QmUxi64HN4JZh11nztj7mQ3mnwKnadmuoStWR9cfkEqKNo",
+        4 => "https://solji.mypinata.cloud/ipfs/QmPieVQDrCXs2hCB8SxpKGc3Rnh32M1eGCrjY4EbqguXQM",
+        5 => "https://solji.mypinata.cloud/ipfs/bafkreiesfvlpyunybdl22oogzj2kxaado3hpblwqmd3q45pcu4imyzj3ha",
+        6 => "https://solji.mypinata.cloud/ipfs/bafkreiesfvlpyunybdl22oogzj2kxaado3hpblwqmd3q45pcu4imyzj3ha",
+        _ => "https://solji.mypinata.cloud/ipfs/QmfE3pH44ef4iHHS7Vv81aDomY7yTzUtPnKxcBtZXyMkh4",
+    };
+
     let temple_config_key = ctx.accounts.temple_config.key();
     let signer_seeds: &[&[&[u8]]] = &[&[
         IncenseNFT::SEED_PREFIX.as_bytes(),
@@ -42,13 +53,13 @@ pub fn create_nft_mint(ctx: Context<CreateNftMint>, incense_id: u8) -> Result<()
         DataV2 {
             name: nft_name,
             symbol: IncenseNFT::TOKEN_SYMBOL.to_string(),
-            uri: IncenseNFT::TOKEN_URL.to_string(),
+            uri: metadata_uri.to_string(),
             seller_fee_basis_points: 0,
             creators: None,
             collection: None,
             uses: None,
         },
-        false,
+        true,
         true,
         None,
     )?;

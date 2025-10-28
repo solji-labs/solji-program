@@ -4,7 +4,7 @@ import { PublicKey } from "@solana/web3.js";
 
 describe("Fortune Drawing", () => {
     const ctx = getTestContext();
-    let user: any;
+    let user = ctx.owner;
 
     before(async function () {
         this.timeout(30000); // 30秒超时
@@ -16,10 +16,6 @@ describe("Fortune Drawing", () => {
             console.log("Creating temple config...");
             await ctx.createTempleConfig();
         }
-
-        user = generateUserKeypair();
-        await ctx.airdropToUser(user.publicKey, 5 * 1000000000); // 5 SOL
-        await ctx.initUser(user);
     });
 
     // can't draw fortune without enough merit

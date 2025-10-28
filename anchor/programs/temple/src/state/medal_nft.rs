@@ -40,10 +40,23 @@ impl MedalNFT {
 
     // Get medal URI by level
     pub fn get_medal_uri(&self) -> String {
-        format!(
-            "https://api.foxverse.co/temple/medal/{}/metadata.json",
-            self.level
-        )
+        Self::get_medal_uri_by_level(self.level)
+    }
+
+    // Get medal URI by level (static method)
+    pub fn get_medal_uri_by_level(level: u8) -> String {
+        match level {
+            1 => "https://solji.mypinata.cloud/ipfs/QmPmFctW8BUPSvebp44rQaVTSmV8Lapd4axVoRsifzA24F"
+                .to_string(),
+            2 => "https://solji.mypinata.cloud/ipfs/QmSH2M4KFCfTLS4MgzXMh83tLoFqwzfY3GR6YyXrnkNRxN"
+                .to_string(),
+            3 => "https://solji.mypinata.cloud/ipfs/QmQSL1ERzKoDUMeudSePCscU8yxm4WVjMCobLjKyus1dcN"
+                .to_string(),
+            4 => "https://solji.mypinata.cloud/ipfs/Qmf1SHiMwMP7rycyzrGoFFV4iVW9F41tPbaBFc8ndoWPPq"
+                .to_string(),
+            _ => "https://solji.mypinata.cloud/ipfs/QmPmFctW8BUPSvebp44rQaVTSmV8Lapd4axVoRsifzA24F"
+                .to_string(),
+        }
     }
 
     // Minimum donation amount for each level (SOL)
@@ -70,14 +83,17 @@ impl MedalNFT {
         current_donation_sol >= required_sol
     }
 
-    // Get next upgrade level
+    // Get next upgrade level (highest possible)
     pub fn get_next_upgrade_level(&self, current_donation_sol: f64) -> Option<u8> {
+        let mut next_level = None;
         for level in (self.level + 1)..=4 {
             if self.can_upgrade_to(level, current_donation_sol) {
-                return Some(level);
+                next_level = Some(level);
+            } else {
+                break; // Since levels are ordered, if we can't upgrade to this level, we can't upgrade to higher levels
             }
         }
-        None
+        next_level
     }
 
     // Get medal description

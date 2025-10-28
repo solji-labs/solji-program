@@ -45,10 +45,9 @@ pub fn mint_wish_tower_nft(ctx: Context<MintWishTowerNFT>) -> Result<()> {
     let level = ctx.accounts.wish_tower_account.level;
 
     let nft_name = format!("Wish Tower ({} wishes, Level {})", wish_count, level);
-    let nft_uri = format!(
-        "https://example.com/wish-tower/{}/metadata.json",
-        ctx.accounts.authority.key()
-    );
+    let nft_uri =
+        "https://solji.mypinata.cloud/ipfs/QmUrEHCc9PH6EEMg22RVigx4X5QF7A6bNDBrHjPZVq6SJb"
+            .to_string();
 
     // Create metadata account
     let temple_signer_seeds: &[&[&[u8]]] = &[&[

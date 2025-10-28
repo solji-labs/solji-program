@@ -16,5 +16,6 @@ impl BuddhaNFT {
     pub const TOKEN_DECIMALS: u8 = 0;
     pub const TOKEN_NAME: &'static str = "BuddhaNFT";
     pub const TOKEN_SYMBOL: &'static str = "MTK";
-    pub const TOKEN_URL: &'static str = "https://example.com/token.json"; // todo
+    pub const TOKEN_URL: &'static str =
+        "https://solji.mypinata.cloud/ipfs/QmYHsbSuCpSUMksQP89VHawf21iJ7K6UE899uBrUmJgbVg";
 }

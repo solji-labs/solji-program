@@ -35,6 +35,26 @@ impl FortuneResult {
             FortuneResult::GreatBadLuck => "Be extra careful, observe quietly",
         }
     }
+
+    pub fn get_uri(&self) -> &str {
+        match self {
+            FortuneResult::GreatLuck => {
+                "https://solji.mypinata.cloud/ipfs/QmeYUSLgMKYL8128quaieDUXfbdeKVsGBRQLmWjgAsqw2y"
+            }
+            FortuneResult::GoodLuck => {
+                "https://solji.mypinata.cloud/ipfs/Qmdkcptk4783ej2sKNsK39UrNXXjjCxoFLbsYLt5KbhzDA"
+            }
+            FortuneResult::Neutral => {
+                "https://solji.mypinata.cloud/ipfs/QmZkYr6vMhSYA37TEPpN2pAC7Cw3DZSHQKo6mNfadbwKik"
+            }
+            FortuneResult::BadLuck => {
+                "https://solji.mypinata.cloud/ipfs/QmSiaGHzMyCijCSRf5tc9oFh7Ajs7Nnr2DMq6WVtiM4D8B"
+            }
+            FortuneResult::GreatBadLuck => {
+                "https://solji.mypinata.cloud/ipfs/QmVQSbuJJnwYQ9ZJYvMcTDyxc1X75mjdVxNkjxWf6D2HsT"
+            }
+        }
+    }
 }
 
 // Define draw result structure
@@ -124,9 +144,9 @@ pub struct DrawFortune<'info> {
     )]
     pub fortune_nft_metadata: UncheckedAccount<'info>,
 
-    /// CHECK: Randomness account (only needed in non-local environment)
-    #[cfg(not(feature = "localnet"))]
-    pub randomness_account: AccountInfo<'info>,
+    /// CHECK: Randomness account (only needed in mainnet)
+    #[cfg(feature = "mainnet")]
+    pub randomness_account: Option<AccountInfo<'info>>,
 
     pub token_program: Program<'info, Token>,
     pub token_metadata_program: Program<'info, Metadata>,
@@ -164,15 +184,7 @@ pub fn draw_fortune(
     }
 
     // Generate random number: decide method based on compilation features
-    #[cfg(feature = "localnet")]
-    let random_value = {
-        // Local test environment: use system clock as pseudo-random seed
-        let clock = Clock::get()?;
-        let seed = clock.unix_timestamp as u64 + clock.slot;
-        (seed % 100) as u8
-    };
-
-    #[cfg(not(feature = "localnet"))]
+    #[cfg(feature = "mainnet")]
     let random_value = {
         // Production environment: use Switchboard oracle randomness
         let clock = Clock::get()?;
@@ -195,6 +207,14 @@ pub fn draw_fortune(
 
         // Convert to 0-99 random number
         (random_u64 % 100) as u8
+    };
+
+    #[cfg(not(feature = "mainnet"))]
+    let random_value = {
+        // Test environments (localnet, devnet): use pseudo-random seed
+        let clock = Clock::get()?;
+        let seed = clock.unix_timestamp as u64 + clock.slot;
+        (seed % 100) as u8
     };
 
     // Get probability settings from dynamic config
@@ -279,11 +299,8 @@ pub fn draw_fortune(
         ),
         DataV2 {
             name: format!("Fortune NFT - {}", fortune_str),
-            symbol: "TFN".to_string(),
-            uri: format!(
-                "https://api.foxverse.co/temple/fortune/{}/metadata.json",
-                fortune_str.to_lowercase().replace(" ", "_")
-            ),
+            symbol: "TMF".to_string(),
+            uri: fortune.get_uri().to_string(),
             seller_fee_basis_points: 0,
             creators: None,
             collection: None,

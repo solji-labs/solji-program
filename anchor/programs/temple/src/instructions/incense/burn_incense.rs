@@ -114,7 +114,11 @@ pub fn burn_incense(
     )?;
     msg!("NFT burned successfully - consumable incense used");
 
-    ctx.accounts.user_incense_state.incense_number += amount as u8;
+    ctx.accounts.user_incense_state.incense_number = ctx
+        .accounts
+        .user_incense_state
+        .incense_number
+        .saturating_add(amount as u8);
 
     // Calculate merit with amulet bonus
     let mut final_merit = merit * amount;
@@ -147,7 +151,6 @@ pub fn burn_incense(
 
     match incense_id {
         1 => {
-            // 清香 (Clear Incense) - 5% chance for Fortune Amulet
             if random_value < 5 {
                 amulet_dropped = true;
                 dropped_amulet_type = 0; // Fortune Amulet
@@ -155,7 +158,6 @@ pub fn burn_incense(
             }
         }
         5 => {
-            // 太上灵香 (Supreme Spirit Incense) - 10% chance for Merit Amulet
             if random_value < 10 {
                 amulet_dropped = true;
                 dropped_amulet_type = 2; // Merit Amulet

@@ -55,6 +55,11 @@ pub mod temple {
         instructions::create_nft_mint(ctx, incense_id)
     }
 
+    /// Mint NFT to user (admin only)
+    pub fn mint_nft_to_user(ctx: Context<MintNftToUser>, incense_id: u8) -> Result<()> {
+        instructions::mint_nft_to_user(ctx, incense_id)
+    }
+
     /// Distribute Buddha NFT to top 10,000 donors
     // pub fn distribute_buddha_nfts(ctx: Context<DistributeBuddhaNfts>) -> Result<()> {
     //     instructions::distribute_buddha_nfts(ctx)
@@ -207,6 +212,15 @@ pub mod temple {
         disabled: bool,
     ) -> Result<()> {
         instructions::update_temple_status_by_bit(ctx, bit, disabled)
+    }
+
+    /// Update NFT URI
+    pub fn update_nft_uri(
+        ctx: Context<UpdateNftUri>,
+        incense_id: u8,
+        new_uri: String,
+    ) -> Result<()> {
+        instructions::update_nft_uri(ctx, incense_id, new_uri)
     }
 
     /// === Shop related ====

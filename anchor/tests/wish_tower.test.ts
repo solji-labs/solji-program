@@ -4,7 +4,7 @@ import { getTestContext, generateUserKeypair, logTestStart, logTestEnd, } from "
 describe("Wish Tower", () => {
 
     const ctx = getTestContext();
-    let user: anchor.web3.Keypair;
+    let user = ctx.owner;
     let userStatePda: anchor.web3.PublicKey;
     let userIncenseStatePda: anchor.web3.PublicKey;
 
@@ -19,9 +19,7 @@ describe("Wish Tower", () => {
             await ctx.createTempleConfig();
         }
 
-        user = generateUserKeypair();
-        await ctx.airdropToUser(user.publicKey, 5 * 1000000000); // 5 SOL
-        await ctx.initUser(user);
+
         [userStatePda] = anchor.web3.PublicKey.findProgramAddressSync(
             [Buffer.from("user_state"), user.publicKey.toBuffer()],
             ctx.program.programId

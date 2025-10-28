@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { Temple } from "../../target/types/temple";
-import { PublicKey, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { PublicKey, Keypair, LAMPORTS_PER_SOL, SystemProgram } from "@solana/web3.js";
 import { BN } from "bn.js";
 
 // Test configuration
@@ -29,7 +29,7 @@ export const TEST_CONFIG = {
         },
         {
             id: 3,
-            name: "龙涎香",
+            name: "龙香",
             priceLamports: new BN(0.1 * LAMPORTS_PER_SOL), // 0.1 SOL
             merit: new BN(1200),
             incensePoints: new BN(3100),
@@ -46,17 +46,17 @@ export const TEST_CONFIG = {
         {
             id: 5,
             name: "秘制香",
-            priceLamports: new BN(10 * LAMPORTS_PER_SOL), // 10 SOL (捐助获得)
-            merit: new BN(5000),
-            incensePoints: new BN(15000),
+            priceLamports: new BN(5 * LAMPORTS_PER_SOL), // 5 SOL (捐助获得)
+            merit: new BN(12000),
+            incensePoints: new BN(10000),
             isDonation: true,
         },
         {
             id: 6,
             name: "天界香",
             priceLamports: new BN(50 * LAMPORTS_PER_SOL), // 50 SOL (捐助获得)
-            merit: new BN(10000),
-            incensePoints: new BN(30000),
+            merit: new BN(300000),
+            incensePoints: new BN(400000),
             isDonation: true,
         }
     ],
@@ -188,25 +188,34 @@ export class TestContext {
     ): Promise<string> {
         console.log("Creating temple config...");
 
-        const tx = await this.program.methods
-            .createTempleConfig(treasury, regularFortune, buddhaFortune, donationLevels, donationRewards, templeLevels)
-            .accounts({
-                owner: this.owner.publicKey,
-                templeConfig: this.templeConfigPda,
-                globalStats: this.getGlobalStatsPda(),
-                systemProgram: anchor.web3.SystemProgram.programId,
-                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-            })
-            .signers([this.owner])
-            .rpc();
+        try {
+            const tx = await this.program.methods
+                .createTempleConfig(treasury, regularFortune, buddhaFortune, donationLevels, donationRewards, templeLevels)
+                .accounts({
+                    owner: this.owner.publicKey,
+                    templeConfig: this.templeConfigPda,
+                    globalStats: this.getGlobalStatsPda(),
+                    systemProgram: anchor.web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                })
+                .signers([this.owner])
+                .rpc();
 
-        console.log(`Temple config created: ${tx}`);
+            console.log(`Temple config created: ${tx}`);
 
+            // 初始化商城物品
+            await this.initShopItems();
 
-        // 初始化商城物品
-        await this.initShopItems();
-
-        return tx;
+            return tx;
+        } catch (error: any) {
+            // Check if config already exists
+            if (error.message.includes('custom program error: 0x0') ||
+                error.message.includes('already in use')) {
+                console.log("Temple config already exists, skipping creation");
+                return "already_exists";
+            }
+            throw error;
+        }
     }
 
     public async initShopItems(): Promise<void> {
@@ -275,7 +284,7 @@ export class TestContext {
 
         const [nftMintPda] = PublicKey.findProgramAddressSync(
             [
-                Buffer.from("IncenseNFT"),
+                Buffer.from("IncenseNFT_V1"),
                 this.templeConfigPda.toBuffer(),
                 Buffer.from([incenseId])
             ],
@@ -412,7 +421,7 @@ export class TestContext {
 
         const [nftMintPda] = PublicKey.findProgramAddressSync(
             [
-                Buffer.from("IncenseNFT"),
+                Buffer.from("IncenseNFT_V1"),
                 this.templeConfigPda.toBuffer(),
                 Buffer.from([incenseId])
             ],
@@ -451,8 +460,9 @@ export class TestContext {
         return tx;
     }
 
+    // Original drawFortune method for localnet (no randomness account)
     public async drawFortune(user: Keypair, useMerit: boolean = false, hasFortuneAmulet: boolean = false, hasProtectionAmulet: boolean = false): Promise<any> {
-        console.log(`User drawing fortune, use merit: ${useMerit}`);
+        console.log(`User drawing fortune (localnet), use merit: ${useMerit}`);
 
         const [userStatePda] = PublicKey.findProgramAddressSync(
             [
@@ -492,29 +502,34 @@ export class TestContext {
 
         const metaAccount = this.getMetadataPda(fortuneNftMintPda);
 
+        // Prepare accounts object (no randomness account for localnet)
+        const accounts: any = {
+            user: user.publicKey,
+            userState: userStatePda,
+            userIncenseState: userIncenseStatePda,
+            templeConfig: this.templeConfigPda,
+            fortuneNftAccount: fortuneNftPda,
+            fortuneNftMint: fortuneNftMintPda,
+            fortuneNftTokenAccount,
+            fortuneNftMetadata: metaAccount,
+            tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+            tokenMetadataProgram: this.TOKEN_METADATA_PROGRAM_ID,
+            associatedTokenProgram: this.ASSOCIATED_TOKEN_PROGRAM_ID,
+            systemProgram: anchor.web3.SystemProgram.programId,
+            rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        };
+
         const tx = await this.program.methods
             .drawFortune(useMerit, hasFortuneAmulet, hasProtectionAmulet)
-            .accounts({
-                user: user.publicKey,
-                userState: userStatePda,
-                userIncenseState: userIncenseStatePda,
-                templeConfig: this.templeConfigPda,
-                fortuneNftAccount: fortuneNftPda,
-                fortuneNftMint: fortuneNftMintPda,
-                fortuneNftTokenAccount,
-                fortuneNftMetadata: metaAccount,
-                tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
-                tokenMetadataProgram: this.TOKEN_METADATA_PROGRAM_ID,
-                associatedTokenProgram: this.ASSOCIATED_TOKEN_PROGRAM_ID,
-                systemProgram: anchor.web3.SystemProgram.programId,
-                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-            })
+            .accounts(accounts)
             .signers([user])
             .rpc();
 
         console.log(`Fortune drawn: ${tx}`);
         return tx;
     }
+
+
 
     public async mintBuddhaNft(user: Keypair): Promise<string> {
         console.log(`User minting Buddha NFT: ${user.publicKey.toString()}`);
@@ -584,76 +599,6 @@ export class TestContext {
             new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s")
         );
         return metadataAccount;
-    }
-
-    public async donate(user: Keypair, amount: number): Promise<string> {
-        console.log(`User donating ${amount / 1000000000} SOL`);
-
-        const [userStatePda] = PublicKey.findProgramAddressSync(
-            [
-                Buffer.from("user_state"),
-                user.publicKey.toBuffer()
-            ],
-            this.program.programId
-        );
-
-        const [userDonationStatePda] = PublicKey.findProgramAddressSync(
-            [
-                Buffer.from("user_donation"),
-                user.publicKey.toBuffer()
-            ],
-            this.program.programId
-        );
-
-        const [userMedalStatePda] = PublicKey.findProgramAddressSync(
-            [
-                Buffer.from("user_medal"),
-                user.publicKey.toBuffer()
-            ],
-            this.program.programId
-        );
-
-        const [medalNftPda] = PublicKey.findProgramAddressSync(
-            [
-                Buffer.from("medal_nft"),
-                Buffer.from("account"),
-                this.templeConfigPda.toBuffer(),
-                user.publicKey.toBuffer()
-            ],
-            this.program.programId
-        );
-
-        const [nftMintPda] = PublicKey.findProgramAddressSync(
-            [
-                Buffer.from("medal_nft"),
-                this.templeConfigPda.toBuffer(),
-                user.publicKey.toBuffer()
-            ],
-            this.program.programId
-        );
-
-        const tx = await this.program.methods
-            .donate(new BN(amount))
-            .accounts({
-                donor: user.publicKey,
-                templeConfig: this.templeConfigPda,
-                userState: userStatePda,
-                userDonationState: userDonationStatePda,
-                userMedalState: userMedalStatePda,
-                templeTreasury: this.treasury,
-                medalNftAccount: medalNftPda,
-                nftMintAccount: nftMintPda,
-                tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
-                associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
-                systemProgram: anchor.web3.SystemProgram.programId,
-                tokenMetadataProgram: new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"),
-                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-            })
-            .signers([user])
-            .rpc();
-
-        console.log(`Donation completed: ${tx}`);
-        return tx;
     }
 
     public async createWish(
@@ -736,7 +681,7 @@ export class TestContext {
 
         const [medalNftPda] = PublicKey.findProgramAddressSync(
             [
-                Buffer.from("medal_nft"),
+                Buffer.from("medal_nft_v1"),
                 Buffer.from("account"),
                 this.templeConfigPda.toBuffer(),
                 user.publicKey.toBuffer()
@@ -746,7 +691,7 @@ export class TestContext {
 
         const [nftMintPda] = PublicKey.findProgramAddressSync(
             [
-                Buffer.from("medal_nft"),
+                Buffer.from("medal_nft_v1"),
                 this.templeConfigPda.toBuffer(),
                 user.publicKey.toBuffer()
             ],
@@ -800,7 +745,7 @@ export class TestContext {
 
         const [medalNftPda] = PublicKey.findProgramAddressSync(
             [
-                Buffer.from("medal_nft"),
+                Buffer.from("medal_nft_v1"),
                 Buffer.from("account"),
                 this.templeConfigPda.toBuffer(),
                 user.publicKey.toBuffer()
@@ -810,7 +755,7 @@ export class TestContext {
 
         const [nftMintPda] = PublicKey.findProgramAddressSync(
             [
-                Buffer.from("medal_nft"),
+                Buffer.from("medal_nft_v1"),
                 this.templeConfigPda.toBuffer(),
                 user.publicKey.toBuffer()
             ],
@@ -1020,6 +965,78 @@ export class TestContext {
     // Associated Token Program ID
     public get ASSOCIATED_TOKEN_PROGRAM_ID(): PublicKey {
         return anchor.utils.token.ASSOCIATED_PROGRAM_ID;
+    }
+
+    public async updateNftUri(incenseId: number, newUri: string): Promise<string> {
+        console.log(`Updating NFT URI for incense type ${incenseId} to: ${newUri}`);
+
+        const [nftMintPda] = PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("IncenseNFT_V1"),
+                this.templeConfigPda.toBuffer(),
+                Buffer.from([incenseId])
+            ],
+            this.program.programId
+        );
+
+        const metaAccount = this.getMetadataPda(nftMintPda);
+
+        const tx = await this.program.methods
+            .updateNftUri(incenseId, newUri)
+            .accounts({
+                adminAuthority: this.owner.publicKey,
+                templeAuthority: this.owner.publicKey,
+                templeConfig: this.templeConfigPda,
+                nftMintAccount: nftMintPda,
+                metaAccount: metaAccount,
+                tokenMetadataProgram: this.TOKEN_METADATA_PROGRAM_ID,
+            })
+            .signers([this.owner])
+            .rpc();
+
+        console.log(`NFT URI updated: ${tx}`);
+
+
+
+        return tx;
+    }
+
+    public async mintNftToUser(userPublicKey: PublicKey, incenseId: number): Promise<string> {
+        console.log(`Minting incense NFT type ${incenseId} to user: ${userPublicKey.toString()}`);
+
+        const [nftMintPda] = PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("IncenseNFT_V1"),
+                this.templeConfigPda.toBuffer(),
+                Buffer.from([incenseId])
+            ],
+            this.program.programId
+        );
+
+        const userTokenAccount = await anchor.utils.token.associatedAddress({
+            mint: nftMintPda,
+            owner: userPublicKey,
+        });
+
+        const tx = await this.program.methods
+            .mintNftToUser(incenseId)
+            .accounts({
+                authority: this.owner.publicKey,
+                templeAuthority: this.owner.publicKey,
+                templeConfig: this.templeConfigPda,
+                nftMintAccount: nftMintPda,
+                userTokenAccount: userTokenAccount,
+                user: userPublicKey,
+                tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+                associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
+                systemProgram: anchor.web3.SystemProgram.programId,
+                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+            })
+            .signers([this.owner])
+            .rpc();
+
+        console.log(`NFT minted to user: ${tx}`);
+        return tx;
     }
 }
 

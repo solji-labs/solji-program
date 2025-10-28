@@ -24,7 +24,7 @@ describe("Buddha NFT Tests", () => {
             await ctx.initUser(user);
 
             // 需要先捐助0.5 SOL以上才能铸造佛像NFT
-            await donationHelpers.donateFund(user, 0.5 * 1000000000);
+            await donationHelpers.donateComplete(user, 0.5 * 1000000000);
 
             const tx = await ctx.mintBuddhaNft(user);
             expect(tx).to.be.a('string');
@@ -41,7 +41,7 @@ describe("Buddha NFT Tests", () => {
             await ctx.initUser(user);
 
             // 需要先捐助0.5 SOL以上才能铸造佛像NFT
-            await donationHelpers.donateFund(user, 0.5 * 1000000000);
+            await donationHelpers.donateComplete(user, 0.5 * 1000000000);
 
             const tx1 = await ctx.mintBuddhaNft(user);
             expect(tx1).to.be.a('string');

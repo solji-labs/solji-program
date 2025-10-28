@@ -8,8 +8,10 @@ use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::metadata::create_metadata_accounts_v3;
 use anchor_spl::metadata::mpl_token_metadata::types::DataV2;
+use anchor_spl::metadata::update_metadata_accounts_v2;
 use anchor_spl::metadata::CreateMetadataAccountsV3;
 use anchor_spl::metadata::Metadata;
+use anchor_spl::metadata::UpdateMetadataAccountsV2;
 use anchor_spl::token::mint_to;
 use anchor_spl::token::Mint;
 use anchor_spl::token::MintTo;
@@ -256,49 +258,67 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
 
         // Check if user already has medal NFT
         if ctx.accounts.user_state.has_medal_nft {
-            // User already has medal, check if can upgrade
-            let next_upgrade_level = ctx
-                .accounts
-                .medal_nft_account
-                .get_next_upgrade_level(total_donation_sol);
-            if let Some(new_level) = next_upgrade_level {
-                // Upgrade existing medal NFT
-                let serial_number = ctx.accounts.medal_nft_account.serial_number;
-                let new_name = if new_level == 4 {
-                    format!("Supreme Dragon Medal #{}", serial_number)
-                } else if new_level == 3 {
-                    format!("Protector Gold Medal #{}", serial_number)
-                } else if new_level == 2 {
-                    format!("Diligent Silver Medal #{}", serial_number)
-                } else {
-                    format!("Entry Merit Bronze Medal #{}", serial_number)
-                };
+            msg!("User already has medal NFT");
+            let serial_number = ctx.accounts.medal_nft_account.serial_number;
+            let new_name = if current_level == 4 {
+                format!("Supreme Dragon Medal #{}", serial_number)
+            } else if current_level == 3 {
+                format!("Protector Gold Medal #{}", serial_number)
+            } else if current_level == 2 {
+                format!("Diligent Silver Medal #{}", serial_number)
+            } else {
+                format!("Entry Merit Bronze Medal #{}", serial_number)
+            };
 
-                let new_uri = format!(
-                    "https://api.foxverse.co/temple/medal/{}/metadata.json",
-                    new_level
-                );
+            let new_uri = MedalNFT::get_medal_uri_by_level(current_level);
 
-                // Update metadata (simplified - in real implementation would use update_metadata_accounts_v2)
-                // For now, just update the account data
-                let now = Clock::get()?.unix_timestamp;
-                ctx.accounts.medal_nft_account.level = new_level;
-                ctx.accounts.medal_nft_account.total_donation =
-                    ctx.accounts.user_donation_state.donation_amount;
-                ctx.accounts.medal_nft_account.last_upgrade = now;
+            // Update metadata
+            let temple_signer_seeds: &[&[&[u8]]] = &[&[
+                TempleConfig::SEED_PREFIX.as_bytes(),
+                &[ctx.bumps.temple_config],
+            ]];
 
-                msg!("Temple medal NFT upgrade successful: {}", new_name);
-                msg!("New level: {}", new_level);
+            update_metadata_accounts_v2(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_metadata_program.to_account_info(),
+                    UpdateMetadataAccountsV2 {
+                        metadata: ctx.accounts.medal_nft_metadata.to_account_info(),
+                        update_authority: ctx.accounts.donor.to_account_info(),
+                    },
+                    temple_signer_seeds,
+                ),
+                None,
+                Some(DataV2 {
+                    name: new_name.clone(),
+                    symbol: "TMM".to_string(),
+                    uri: new_uri,
+                    seller_fee_basis_points: 0,
+                    creators: None,
+                    collection: None,
+                    uses: None,
+                }),
+                None,
+                None,
+            )?;
 
-                // Emit NFT upgrade event
-                emit!(DonationNFTMinted {
-                    user: donor.key(),
-                    nft_mint: ctx.accounts.medal_nft_mint.key(),
-                    level: new_level,
-                    serial_number,
-                    timestamp: clock.unix_timestamp,
-                });
-            }
+            // Update account data
+            let now = Clock::get()?.unix_timestamp;
+            ctx.accounts.medal_nft_account.level = current_level;
+            ctx.accounts.medal_nft_account.total_donation =
+                ctx.accounts.user_donation_state.donation_amount;
+            ctx.accounts.medal_nft_account.last_upgrade = now;
+
+            msg!("Temple medal NFT upgrade successful: {}", new_name);
+            msg!("New level: {}", current_level);
+
+            // Emit NFT upgrade event
+            emit!(DonationNFTMinted {
+                user: donor.key(),
+                nft_mint: ctx.accounts.medal_nft_mint.key(),
+                level: current_level,
+                serial_number,
+                timestamp: clock.unix_timestamp,
+            });
         } else {
             // Mint new medal NFT
             let serial_number = ctx.accounts.user_donation_state.total_donation_count;
@@ -319,6 +339,8 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
                 &[ctx.bumps.temple_config],
             ]];
 
+            let uri = MedalNFT::get_medal_uri_by_level(current_level);
+
             create_metadata_accounts_v3(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_metadata_program.to_account_info(),
@@ -336,10 +358,7 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<()> {
                 DataV2 {
                     name: medal_name.clone(),
                     symbol: "TMM".to_string(),
-                    uri: format!(
-                        "https://api.foxverse.co/temple/medal/{}/metadata.json",
-                        current_level
-                    ),
+                    uri,
                     seller_fee_basis_points: 0,
                     creators: None,
                     collection: None,
