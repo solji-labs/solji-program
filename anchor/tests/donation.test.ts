@@ -40,8 +40,6 @@ describe("donation", () => {
             ctx.printUserState(ctx.getUserStatePda(donator.publicKey));
             console.log("\n");
             ctx.printUserIncenseState(ctx.getUserIncenseStatePda(donator.publicKey));
-            console.log("\n");
-            ctx.printUserDonationState(ctx.getUserDonationStatePda(donator.publicKey));
 
         }
     });

@@ -128,7 +128,7 @@ async function initUser(
 ): Promise<string> {
   // 计算用户状态 PDA
   const [userStatePda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("user_state_v1"), user.publicKey.toBuffer()],
+    [Buffer.from("user_state_v2"), user.publicKey.toBuffer()],
     program.programId
   );
 
@@ -178,7 +178,7 @@ interface UserInitEvent {
 ```typescript
 // 计算用户状态 PDA
 const [userStatePda] = PublicKey.findProgramAddressSync(
-  [Buffer.from("user_state_v1"), userPublicKey.toBuffer()],
+  [Buffer.from("user_state_v2"), userPublicKey.toBuffer()],
   program.programId
 );
 
@@ -215,7 +215,7 @@ async function ensureUserInitialized(
   user: anchor.web3.Keypair
 ): Promise<PublicKey> {
   const [userStatePda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("user_state_v1"), user.publicKey.toBuffer()],
+    [Buffer.from("user_state_v2"), user.publicKey.toBuffer()],
     program.programId
   );
 

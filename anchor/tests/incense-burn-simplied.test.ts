@@ -12,10 +12,14 @@ describe("incense burn simplified", () => {
     console.log("Program ID: ", ctx.program.programId.toString());
 
     it("should burn incense with SOL payment and mint NFT", async () => {
-        // 使用新用户进行测试
-        let randomUserIndex = Math.floor(Math.random() * 8);
-        const user = getUserKeypairs(randomUserIndex);
-        console.log("User: ", user.publicKey.toString());
+        // // 使用新用户进行测试
+        // let randomUserIndex = Math.floor(Math.random() * 8);
+        // const user = getUserKeypairs(randomUserIndex);
+        // console.log("User: ", user.publicKey.toString());
+
+
+        const user = ctx.authority;
+
 
         // 检查用户SOL余额，如果不足则进行airdrop
         const balance = await ctx.provider.connection.getBalance(user.publicKey);

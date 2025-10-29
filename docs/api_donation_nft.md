@@ -47,7 +47,7 @@ async function donateFund(
 
   // 计算 PDA
   const [userStatePda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("user_state_v1"), user.publicKey.toBuffer()],
+    [Buffer.from("user_state_v2"), user.publicKey.toBuffer()],
     program.programId
   );
 
@@ -270,7 +270,7 @@ async function mintBuddhaNft(
   );
 
   const [userStatePda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("user_state_v1"), user.publicKey.toBuffer()],
+    [Buffer.from("user_state_v2"), user.publicKey.toBuffer()],
     program.programId
   );
 

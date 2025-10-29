@@ -77,7 +77,7 @@ const [templeConfigPda] = PublicKey.findProgramAddressSync(
 
 ```typescript
 const [userStatePda] = PublicKey.findProgramAddressSync(
-  [Buffer.from("user_state_v1"), userPublicKey.toBuffer()],
+  [Buffer.from("user_state_v2"), userPublicKey.toBuffer()],
   programId
 );
 ```

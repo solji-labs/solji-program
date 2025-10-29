@@ -40,7 +40,7 @@ async function buyIncense(
 ): Promise<string> {
   // 计算 PDA
   const [userStatePda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("user_state_v1"), user.publicKey.toBuffer()],
+    [Buffer.from("user_state_v2"), user.publicKey.toBuffer()],
     program.programId
   );
 
@@ -230,7 +230,7 @@ async function burnIncenseSimplified(
   const templeConfig = await program.account.templeConfig.fetch(templeConfigPda);
 
   const [userStatePda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("user_state_v1"), user.publicKey.toBuffer()],
+    [Buffer.from("user_state_v2"), user.publicKey.toBuffer()],
     program.programId
   );
 
@@ -368,7 +368,7 @@ async function burnIncense(
   const templeConfig = await program.account.templeConfig.fetch(templeConfigPda);
 
   const [userStatePda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("user_state_v1"), user.publicKey.toBuffer()],
+    [Buffer.from("user_state_v2"), user.publicKey.toBuffer()],
     program.programId
   );
 

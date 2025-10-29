@@ -16,7 +16,21 @@ pub struct UserState {
 
     /// 用户总消费金额 (lamports)
     pub total_sol_spent: u64,
- 
+
+    /// 用户捐助金额
+    pub total_donation_amount: u64,
+
+    /// 用户捐助次数
+    pub total_donation_count: u64,
+
+    /// 是否可以铸造佛像NFT
+    pub can_mint_buddha_nft: bool,
+
+    /// 是否铸造过佛像NFT
+    pub has_minted_buddha_nft: bool,
+
+    /// 是否铸造过徽章NFT
+    pub has_minted_badge_nft: bool,
 
     /// 通过捐助解锁的额外烧香次数（每日重置）
     pub donation_unlocked_burns: u8,
@@ -32,7 +46,6 @@ pub struct UserState {
 
     /// 上次操作日期，用于每日重置判断
     pub last_action_day: u16, // 存储自纪元开始的天数
- 
 
     /// 总烧香操作次数统计
     pub total_burn_count: u32,
@@ -52,7 +65,7 @@ pub struct UserState {
 
 impl UserState {
     /// PDA种子前缀
-    pub const SEED_PREFIX: &'static str = "user_state_v1";
+    pub const SEED_PREFIX: &'static str = "user_state_v2";
 
     /// 每日基础烧香次数限制
     pub const DAILY_BURN_LIMIT: u8 = 10;
@@ -67,15 +80,20 @@ impl UserState {
         self.user = user;
         self.karma_points = 0;
         self.total_incense_value = 0;
-        self.total_sol_spent = 0; 
+        self.total_sol_spent = 0;
         self.donation_unlocked_burns = 0;
         self.daily_burn_count = 0;
         self.daily_draw_count = 0;
         self.daily_wish_count = 0;
-        self.last_action_day = current_day; 
-        self.total_burn_count = 0; 
+        self.last_action_day = current_day;
+        self.total_burn_count = 0;
         self.total_draw_count = 0;
         self.total_wish_count = 0;
+        self.total_donation_amount = 0;
+        self.total_donation_count = 0;
+        self.can_mint_buddha_nft = false;
+        self.has_minted_buddha_nft = false;
+        self.has_minted_badge_nft = false;
         self.created_at = current_timestamp;
         self.last_active_at = current_timestamp;
 
@@ -83,29 +101,66 @@ impl UserState {
         Ok(())
     }
 
-    pub fn donate_fund(&mut self, amount: u64, add_karma_points: u64, add_incense_value: u64, current_timestamp: i64) -> Result<()> {
+    pub fn donate_fund(
+        &mut self,
+        amount: u64,
+        add_karma_points: u64,
+        add_incense_value: u64,
+        current_timestamp: i64,
+    ) -> Result<()> {
         self.check_and_reset_daily_limits()?;
         // 每捐助0.01sol ，可以增加烧香的1次
         // 如果捐助 0.011sol，可以增加烧香的1次, 0.009sol 不增加
         let donate_sol = (amount / 100_000_000) as f64;
 
         //floor: 向下取整 - 0.011 -> 0.01； 0.009 -> 0.00
-        let donate_burns =  if donate_sol >= 1.0 {
+        let donate_burns = if donate_sol >= 1.0 {
             donate_sol.floor() as u8
         } else {
             0
         };
-        
+
         //增加烧香次数
         self.donation_unlocked_burns = self.donation_unlocked_burns.saturating_add(donate_burns);
-        
+
         //增加功德值
         self.karma_points = self.karma_points.saturating_add(add_karma_points);
-        
+
         //增加香火值
         self.total_incense_value = self.total_incense_value.saturating_add(add_incense_value);
-        
+
+        //增加捐助金额
+        self.total_donation_amount = self
+            .total_donation_amount
+            .checked_add(amount)
+            .ok_or(UserError::DonationOverflow)?;
+
+        //增加捐助次数
+        self.total_donation_count = self
+            .total_donation_count
+            .checked_add(1)
+            .ok_or(UserError::DonationOverflow)?;
+
+        //捐助金额大于等于5sol，可以铸造佛像NFT
+        // 1 sol = 1_000_000_000 lamports
+        if self.total_donation_amount >= 500_000_000 {
+            self.can_mint_buddha_nft = true;
+        }
+
         self.last_active_at = current_timestamp;
+        Ok(())
+    }
+
+        pub fn can_mint_buddha_nft(&self) -> bool {
+        self.can_mint_buddha_nft
+    }
+
+    pub fn has_minted_buddha_nft(&self) -> bool {
+        self.has_minted_buddha_nft
+    }
+
+    pub fn mint_buddha_nft(&mut self) -> Result<()> {
+        self.has_minted_buddha_nft = true;
         Ok(())
     }
 
@@ -184,8 +239,6 @@ impl UserState {
         self.daily_wish_count
     }
 
- 
-
     /// 增加功德值
     pub fn add_karma_points(&mut self, amount: u64) -> Result<()> {
         self.karma_points = self
@@ -208,8 +261,6 @@ impl UserState {
         Ok(())
     }
 
- 
-
     /// 增加捐助解锁的烧香次数
     pub fn add_donation_unlocked_burns(&mut self, count: u8) -> Result<()> {
         self.donation_unlocked_burns = self.donation_unlocked_burns.saturating_add(count);
@@ -231,7 +282,12 @@ impl UserState {
     }
 
     /// 抽签
-    pub fn draw_fortune(&mut self, reduce_karma_points: u64, reward_karma_points: u64, current_timestamp: i64) -> Result<()> {
+    pub fn draw_fortune(
+        &mut self,
+        reduce_karma_points: u64,
+        reward_karma_points: u64,
+        current_timestamp: i64,
+    ) -> Result<()> {
         self.daily_draw_count = self.daily_draw_count.saturating_add(1);
         self.total_draw_count = self.total_draw_count.saturating_add(1);
         require!(
@@ -249,7 +305,12 @@ impl UserState {
     }
 
     /// 许愿
-    pub fn create_wish(&mut self, reduce_karma_points: u64, reward_karma_points: u64, current_timestamp: i64) -> Result<()> {
+    pub fn create_wish(
+        &mut self,
+        reduce_karma_points: u64,
+        reward_karma_points: u64,
+        current_timestamp: i64,
+    ) -> Result<()> {
         if reduce_karma_points > 0 {
             require!(
                 self.karma_points >= reduce_karma_points,
@@ -266,12 +327,9 @@ impl UserState {
         Ok(())
     }
 
-
     pub fn get_total_wish_count(&self) -> u32 {
         self.total_wish_count.into()
     }
-
-
 }
 
 #[account]
@@ -302,10 +360,7 @@ impl UserIncenseState {
     /// PDA种子前缀
     pub const SEED_PREFIX: &'static str = "user_incense_state_v1";
 
-
-
-
-    pub fn initialize(&mut self, user: Pubkey,current_timestamp: i64) -> Result<()> {
+    pub fn initialize(&mut self, user: Pubkey, current_timestamp: i64) -> Result<()> {
         self.user = user;
         for i in 0..6 {
             self.incense_having_balances[i] = IncenseBalance {
@@ -325,20 +380,18 @@ impl UserIncenseState {
         Ok(())
     }
 
-
     pub fn airdrop_incense_by_donation(&mut self, amount: u64) -> Result<()> {
-        let (incense_type_id, incense_amount) = if amount >= 5_000_000_000 && amount < 50_000_000_000 {
-            (5, 10)
-        } else {
-            (6, 5)
-        };
+        let (incense_type_id, incense_amount) =
+            if amount >= 5_000_000_000 && amount < 50_000_000_000 {
+                (5, 10)
+            } else {
+                (6, 5)
+            };
 
         self.add_incense_balance(incense_type_id, incense_amount)?;
 
         Ok(())
     }
-
-
 
     /// 获取拥有的香的余额
     pub fn get_incense_having_balance(&self, incense_type_id: u8) -> u64 {
@@ -412,91 +465,8 @@ impl UserIncenseState {
         Ok(())
     }
 }
-
-
-#[account]
-#[derive(Debug, InitSpace)]
-pub struct UserDonationState {
-    pub user: Pubkey,
-    pub total_donation_amount: u64,
-    pub total_donation_count: u64,
-    pub donation_level: u8,
-    pub last_donation_at: i64,
-    
-    pub can_mint_buddha_nft: bool,
-    pub has_minted_buddha_nft: bool,
-  
-    pub has_minted_badge_nft: bool,
-}
-
-impl UserDonationState {
- pub const SEED_PREFIX: &'static str = "user_donation_state_v1";
-
-    pub fn initialize(&mut self, user: Pubkey) -> Result<()> {
-        self.user = user;
-        self.can_mint_buddha_nft = false;
-        self.has_minted_buddha_nft = false;
-        self.total_donation_amount = 0;
-        self.total_donation_count = 0;
-        self.donation_level = self.get_donation_level();
-        self.last_donation_at = 0;
-        self.has_minted_badge_nft = false;
-        Ok(())
-    }
-
-    pub fn can_mint_buddha_nft(&self) -> bool {
-        self.can_mint_buddha_nft
-    }   
-    
-    pub fn has_minted_buddha_nft(&self) -> bool {
-        self.has_minted_buddha_nft   
-    }   
-    
-    pub fn mint_buddha_nft(&mut self) -> Result<()> {
-        self.has_minted_buddha_nft = true;
-        Ok(())
-    }
-
-    // donate fund
-    pub fn donate_fund(&mut self, amount: u64, current_timestamp: i64) -> Result<u64> {
-        self.total_donation_amount = self.total_donation_amount.checked_add(amount).ok_or(UserError::DonationOverflow)?;
-        self.total_donation_count = self.total_donation_count.checked_add(1).ok_or(UserError::DonationOverflow)?;
-        self.donation_level = self.get_donation_level();
-        self.last_donation_at = current_timestamp;
-
-        // more than 0.5 SOL can mint
-        // 1 sol = 1_000_000_000 lamports
-        if self.total_donation_amount >= 500_000_000 {
-            self.can_mint_buddha_nft = true;
-        }
  
-
-        Ok(self.total_donation_amount)
-    }
-
-    // calculate donation level
-    pub fn get_donation_level(&self) -> u8 {
-        let donation_sol = (self.total_donation_amount as f64 / 1_000_000_000.0);
-
-        if donation_sol >= 5.0 {
-            4 // Supreme Patron
-        } else if donation_sol >= 1.0 {
-            3 // Gold Protector
-        } else if donation_sol >= 0.2 {
-            2 // Silver Disciple
-        } else {
-            1 // Bronze Believer
-        } 
-    }
-     
  
-}
-
-
-
- 
-
-
 /// 用户相关错误定义
 #[error_code]
 pub enum UserError {

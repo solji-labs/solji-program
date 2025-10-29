@@ -9,7 +9,7 @@ use anchor_spl::metadata::{
 use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 
 use crate::state::{
-    BadgeNFT, Donation, TempleConfig, UserDonationState, UserError, UserIncenseState, UserState,
+    BadgeNFT, Donation, TempleConfig, UserIncenseState, UserState,
 };
 use crate::DonationError;
 use crate::TempleError;
@@ -28,15 +28,7 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<DonateFundRe
         user_state.initialize(ctx.accounts.user.key(), current_timestamp)?;
         msg!("User state initialized {}", ctx.accounts.user.key());
     }
-
-    let user_donation_state = &mut ctx.accounts.user_donation_state;
-    if user_donation_state.user == Pubkey::default() {
-        user_donation_state.initialize(ctx.accounts.user.key())?;
-        msg!(
-            "User donation state initialized {}",
-            ctx.accounts.user.key()
-        );
-    }
+ 
 
     // 转账
     transfer(
@@ -50,10 +42,10 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<DonateFundRe
         amount,
     )?;
 
-    let old_donation_level = user_donation_state.get_donation_level();
+    let old_donation_level = BadgeNFT::calculate_donation_level(user_state.total_donation_amount);
 
     let new_donation_level =
-        BadgeNFT::calculate_donation_level(user_donation_state.total_donation_amount + amount);
+        BadgeNFT::calculate_donation_level(user_state.total_donation_amount + amount);
 
     msg!(
         "old_donation_level: {}, new_donation_level: {}",
@@ -67,7 +59,7 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<DonateFundRe
         new_donation_level
     );
 
-    if user_donation_state.has_minted_badge_nft {
+    if user_state.has_minted_badge_nft {
         if new_donation_level > old_donation_level {
             update_metadata_accounts_v2(
                 CpiContext::new(
@@ -146,13 +138,11 @@ pub fn donate_fund(ctx: Context<DonateFund>, amount: u64) -> Result<DonateFundRe
             1,
         )?;
 
-        user_donation_state.has_minted_badge_nft = true;
+        user_state.has_minted_badge_nft = true;
     }
 
     let (reward_karma_points, reward_incense_value) = Donation::calculate_donation(amount)?;
-
-    //捐助
-    let _total_donation_amount = user_donation_state.donate_fund(amount, current_timestamp)?;
+ 
     //增加用户功德值
     user_state.donate_fund(
         amount,
@@ -218,16 +208,7 @@ pub struct DonateFund<'info> {
         bump,
     )]
     pub user_incense_state: Account<'info, UserIncenseState>,
-
-    /// 用户捐助状态账户
-    #[account(
-            init_if_needed,
-            payer = user,
-            space = 8+ UserDonationState::INIT_SPACE,
-            seeds = [UserDonationState::SEED_PREFIX.as_bytes(), user.key().as_ref()],
-            bump,
-        )]
-    pub user_donation_state: Account<'info, UserDonationState>,
+ 
 
     /// CHECK: This account is validated through the constraint that ensures it matches the treasury in temple_config
     #[account(mut, constraint = temple_treasury.key() == temple_config.treasury @ TempleError::InvalidTreasury)]

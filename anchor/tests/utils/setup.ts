@@ -203,24 +203,14 @@ export class TestContext {
     public getUserStatePda(user: PublicKey): PublicKey {
         const [pda] = PublicKey.findProgramAddressSync(
             [
-                Buffer.from("user_state_v1"),
+                Buffer.from("user_state_v2"),
                 user.toBuffer(),
             ],
             this.program.programId
         );
         return pda;
     }
-    // 获取用户捐助统计PDA
-    public getUserDonationStatePda(user: PublicKey): PublicKey {
-        const [pda] = PublicKey.findProgramAddressSync(
-            [
-                Buffer.from("user_donation_state_v1"),
-                user.toBuffer(),
-            ],
-            this.program.programId
-        );
-        return pda;
-    }
+ 
 
     // 获取用户香炉状态PDA
     public getUserIncenseStatePda(user: PublicKey): PublicKey {
@@ -438,7 +428,7 @@ export class TestContext {
 
         const [userStatePda] = PublicKey.findProgramAddressSync(
             [
-                Buffer.from("user_state_v1"),
+                Buffer.from("user_state_v2"),
                 user.publicKey.toBuffer(),
             ],
             this.program.programId
@@ -463,10 +453,7 @@ export class TestContext {
 
         // 设置事件监听器
         let fortuneResult: any = null;
-        const eventListener = this.program.addEventListener('drawFortuneEvent', (event, slot) => {
-            console.log("🎯 收到抽签事件:", event);
-            fortuneResult = event;
-        });
+       
 
         try {
             const tx = await this.program.methods
@@ -481,9 +468,7 @@ export class TestContext {
 
             // 等待事件被触发
             await new Promise(resolve => setTimeout(resolve, 1000));
-
-            // 移除事件监听器
-            await this.program.removeEventListener(eventListener);
+ 
 
             if (fortuneResult) {
                 console.log("\n🎊 抽签结果详情:");
@@ -498,8 +483,6 @@ export class TestContext {
             return { tx, fortuneResult };
 
         } catch (error) {
-            // 确保在错误情况下也移除监听器
-            await this.program.removeEventListener(eventListener);
             throw error;
         }
     }
@@ -664,6 +647,10 @@ export class TestContext {
         console.log("Daily Wish Count:", userStateAccount.dailyWishCount);
         console.log("Created At:", new Date(userStateAccount.createdAt.toNumber() * 1000).toISOString());
         console.log("Last Active At:", new Date(userStateAccount.lastActiveAt.toNumber() * 1000).toISOString());
+        console.log("Total Donation Amount:", userStateAccount.totalDonationAmount.toString());
+        console.log("Total Donation Count:", userStateAccount.totalDonationCount.toString()); 
+        console.log("Can Mint Buddha NFT:", userStateAccount.canMintBuddhaNft);
+        console.log("Has Minted Buddha NFT:", userStateAccount.hasMintedBuddhaNft);
     }
 
 
@@ -682,22 +669,7 @@ export class TestContext {
         console.log("Last Active At:", new Date(userIncenseStateAccount.lastActiveAt.toNumber() * 1000).toISOString());
     }
 
-    public async printUserDonationState(userDonationStatePda: PublicKey): Promise<void> {
-        const userDonationStateAccount = await this.program.account.userDonationState.fetch(userDonationStatePda);
-        // 获取PDA账户的数据信息
-        console.log("\n📊 Reading User Donation State PDA Data:");
-        console.log("================================");
-
-        console.log("userDonationStateAccount", JSON.stringify(userDonationStateAccount));
-
-        console.log("User:", userDonationStateAccount.user.toString());
-        console.log("Total Donation Amount:", userDonationStateAccount.totalDonationAmount.toString());
-        console.log("Total Donation Count:", userDonationStateAccount.totalDonationCount.toString());
-        console.log("Donation Level:", userDonationStateAccount.donationLevel);
-        console.log("Last Donation At:", new Date(userDonationStateAccount.lastDonationAt.toNumber() * 1000).toISOString());
-        console.log("Can Mint Buddha NFT:", userDonationStateAccount.canMintBuddhaNft);
-        console.log("Has Minted Buddha NFT:", userDonationStateAccount.hasMintedBuddhaNft);
-    }
+ 
 
     public async printTempleConfig(): Promise<void> {
         const templeConfigAccount = await this.program.account.templeConfig.fetch(this.templeConfigPda);

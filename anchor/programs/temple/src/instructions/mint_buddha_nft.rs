@@ -12,7 +12,7 @@ use anchor_spl::token::MintTo;
 use anchor_spl::token::Token;
 use anchor_spl::token::TokenAccount;
 
-use crate::state::{BuddhaNft, TempleError, TempleConfig, UserState, UserDonationState};
+use crate::state::{BuddhaNft, TempleError, TempleConfig, UserState};
 use crate::BuddhaNftError;
 
 
@@ -28,17 +28,17 @@ pub fn mint_buddha_nft(ctx: Context<MintBuddhaNft>) -> Result<()> {
 
     require!(
         // 用户捐助状态账户未初始化
-        ctx.accounts.user_donation_state.user == Pubkey::default(),
+        ctx.accounts.user_state.user == Pubkey::default(),
         BuddhaNftError::UserCannotMintBuddhaNft,
     );
 
     require!(
-        !ctx.accounts.user_donation_state.can_mint_buddha_nft(),
+        !ctx.accounts.user_state.can_mint_buddha_nft(),
         BuddhaNftError::UserCannotMintBuddhaNft,
     );
 
     require!(
-        ctx.accounts.user_donation_state.has_minted_buddha_nft(),
+        ctx.accounts.user_state.has_minted_buddha_nft(),
         BuddhaNftError::UserAlreadyMintedBuddhaNft,
     );
 
@@ -127,8 +127,8 @@ pub fn mint_buddha_nft(ctx: Context<MintBuddhaNft>) -> Result<()> {
         current_time,
     );
 
-    let user_donation_state = &mut ctx.accounts.user_donation_state;
-    user_donation_state.mint_buddha_nft()?;
+    let user_state = &mut ctx.accounts.user_state;
+    user_state.mint_buddha_nft()?;
 
 
     let temple_config = &mut ctx.accounts.temple_config;
@@ -164,16 +164,6 @@ pub struct MintBuddhaNft<'info> {
         bump,
     )]
     pub user_state: Account<'info, UserState>,
-
-    /// 用户捐助状态账户
-    #[account(
-        init_if_needed,
-        payer = user,
-        space = 8 + UserDonationState::INIT_SPACE,
-        seeds = [UserDonationState::SEED_PREFIX.as_bytes(), user.key().as_ref()],
-        bump,
-    )]
-    pub user_donation_state: Account<'info, UserDonationState>,
 
      
     #[account(mut)]
