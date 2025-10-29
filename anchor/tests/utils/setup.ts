@@ -6,6 +6,9 @@ import { BN } from "bn.js";
 import { web3 } from "@coral-xyz/anchor";
 import { getUserKeypairs } from "./user-generate";
 
+// 可选：导入随机数配置（如果需要在 devnet/mainnet 测试）
+// import { getRandomnessAccount } from "./randomness-config";
+
 // Test configuration
 export const TEST_CONFIG = {
     confirmOptions: {
@@ -456,11 +459,32 @@ export class TestContext {
        
 
         try {
+            // 构建账户对象
+            // 注意：对于 optional 账户，必须显式设置为 null 或提供账户地址
+            const accounts: any = {
+                user: user.publicKey,
+                randomnessAccount: null, // 默认为 null（使用降级方案）
+            };
+
+            // 在非 localnet 环境下添加随机数账户
+            // 后端使用 Option<AccountInfo>，如果为 null 则使用降级方案
+            const network = process.env.ANCHOR_PROVIDER_URL || '';
+            if (!network.includes('localhost') && !network.includes('127.0.0.1')) {
+                // 在 devnet/mainnet 环境下，这里应该配置实际的 Switchboard 随机数账户
+                // 例如：
+                // const randomnessAccount = new PublicKey('GvDMxPzN1sCj7L26YDK2HnMRXEQmQ2aemov8YBtPS7vR');
+                // accounts.randomnessAccount = randomnessAccount;
+                console.log('⚠️  非 localnet 环境，但未配置 randomness_account');
+                console.log('⚠️  后端将使用降级方案（伪随机数）');
+                accounts.randomnessAccount = null;
+            } else {
+                console.log('🏠 Localnet 环境，使用伪随机数');
+                accounts.randomnessAccount = null;
+            }
+
             const tx = await this.program.methods
                 .drawFortune()
-                .accounts({
-                    user: user.publicKey, 
-                })
+                .accounts(accounts)
                 .signers([user])
                 .rpc();
 

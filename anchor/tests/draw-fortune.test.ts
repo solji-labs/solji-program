@@ -2,6 +2,16 @@ import * as anchor from "@coral-xyz/anchor";
 import { getTestContext } from "./utils/setup";
 import { getUserKeypairs } from "./utils/user-generate";
 
+/**
+ * 抽签测试套件
+ * 
+ * 注意事项：
+ * 1. 后端 draw_fortune 指令使用 Option<AccountInfo> 接收 randomness_account
+ * 2. 在 localnet 环境下，不需要提供 randomness_account（使用伪随机数）
+ * 3. 在 devnet/mainnet 环境下，应该提供有效的 Switchboard 随机数账户
+ * 4. 如果未提供 randomness_account，后端会降级到伪随机数（slot + timestamp）
+ */
+
 // 运势类型映射
 function getFortuneText(fortune: any): string {
     const fortuneMap: { [key: string]: string } = {
